@@ -23,6 +23,7 @@ import './modules/notifications/notifications.css';
 import './modules/finance/finance.css';
 import './modules/reports/reports.css';
 import './modules/settings/settings.css';
+import './modules/management/layout-responsive.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
