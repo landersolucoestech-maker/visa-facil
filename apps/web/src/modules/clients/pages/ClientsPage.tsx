@@ -6,7 +6,7 @@ import { ClientTable } from '../components/ClientTable';
 import { CLIENT_STATUS_LABELS, type Client, type ClientStatus } from '../types/client';
 
 type ClientUpdate = Pick<Client, 'fullName' | 'email' | 'phone' | 'status' | 'notes'>;
-type CrmTab = 'contacts' | 'clients' | 'leads';
+type CrmTab = 'contacts' | 'leads';
 type ClientsPageProps = {
   clients: Client[];
   onCreateClient: (input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -29,7 +29,7 @@ export function ClientsPage({ clients, onCreateClient, onUpdateClient, showForm,
   const filteredClients = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return clients.filter((client) => {
-      const matchesTab = tab === 'contacts' || (tab === 'clients' && client.status === 'active') || (tab === 'leads' && client.status === 'lead');
+      const matchesTab = tab === 'contacts' || client.status === 'lead';
       const matchesQuery = !normalized || [client.fullName, client.email, client.phone].some((value) => value.toLowerCase().includes(normalized));
       const matchesStatus = status === 'all' || client.status === status;
       return matchesTab && matchesQuery && matchesStatus;
@@ -38,24 +38,23 @@ export function ClientsPage({ clients, onCreateClient, onUpdateClient, showForm,
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) { onCreateClient(input); onCloseForm(); }
   function saveClient(clientId: string, patch: ClientUpdate) { onUpdateClient(clientId, patch); setEditClient(undefined); }
-  function selectTab(nextTab: CrmTab) { setTab(nextTab); setStatus(nextTab === 'clients' ? 'active' : nextTab === 'leads' ? 'lead' : 'all'); }
+  function selectTab(nextTab: CrmTab) { setTab(nextTab); setStatus(nextTab === 'leads' ? 'lead' : 'all'); }
 
-  const sectionTitle = tab === 'contacts' ? 'Contatos' : tab === 'clients' ? 'Clientes' : 'Leads';
-  const sectionDescription = tab === 'contacts' ? 'Todos os relacionamentos cadastrados na operação, independentemente da etapa atual.' : tab === 'clients' ? 'Clientes ativos que já estão em acompanhamento pela Visa Fácil.' : 'Contatos em fase inicial que ainda precisam evoluir para atendimento ativo.';
+  const sectionTitle = tab === 'contacts' ? 'Contatos' : 'Leads';
+  const sectionDescription = tab === 'contacts' ? 'Todos os relacionamentos cadastrados na operação, incluindo clientes ativos, leads e contatos inativos.' : 'Contatos em fase inicial que ainda precisam evoluir para atendimento ativo.';
 
   return <section className="management-page client-page crm-page" aria-labelledby="clients-title">
-    <div className="management-page__heading"><div><span className="management-eyebrow">Relacionamento</span><h1 id="clients-title">CRM</h1><p>Centralize contatos, clientes e leads em uma única área de relacionamento.</p></div></div>
+    <div className="management-page__heading"><div><span className="management-eyebrow">Relacionamento</span><h1 id="clients-title">CRM</h1><p>Centralize contatos e leads em uma única área de relacionamento.</p></div></div>
 
     <div className="client-summary-grid crm-summary-grid" aria-label="Resumo do CRM">
       <article><span>Todos os contatos</span><strong>{clients.length}</strong><small>Base completa da sessão</small></article>
-      <article><span>Clientes</span><strong>{activeCount}</strong><small>Em acompanhamento ativo</small></article>
+      <article><span>Clientes ativos</span><strong>{activeCount}</strong><small>Em acompanhamento ativo</small></article>
       <article><span>Leads</span><strong>{leadCount}</strong><small>Em evolução comercial</small></article>
       <article><span>Inativos</span><strong>{inactiveCount}</strong><small>Sem operação ativa</small></article>
     </div>
 
     <div className="crm-tabs" role="tablist" aria-label="Navegação do CRM">
       <button type="button" role="tab" aria-selected={tab === 'contacts'} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => selectTab('contacts')}>Contatos</button>
-      <button type="button" role="tab" aria-selected={tab === 'clients'} className={tab === 'clients' ? 'is-active' : ''} onClick={() => selectTab('clients')}>Clientes</button>
       <button type="button" role="tab" aria-selected={tab === 'leads'} className={tab === 'leads' ? 'is-active' : ''} onClick={() => selectTab('leads')}>Leads</button>
     </div>
 
