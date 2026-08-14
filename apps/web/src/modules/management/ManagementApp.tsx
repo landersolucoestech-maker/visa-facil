@@ -22,7 +22,20 @@ import type { ChatConversation, ChatConversationStatus, ChatMessage } from '../c
 import type { ManagementTask } from '../tasks/types/task';
 import type { FinancialEntry, FinancialEntryStatus } from '../finance/types/finance';
 
-function normalizePath() { return window.location.pathname.replace(/\/+$/, '') || '/app'; }
+const deploymentBase = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+function normalizePath(pathname = window.location.pathname) {
+  let normalized = pathname.replace(/\/+$/, '') || '/';
+  if (deploymentBase && deploymentBase !== '/' && (normalized === deploymentBase || normalized.startsWith(`${deploymentBase}/`))) {
+    normalized = normalized.slice(deploymentBase.length) || '/';
+  }
+  return normalized === '/' ? '/app' : normalized;
+}
+
+function toBrowserPath(appPath: string) {
+  if (!deploymentBase || deploymentBase === '/') return appPath;
+  return `${deploymentBase}${appPath}`;
+}
 
 type ClientUpdate = Partial<Pick<Client, 'fullName' | 'email' | 'phone' | 'status' | 'notes'>>;
 type ProcessUpdate = Partial<Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>>;
@@ -39,7 +52,12 @@ export function ManagementApp() {
   const [tasks, setTasks] = useState<ManagementTask[]>([]);
   const [financialEntries, setFinancialEntries] = useState<FinancialEntry[]>([]);
 
-  function navigate(nextPath: string) { if (nextPath === path) return; window.history.pushState({}, '', nextPath); setPath(normalizePath()); window.scrollTo({ top: 0, behavior: 'instant' }); }
+  function navigate(nextPath: string) {
+    if (nextPath === path) return;
+    window.history.pushState({}, '', toBrowserPath(nextPath));
+    setPath(nextPath);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 
   useEffect(() => {
     const handlePopState = () => setPath(normalizePath());
@@ -50,10 +68,19 @@ export function ManagementApp() {
       if (!anchor || anchor.target === '_blank') return;
       const url = new URL(anchor.href, window.location.origin);
       if (url.origin !== window.location.origin) return;
-      event.preventDefault(); window.history.pushState({}, '', url.pathname); setPath(normalizePath()); window.scrollTo({ top: 0, behavior: 'instant' });
+      const nextPath = normalizePath(url.pathname);
+      if (!nextPath.startsWith('/app')) return;
+      event.preventDefault();
+      window.history.pushState({}, '', toBrowserPath(nextPath));
+      setPath(nextPath);
+      window.scrollTo({ top: 0, behavior: 'instant' });
     };
-    window.addEventListener('popstate', handlePopState); document.addEventListener('click', handleDocumentClick);
-    return () => { window.removeEventListener('popstate', handlePopState); document.removeEventListener('click', handleDocumentClick); };
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleDocumentClick);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleDocumentClick);
+    };
   }, []);
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setClients((current) => [{ ...input, id: `session-client-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
