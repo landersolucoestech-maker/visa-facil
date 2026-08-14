@@ -16,70 +16,24 @@ body,
   min-height: 100%;
 }
 
-body {
-  overflow-x: hidden;
-}
+body { overflow-x: hidden; }
+.management-shell { display: block; width: 100%; min-width: 0; min-height: 100vh; }
+.management-sidebar { position: fixed; inset: 0 auto 0 0; width: var(--management-sidebar-width); height: 100dvh; min-height: 100vh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; z-index: 50; }
+.management-workspace { width: calc(100% - var(--management-sidebar-width)); min-width: 0; min-height: 100vh; margin-left: var(--management-sidebar-width); }
+.management-topbar { position: sticky; top: 0; z-index: 40; width: 100%; min-width: 0; padding-inline: var(--management-content-x); }
+.management-topbar__page-title { display: grid; gap: 2px; min-width: 0; }
+.management-topbar__page-title > strong { color: var(--management-navy); font-size: 18px; line-height: 1.1; letter-spacing: -.02em; }
+.management-topbar__page-title > small { color: var(--management-muted); font-size: 10px; line-height: 1.25; }
+.management-topbar__right { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-left: auto; }
+.management-topbar__actions { display: flex; align-items: center; gap: 8px; }
+.management-content { width: 100%; min-width: 0; padding: var(--management-content-y) var(--management-content-x) clamp(34px, 4vw, 64px); }
+.management-page { width: 100%; max-width: none; min-width: 0; margin: 0; }
+.management-page__heading { width: 100%; margin-bottom: clamp(20px, 1.6vw, 28px); }
+.management-page__heading p { max-width: min(900px, 78vw); }
 
-/* Desktop: sidebar is viewport-fixed and only the workspace scrolls naturally. */
-.management-shell {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  min-height: 100vh;
-}
+/* The Dashboard title now lives in the topbar, so avoid duplicating it in page content. */
+.management-dashboard > .approved-dashboard-heading { display: none; }
 
-.management-sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--management-sidebar-width);
-  height: 100dvh;
-  min-height: 100vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  z-index: 50;
-}
-
-.management-workspace {
-  width: calc(100% - var(--management-sidebar-width));
-  min-width: 0;
-  min-height: 100vh;
-  margin-left: var(--management-sidebar-width);
-}
-
-.management-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  width: 100%;
-  min-width: 0;
-  padding-inline: var(--management-content-x);
-}
-
-.management-content {
-  width: 100%;
-  min-width: 0;
-  padding: var(--management-content-y) var(--management-content-x) clamp(34px, 4vw, 64px);
-}
-
-/* Remove the narrow centered canvas. Every page fills the workspace. */
-.management-page {
-  width: 100%;
-  max-width: none;
-  min-width: 0;
-  margin: 0;
-}
-
-.management-page__heading {
-  width: 100%;
-  margin-bottom: clamp(20px, 1.6vw, 28px);
-}
-
-.management-page__heading p {
-  max-width: min(900px, 78vw);
-}
-
-/* Let grids breathe on large screens instead of looking like cards floating in the middle. */
 .management-dashboard-grid,
 .management-metrics,
 .client-summary-grid,
@@ -90,10 +44,7 @@ body {
 .reports-summary-grid,
 .interactions-summary-grid,
 .calendar-summary-grid,
-.settings-grid {
-  width: 100%;
-  min-width: 0;
-}
+.settings-grid { width: 100%; min-width: 0; }
 
 .management-dashboard-card,
 .management-form-card,
@@ -107,257 +58,67 @@ body {
 .reports-card,
 .settings-card,
 .chat-workspace,
-.calendar-layout {
-  min-width: 0;
-}
+.calendar-layout { min-width: 0; }
 
-/* Tables may scroll internally, never force the whole viewport sideways. */
-.management-table-wrap {
-  max-width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-}
+.management-table-wrap { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.management-table { min-width: 720px; }
 
-.management-table {
-  min-width: 720px;
-}
-
-/* Better use of ultrawide screens while keeping readable cards. */
 @media (min-width: 1500px) {
-  :root {
-    --management-sidebar-width: 252px;
-    --management-content-x: clamp(32px, 2.6vw, 58px);
-  }
-
-  .management-content {
-    padding-top: 34px;
-  }
-
-  .management-page h1 {
-    font-size: clamp(34px, 2.35vw, 48px);
-  }
+  :root { --management-sidebar-width: 252px; --management-content-x: clamp(32px, 2.6vw, 58px); }
+  .management-content { padding-top: 34px; }
+  .management-page h1 { font-size: clamp(34px, 2.35vw, 48px); }
 }
 
-/* Laptop / compact desktop. */
 @media (max-width: 1180px) {
-  :root {
-    --management-sidebar-width: 218px;
-    --management-content-x: 24px;
-  }
-
-  .management-sidebar {
-    padding-inline: 13px;
-  }
-
-  .management-brand {
-    gap: 9px;
-  }
-
-  .management-brand__mark,
-  .management-brand__logo {
-    width: 42px;
-    height: 42px;
-  }
-
-  .management-nav a {
-    padding-inline: 12px;
-  }
-
-  .management-topbar {
-    gap: 14px;
-  }
+  :root { --management-sidebar-width: 218px; --management-content-x: 24px; }
+  .management-sidebar { padding-inline: 13px; }
+  .management-brand { gap: 9px; }
+  .management-brand__mark, .management-brand__logo { width: 42px; height: 42px; }
+  .management-nav a { padding-inline: 12px; }
+  .management-topbar { gap: 14px; }
 }
 
-/* Tablet: preserve a fixed compact rail instead of letting the sidebar consume the page. */
 @media (max-width: 900px) and (min-width: 721px) {
-  :root {
-    --management-sidebar-width: 186px;
-    --management-content-x: 18px;
-    --management-content-y: 22px;
-  }
-
-  .management-sidebar {
-    gap: 16px;
-    padding: 18px 10px;
-  }
-
-  .management-brand strong {
-    font-size: 11px;
-  }
-
-  .management-brand small {
-    display: none;
-  }
-
-  .management-nav a {
-    min-height: 38px;
-    padding-inline: 10px;
-    font-size: 10px;
-  }
-
-  .management-sidebar__flag {
-    transform: scale(.86);
-    transform-origin: left bottom;
-  }
-
-  .management-topbar__label {
-    display: none;
-  }
-
-  .management-dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+  :root { --management-sidebar-width: 186px; --management-content-x: 18px; --management-content-y: 22px; }
+  .management-sidebar { gap: 16px; padding: 18px 10px; }
+  .management-brand strong { font-size: 11px; }
+  .management-brand small { display: none; }
+  .management-nav a { min-height: 38px; padding-inline: 10px; font-size: 10px; }
+  .management-sidebar__flag { transform: scale(.86); transform-origin: left bottom; }
+  .management-topbar__label { display: none; }
+  .management-dashboard-grid { grid-template-columns: 1fr; }
 }
 
-/* Mobile: fixed top navigation rail. Content uses the complete viewport width below it. */
 @media (max-width: 720px) {
-  :root {
-    --management-sidebar-width: 0px;
-    --management-content-x: 14px;
-    --management-content-y: 18px;
-  }
-
-  .management-shell {
-    padding-top: 116px;
-  }
-
-  .management-sidebar {
-    position: fixed;
-    inset: 0 0 auto 0;
-    width: 100%;
-    height: 116px;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: 52px 46px;
-    gap: 4px 10px;
-    padding: 8px 12px 6px;
-    overflow: hidden;
-    border-radius: 0;
-  }
-
-  .management-brand {
-    grid-column: 1;
-    grid-row: 1;
-    padding: 0;
-  }
-
-  .management-brand__mark,
-  .management-brand__logo {
-    width: 38px;
-    height: 38px;
-  }
-
-  .management-brand strong {
-    font-size: 11px;
-  }
-
-  .management-brand small,
-  .management-brand-stripes,
-  .management-nav__label,
-  .management-sidebar__footer,
-  .management-sidebar__flag {
-    display: none !important;
-  }
-
-  .management-nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    display: flex;
-    gap: 6px;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 3px 0 5px;
-    scrollbar-width: none;
-  }
-
-  .management-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .management-nav a {
-    flex: 0 0 auto;
-    min-height: 34px;
-    padding: 0 11px;
-    border-radius: 9px;
-    font-size: 10px;
-    white-space: nowrap;
-  }
-
-  .management-workspace {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .management-topbar {
-    top: 116px;
-    height: 56px;
-    padding-inline: 12px;
-  }
-
-  .management-topbar > div:first-child {
-    display: none;
-  }
-
-  .management-user small {
-    display: none;
-  }
-
-  .management-content {
-    padding: 18px 14px 34px;
-  }
-
-  .management-page__heading--row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-
-  .management-page__heading--row > :last-child {
-    align-self: flex-start;
-  }
-
-  .management-page h1 {
-    font-size: clamp(28px, 9vw, 38px);
-  }
-
-  .management-page__heading p {
-    max-width: 100%;
-  }
-
-  .management-table {
-    min-width: 650px;
-  }
-
-  .management-dashboard-hero,
-  .management-dashboard-grid,
-  .management-foundation-note,
-  .management-form-grid {
-    grid-template-columns: 1fr;
-  }
+  :root { --management-sidebar-width: 0px; --management-content-x: 14px; --management-content-y: 18px; }
+  .management-shell { padding-top: 116px; }
+  .management-sidebar { position: fixed; inset: 0 0 auto 0; width: 100%; height: 116px; min-height: 0; display: grid; grid-template-columns: auto 1fr; grid-template-rows: 52px 46px; gap: 4px 10px; padding: 8px 12px 6px; overflow: hidden; border-radius: 0; }
+  .management-brand { grid-column: 1; grid-row: 1; padding: 0; }
+  .management-brand__mark, .management-brand__logo { width: 38px; height: 38px; }
+  .management-brand strong { font-size: 11px; }
+  .management-brand small, .management-brand-stripes, .management-nav__label, .management-sidebar__footer, .management-sidebar__flag { display: none !important; }
+  .management-nav { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 6px; width: 100%; overflow-x: auto; overflow-y: hidden; padding: 3px 0 5px; scrollbar-width: none; }
+  .management-nav::-webkit-scrollbar { display: none; }
+  .management-nav a { flex: 0 0 auto; min-height: 34px; padding: 0 11px; border-radius: 9px; font-size: 10px; white-space: nowrap; }
+  .management-workspace { width: 100%; margin-left: 0; }
+  .management-topbar { top: 116px; height: 56px; padding-inline: 12px; }
+  .management-topbar__page-title { display: grid !important; }
+  .management-topbar__page-title > strong { font-size: 15px; }
+  .management-topbar__page-title > small { font-size: 9px; }
+  .management-user small { display: none; }
+  .management-content { padding: 18px 14px 34px; }
+  .management-page__heading--row { flex-direction: column; align-items: stretch; gap: 14px; }
+  .management-page__heading--row > :last-child { align-self: flex-start; }
+  .management-page h1 { font-size: clamp(28px, 9vw, 38px); }
+  .management-page__heading p { max-width: 100%; }
+  .management-table { min-width: 650px; }
+  .management-dashboard-hero, .management-dashboard-grid, .management-foundation-note, .management-form-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
-  .management-shell {
-    padding-top: 108px;
-  }
-
-  .management-sidebar {
-    height: 108px;
-    grid-template-rows: 48px 42px;
-  }
-
-  .management-topbar {
-    top: 108px;
-  }
-
-  .management-content {
-    padding-inline: 12px;
-  }
-
-  .management-primary-button,
-  .management-secondary-button {
-    min-height: 40px;
-  }
+  .management-shell { padding-top: 108px; }
+  .management-sidebar { height: 108px; grid-template-rows: 48px 42px; }
+  .management-topbar { top: 108px; }
+  .management-content { padding-inline: 12px; }
+  .management-primary-button, .management-secondary-button { min-height: 40px; }
 }
