@@ -6,12 +6,13 @@ import { CLIENT_STATUS_LABELS, type Client, type ClientStatus } from '../types/c
 type ClientsPageProps = {
   clients: Client[];
   onCreateClient: (input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  showForm: boolean;
+  onCloseForm: () => void;
 };
 
-export function ClientsPage({ clients, onCreateClient }: ClientsPageProps) {
+export function ClientsPage({ clients, onCreateClient, showForm, onCloseForm }: ClientsPageProps) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<ClientStatus | 'all'>('all');
-  const [showForm, setShowForm] = useState(false);
 
   const filteredClients = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -27,15 +28,12 @@ export function ClientsPage({ clients, onCreateClient }: ClientsPageProps) {
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) {
     onCreateClient(input);
-    setShowForm(false);
+    onCloseForm();
   }
 
   return (
     <section className="management-page client-page" aria-labelledby="clients-title">
-      <div className="management-page__heading management-page__heading--row">
-        <div><span className="management-eyebrow">Relacionamento</span><h1 id="clients-title">Clientes</h1><p>Organize leads e clientes atendidos pela Visa Fácil e mantenha a entrada da operação centralizada.</p></div>
-        <button className="management-primary-button" type="button" onClick={() => setShowForm((value) => !value)}>{showForm ? 'Fechar cadastro' : 'Novo cliente'}</button>
-      </div>
+      <div className="management-page__heading"><div><span className="management-eyebrow">Relacionamento</span><h1 id="clients-title">Clientes</h1><p>Organize leads e clientes atendidos pela Visa Fácil e mantenha a entrada da operação centralizada.</p></div></div>
 
       <div className="client-summary-grid" aria-label="Resumo de clientes">
         <article><span>Total na sessão</span><strong>{clients.length}</strong><small>Todos os cadastros temporários</small></article>
@@ -44,7 +42,7 @@ export function ClientsPage({ clients, onCreateClient }: ClientsPageProps) {
         <article><span>Inativos</span><strong>{inactiveCount}</strong><small>Cadastros sem operação ativa</small></article>
       </div>
 
-      {showForm && <ClientForm onCreateClient={createClient} onCancel={() => setShowForm(false)} />}
+      {showForm && <ClientForm onCreateClient={createClient} onCancel={onCloseForm} />}
 
       <section className="client-list-card" aria-labelledby="client-list-title">
         <div className="client-list-card__heading"><div><span className="management-eyebrow">Base de clientes</span><h2 id="client-list-title">Cadastros</h2></div><span>{filteredClients.length} resultado(s)</span></div>
