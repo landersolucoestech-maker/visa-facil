@@ -28,6 +28,12 @@ for (const id of ['#eua', '#canada', '#australia', '#europa-schengen', '#process
 
 assert((hero.match(/data-hero-slide=\"\"/g) || []).length === 3, 'Hero must contain exactly three slideshow slides');
 assert((hero.match(/data-hero-dot=/g) || []).length === 3, 'Hero must contain exactly three slideshow dots');
+assert(hero.includes('O caminho mais fácil') && hero.includes('para o seu visto') && hero.includes('começa aqui.'), 'Official hero headline changed unexpectedly');
+assert(hero.includes('hero__content reveal'), 'Official hero reveal behavior marker is missing');
+assert(hero.includes('★') && hero.includes('◎') && hero.includes('↗') && hero.includes('◯'), 'Official hero benefit symbols changed unexpectedly');
+assert(hero.includes('Onde você estiver') && hero.includes('Sem pacote genérico') && hero.includes('Do visto à próxima etapa') && hero.includes('Orientação em português'), 'Official confidence strip copy is incomplete');
+assert(hero.includes("import heroVisaFacil from '../assets/hero-visa-facil.webp'"), 'Official first hero artwork must be a local asset');
+assert(existsSync(resolve(root, 'apps/web/src/modules/public-site/assets/hero-visa-facil.webp')), 'Official first hero artwork asset is missing');
 assert(interactions.includes('6000'), 'Hero autoplay interval must remain 6000 ms');
 assert(interactions.includes('IntersectionObserver'), 'Reveal behavior must remain IntersectionObserver-based');
 assert(interactions.includes(".accordion__item button"), 'FAQ accordion behavior is missing');
