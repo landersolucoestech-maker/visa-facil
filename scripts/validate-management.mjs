@@ -47,7 +47,7 @@ const pageFiles = {
 
 assert(rootApplication.includes("path === '/app'") && rootApplication.includes("path.startsWith('/app/')"), 'Management application must remain isolated under /app/*');
 assert(rootApplication.includes('<ManagementApp />'), 'Root application must render ManagementApp for /app/*');
-assert(main.includes("./modules/management/management.css") && main.includes("./modules/management/dashboard.css") && main.includes("./modules/management/accessibility.css"), 'Management visual and accessibility styles must remain loaded');
+assert(main.includes("./modules/management/management.css") && main.includes("./modules/management/dashboard.css") && main.includes("./modules/management/accessibility.css") && main.includes("./modules/management/forms.css"), 'Management visual, accessibility and form feedback styles must remain loaded');
 assert(main.includes("./modules/clients/client-controls.css") && main.includes("./modules/processes/process-controls.css"), 'Client/process progression controls must remain styled');
 assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/notifications/notifications.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/notifications/reports/settings visual styles must remain loaded');
 assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Management foundation must not persist client data in browser storage');
@@ -58,6 +58,7 @@ assert(app.includes('updateClientStatus') && app.includes('updateProcess'), 'Exi
 assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/notifications/components/NotificationCenter.tsx')), 'Alert center component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/accessibility.css')), 'Management keyboard accessibility stylesheet must remain present');
+assert(existsSync(resolve(root, 'apps/web/src/modules/management/forms.css')), 'Shared form feedback stylesheet must remain present');
 assert(shell.includes('management-skip-link') && shell.includes('management-main'), 'Management shell must retain skip-link keyboard navigation');
 
 const routes = ['/app/clientes','/app/processos','/app/documentos','/app/atendimentos','/app/chat','/app/tarefas','/app/agenda','/app/financeiro','/app/relatorios','/app/configuracoes'];
@@ -92,6 +93,16 @@ assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && cal
 const processDetail = read(pageFiles.processDetail);
 assert(processDetail.includes('process-stage-timeline') && processDetail.includes('operationalStages'), 'Process detail must retain its sequential stage timeline');
 assert(processDetail.includes('process-update-card') && processDetail.includes('onUpdateProcess'), 'Process detail must retain stage/priority/date progression controls');
+
+const validatedForms = [
+  'apps/web/src/modules/clients/components/ClientForm.tsx',
+  'apps/web/src/modules/processes/components/ProcessForm.tsx',
+  'apps/web/src/modules/documents/components/DocumentChecklistForm.tsx',
+  'apps/web/src/modules/interactions/components/InteractionForm.tsx',
+  'apps/web/src/modules/tasks/pages/TasksPage.tsx',
+  'apps/web/src/modules/finance/pages/FinancePage.tsx',
+];
+for (const file of validatedForms) assert(read(file).includes('management-form-error'), `Critical frontend form must retain visible validation feedback: ${file}`);
 
 const internalModules = resolve(root, 'apps/web/src/modules');
 for (const file of walkFiles(internalModules).filter((path) => /\.(tsx?|css|jsx?)$/.test(path))) {
