@@ -1,4 +1,7 @@
-import type { Client, DocumentItem, ServiceInteraction, VisaProcess } from '../domain';
+import type { Client } from '../../clients/types/client';
+import type { VisaProcess } from '../../processes/types/process';
+import type { DocumentItem } from '../../documents/types/document';
+import type { ServiceInteraction } from '../../interactions/types/interaction';
 
 type ManagementDashboardPageProps = {
   clients: Client[];
@@ -34,7 +37,7 @@ export function ManagementDashboardPage({ clients, processes, documents, interac
       <div className="management-metrics" aria-label="Indicadores operacionais">{metrics.map((metric) => <article className="management-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.note}</small></article>)}</div>
       <div className="management-section-heading"><div><span className="management-eyebrow">Módulos</span><h2>Fluxo operacional</h2></div><span>Cliente → Processo → Documentos → Atendimento → Tarefas → Financeiro</span></div>
       <div className="management-modules">{modules.map((module) => <a className="management-module-card" href={module.href} key={module.href}><span className="management-module-card__index">{module.index}</span><div><h3>{module.title}</h3><p>{module.copy}</p></div><span className="management-module-card__arrow" aria-hidden="true">→</span></a>)}</div>
-      <div className="management-foundation-note"><div><span className="management-eyebrow">Arquitetura desta fase</span><h2>Contratos definidos antes do backend</h2></div><p>Clientes, processos, checklists, atendimentos, tarefas e lançamentos financeiros compartilham um modelo de domínio no frontend. Persistência, autenticação, permissões, arquivos e integrações externas permanecem fora até a próxima fase.</p></div>
+      <div className="management-foundation-note"><div><span className="management-eyebrow">Arquitetura desta fase</span><h2>Domínios separados por módulo</h2></div><p>Clientes, processos, documentos, atendimentos, tarefas e financeiro agora possuem suas próprias pastas, páginas e contratos de tipo. O módulo management permanece responsável apenas pelo shell, dashboard e orquestração da SPA.</p></div>
     </section>
   );
 }
