@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { ProcessEditForm } from '../components/ProcessEditForm';
 import type { Client } from '../../clients/types/client';
 import type { DocumentItem } from '../../documents/types/document';
 import type { ServiceInteraction } from '../../interactions/types/interaction';
@@ -5,23 +7,16 @@ import type { ManagementTask } from '../../tasks/types/task';
 import type { FinancialEntry } from '../../finance/types/finance';
 import { DESTINATION_LABELS, PROCESS_PRIORITY_LABELS, PROCESS_STAGE_LABELS, type ProcessPriority, type ProcessStage, type VisaProcess } from '../types/process';
 
-type ProcessUpdate = Partial<Pick<VisaProcess, 'stage' | 'priority' | 'targetDate'>>;
-type ProcessDetailPageProps = {
-  process?: VisaProcess;
-  client?: Client;
-  documents: DocumentItem[];
-  interactions: ServiceInteraction[];
-  tasks: ManagementTask[];
-  financialEntries: FinancialEntry[];
-  onUpdateProcess: (processId: string, patch: ProcessUpdate) => void;
-};
+type ProcessUpdate = Partial<Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>>;
+type ProcessEditableFields = Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>;
+type ProcessDetailPageProps = { process?: VisaProcess; client?: Client; documents: DocumentItem[]; interactions: ServiceInteraction[]; tasks: ManagementTask[]; financialEntries: FinancialEntry[]; onUpdateProcess: (processId: string, patch: ProcessUpdate) => void; };
 
 const operationalStages: ProcessStage[] = ['diagnosis','documents','forms','scheduling','preparation','submitted','completed'];
 function money(valueCents: number) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valueCents / 100); }
 
 export function ProcessDetailPage({ process, client, documents, interactions, tasks, financialEntries, onUpdateProcess }: ProcessDetailPageProps) {
+  const [editing, setEditing] = useState(false);
   if (!process) return <section className="management-page process-detail-page"><div className="management-empty-state"><strong>Processo não encontrado nesta sessão.</strong><span>Os dados temporários são perdidos ao recarregar a página.</span><a className="management-primary-button" href="/app/processos">Voltar para Processos</a></div></section>;
-
   const processDocuments = documents.filter((item) => item.processId === process.id);
   const requiredDocuments = processDocuments.filter((item) => item.required);
   const receivedRequired = requiredDocuments.filter((item) => item.received).length;
@@ -33,9 +28,12 @@ export function ProcessDetailPage({ process, client, documents, interactions, ta
   const revenue = processFinancial.filter((entry) => entry.type === 'income').reduce((sum, entry) => sum + entry.amountCents, 0);
   const expense = processFinancial.filter((entry) => entry.type === 'expense').reduce((sum, entry) => sum + entry.amountCents, 0);
   const stageIndex = operationalStages.indexOf(process.stage);
+  function saveProcess(processId: string, patch: ProcessEditableFields) { onUpdateProcess(processId, patch); setEditing(false); }
 
   return <section className="management-page process-detail-page" aria-labelledby="process-detail-title">
-    <div className="process-detail-hero"><div><span className="management-eyebrow">Processo</span><h1 id="process-detail-title">{process.category}</h1><p>{client?.fullName ?? 'Cliente não encontrado'} · {DESTINATION_LABELS[process.destination]}</p></div><div className="process-detail-actions"><span className="management-badge">{PROCESS_STAGE_LABELS[process.stage]}</span><a className="management-secondary-button" href="/app/processos">← Processos</a><a className="management-primary-button" href="/app/documentos">Documentos</a></div></div>
+    <div className="process-detail-hero"><div><span className="management-eyebrow">Processo</span><h1 id="process-detail-title">{process.category}</h1><p>{client?.fullName ?? 'Cliente não encontrado'} · {DESTINATION_LABELS[process.destination]}</p></div><div className="process-detail-actions"><span className="management-badge">{PROCESS_STAGE_LABELS[process.stage]}</span><button type="button" className="management-secondary-button" onClick={() => setEditing((value) => !value)}>{editing ? 'Fechar edição' : 'Editar processo'}</button><a className="management-primary-button" href="/app/documentos">Documentos</a></div></div>
+
+    {editing && <ProcessEditForm process={process} onSave={saveProcess} onCancel={() => setEditing(false)} />}
 
     <nav className="process-quick-actions" aria-label="Ações rápidas do processo">{client && <a href={`/app/clientes/${encodeURIComponent(client.id)}`}><span>CL</span><strong>Cliente</strong><small>Abrir visão completa</small></a>}<a href="/app/documentos"><span>DO</span><strong>Documentos</strong><small>Checklist e pendências</small></a><a href="/app/tarefas"><span>TA</span><strong>Tarefas</strong><small>Próximos passos</small></a><a href="/app/atendimentos"><span>AT</span><strong>Atendimentos</strong><small>Histórico do processo</small></a><a href="/app/financeiro"><span>FI</span><strong>Financeiro</strong><small>Movimentações vinculadas</small></a></nav>
 
