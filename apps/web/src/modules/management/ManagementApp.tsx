@@ -14,6 +14,7 @@ import { FinancePage } from '../finance/pages/FinancePage';
 import { ReportsPage } from '../reports/pages/ReportsPage';
 import { SettingsPage } from '../settings/pages/SettingsPage';
 import { GlobalSearch } from '../search/components/GlobalSearch';
+import { NotificationCenter } from '../notifications/components/NotificationCenter';
 import type { Client } from '../clients/types/client';
 import type { VisaProcess } from '../processes/types/process';
 import type { DocumentItem } from '../documents/types/document';
@@ -87,6 +88,6 @@ export function ManagementApp() {
   else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} interactions={interactions} conversations={conversations} />;
   else if (path === '/app/configuracoes') content = <SettingsPage />;
 
-  const search = <GlobalSearch clients={clients} processes={processes} tasks={tasks} onNavigate={navigate} />;
-  return <ManagementShell path={path} onNavigate={navigate} search={search}>{content}</ManagementShell>;
+  const topbarTools = <div className="management-topbar__actions"><GlobalSearch clients={clients} processes={processes} tasks={tasks} onNavigate={navigate} /><NotificationCenter tasks={tasks} conversations={conversations} documents={documents} onNavigate={navigate} /></div>;
+  return <ManagementShell path={path} onNavigate={navigate} search={topbarTools}>{content}</ManagementShell>;
 }
