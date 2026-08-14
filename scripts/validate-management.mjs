@@ -1,10 +1,17 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const root = process.cwd();
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
+
+function walkFiles(directory) {
+  return readdirSync(directory).flatMap((entry) => {
+    const fullPath = join(directory, entry);
+    return statSync(fullPath).isDirectory() ? walkFiles(fullPath) : [fullPath];
+  });
+}
 
 const rootApplication = read('apps/web/src/RootApplication.tsx');
 const main = read('apps/web/src/main.tsx');
@@ -40,9 +47,11 @@ const pageFiles = {
 assert(rootApplication.includes("path === '/app'") && rootApplication.includes("path.startsWith('/app/')"), 'Management application must remain isolated under /app/*');
 assert(rootApplication.includes('<ManagementApp />'), 'Root application must render ManagementApp for /app/*');
 assert(main.includes("./modules/management/management.css") && main.includes("./modules/management/dashboard.css"), 'Management visual styles must remain loaded');
-assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/reports/settings visual styles must remain loaded');
+assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/reports/settings visual styles must remain loaded');
 assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Management foundation must not persist client data in browser storage');
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
+assert(app.includes('GlobalSearch'), 'Global frontend search must remain connected to the management shell');
+assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
 
 const routes = ['/app/clientes','/app/processos','/app/documentos','/app/atendimentos','/app/chat','/app/tarefas','/app/agenda','/app/financeiro','/app/relatorios','/app/configuracoes'];
 for (const route of routes) {
@@ -68,7 +77,14 @@ assert(processDomain.includes("'diagnosis'") && processDomain.includes("'documen
 const chatDomain = read(domainFiles.chat);
 assert(chatDomain.includes("'open'") && chatDomain.includes("'waiting'") && chatDomain.includes("'closed'") && chatDomain.includes('unreadCount'), 'VisaChat lifecycle model is incomplete');
 const calendarPage = read(pageFiles.calendar);
-assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && calendarPage.includes('Processo') && !calendarPage.toLowerCase().includes('kanban'), 'Agenda must remain a temporal calendar/list view and must not implement Kanban');
+assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && calendarPage.includes('Processo'), 'Agenda must remain a temporal calendar/list view');
+const processDetail = read(pageFiles.processDetail);
+assert(processDetail.includes('process-stage-timeline') && processDetail.includes('operationalStages'), 'Process detail must retain its sequential stage timeline');
+
+const internalModules = resolve(root, 'apps/web/src/modules');
+for (const file of walkFiles(internalModules).filter((path) => /\.(tsx?|css|jsx?)$/.test(path))) {
+  assert(!readFileSync(file, 'utf8').toLowerCase().includes('kanban'), `Kanban is prohibited in the Visa Fácil frontend: ${file.replace(`${root}/`, '')}`);
+}
 assert(!app.includes('fetch('), 'No backend endpoint should be simulated in the management foundation');
 
 if (failures.length) {
