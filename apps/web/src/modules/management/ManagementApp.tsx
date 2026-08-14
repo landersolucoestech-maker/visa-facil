@@ -83,7 +83,7 @@ export function ManagementApp() {
     setFinancialEntries((current) => [{ ...input, id: `session-finance-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]);
   }
 
-  let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} />;
+  let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} />;
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
   else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
