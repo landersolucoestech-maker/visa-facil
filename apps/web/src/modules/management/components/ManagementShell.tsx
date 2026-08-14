@@ -6,6 +6,8 @@ const navItems = [
   { href: '/app/processos', label: 'Processos' },
   { href: '/app/documentos', label: 'Documentos' },
   { href: '/app/atendimentos', label: 'Atendimentos' },
+  { href: '/app/tarefas', label: 'Tarefas' },
+  { href: '/app/financeiro', label: 'Financeiro' },
 ];
 
 type ManagementShellProps = {
