@@ -15,7 +15,7 @@ import { ReportsPage } from '../reports/pages/ReportsPage';
 import { SettingsPage } from '../settings/pages/SettingsPage';
 import { GlobalSearch } from '../search/components/GlobalSearch';
 import { NotificationCenter } from '../notifications/components/NotificationCenter';
-import type { Client } from '../clients/types/client';
+import type { Client, ClientStatus } from '../clients/types/client';
 import type { VisaProcess } from '../processes/types/process';
 import type { DocumentItem } from '../documents/types/document';
 import type { ServiceInteraction } from '../interactions/types/interaction';
@@ -24,6 +24,8 @@ import type { ManagementTask } from '../tasks/types/task';
 import type { FinancialEntry } from '../finance/types/finance';
 
 function normalizePath() { return window.location.pathname.replace(/\/+$/, '') || '/app'; }
+
+type ProcessUpdate = Partial<Pick<VisaProcess, 'stage' | 'priority' | 'targetDate'>>;
 
 export function ManagementApp() {
   const [path, setPath] = useState(normalizePath);
@@ -54,7 +56,9 @@ export function ManagementApp() {
   }, []);
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setClients((current) => [{ ...input, id: `session-client-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
+  function updateClientStatus(clientId: string, status: ClientStatus) { const now = new Date().toISOString(); setClients((current) => current.map((client) => client.id === clientId ? { ...client, status, updatedAt: now } : client)); }
   function createProcess(input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setProcesses((current) => [{ ...input, id: `session-process-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
+  function updateProcess(processId: string, patch: ProcessUpdate) { const now = new Date().toISOString(); setProcesses((current) => current.map((process) => process.id === processId ? { ...process, ...patch, updatedAt: now } : process)); }
   function createDocument(input: Omit<DocumentItem, 'id' | 'updatedAt'>) { setDocuments((current) => [{ ...input, id: `session-document-${current.length + 1}`, updatedAt: new Date().toISOString() }, ...current]); }
   function toggleDocumentReceived(documentId: string) { setDocuments((current) => current.map((document) => document.id === documentId ? { ...document, received: !document.received, updatedAt: new Date().toISOString() } : document)); }
   function createInteraction(input: Omit<ServiceInteraction, 'id'>) { setInteractions((current) => [{ ...input, id: `session-interaction-${current.length + 1}` }, ...current]); }
@@ -71,13 +75,13 @@ export function ManagementApp() {
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
   else if (path.startsWith('/app/clientes/')) {
     const clientId = decodeURIComponent(path.slice('/app/clientes/'.length));
-    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} />;
+    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} onUpdateStatus={updateClientStatus} />;
   }
   else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
   else if (path.startsWith('/app/processos/')) {
     const processId = decodeURIComponent(path.slice('/app/processos/'.length));
     const process = processes.find((item) => item.id === processId);
-    content = <ProcessDetailPage process={process} client={clients.find((client) => client.id === process?.clientId)} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} />;
+    content = <ProcessDetailPage process={process} client={clients.find((client) => client.id === process?.clientId)} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} onUpdateProcess={updateProcess} />;
   }
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
