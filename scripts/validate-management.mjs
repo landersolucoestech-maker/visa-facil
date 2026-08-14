@@ -54,9 +54,11 @@ assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Manage
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
 assert(app.includes('GlobalSearch'), 'Global frontend search must remain connected to the management shell');
 assert(app.includes('NotificationCenter'), 'Frontend alert center must remain connected to the management shell');
-assert(app.includes('updateClientStatus') && app.includes('updateProcess'), 'Existing session records must remain evolvable in the frontend');
+assert(app.includes('updateClientStatus') && app.includes('updateClient') && app.includes('updateProcess'), 'Existing session records must remain editable and evolvable in the frontend');
 assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/notifications/components/NotificationCenter.tsx')), 'Alert center component must remain inside its own module');
+assert(existsSync(resolve(root, 'apps/web/src/modules/clients/components/ClientEditForm.tsx')), 'Client edit form must remain inside the clients module');
+assert(existsSync(resolve(root, 'apps/web/src/modules/processes/components/ProcessEditForm.tsx')), 'Process edit form must remain inside the processes module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/accessibility.css')), 'Management keyboard accessibility stylesheet must remain present');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/forms.css')), 'Shared form feedback stylesheet must remain present');
 assert(shell.includes('management-skip-link') && shell.includes('management-main'), 'Management shell must retain skip-link keyboard navigation');
@@ -81,7 +83,7 @@ assert(shell.includes('VisaFacilLogo') && shell.includes('seu visto, sem complic
 assert(dashboard.includes('Processos por Status') && dashboard.includes('Processos por Destino') && dashboard.includes('Financeiro (Resumo)') && dashboard.includes('Atendimentos Recentes') && dashboard.includes('Tarefas Pendentes'), 'Approved dashboard visual blocks must remain present');
 
 const clientDetail = read(pageFiles.clientDetail);
-assert(clientDetail.includes('client-status-control') && clientDetail.includes('onUpdateStatus'), 'Client detail must retain status progression controls');
+assert(clientDetail.includes('client-status-control') && clientDetail.includes('onUpdateStatus') && clientDetail.includes('ClientEditForm'), 'Client detail must retain status and full edit controls');
 const processDomain = read(domainFiles.processes);
 assert(processDomain.includes("'diagnosis'") && processDomain.includes("'documents'") && processDomain.includes("'forms'") && processDomain.includes("'scheduling'") && processDomain.includes("'preparation'") && processDomain.includes("'submitted'") && processDomain.includes("'completed'"), 'Visa process stage model is incomplete');
 const chatDomain = read(domainFiles.chat);
@@ -92,11 +94,13 @@ const calendarPage = read(pageFiles.calendar);
 assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && calendarPage.includes('Processo'), 'Agenda must remain a temporal calendar/list view');
 const processDetail = read(pageFiles.processDetail);
 assert(processDetail.includes('process-stage-timeline') && processDetail.includes('operationalStages'), 'Process detail must retain its sequential stage timeline');
-assert(processDetail.includes('process-update-card') && processDetail.includes('onUpdateProcess'), 'Process detail must retain stage/priority/date progression controls');
+assert(processDetail.includes('process-update-card') && processDetail.includes('onUpdateProcess') && processDetail.includes('ProcessEditForm'), 'Process detail must retain progression and full edit controls');
 
 const validatedForms = [
   'apps/web/src/modules/clients/components/ClientForm.tsx',
+  'apps/web/src/modules/clients/components/ClientEditForm.tsx',
   'apps/web/src/modules/processes/components/ProcessForm.tsx',
+  'apps/web/src/modules/processes/components/ProcessEditForm.tsx',
   'apps/web/src/modules/documents/components/DocumentChecklistForm.tsx',
   'apps/web/src/modules/interactions/components/InteractionForm.tsx',
   'apps/web/src/modules/tasks/pages/TasksPage.tsx',
