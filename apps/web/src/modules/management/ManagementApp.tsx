@@ -1,36 +1,67 @@
+import { useEffect, useState } from 'react';
 import { ManagementShell } from './components/ManagementShell';
 import { ManagementDashboardPage } from './pages/ManagementDashboardPage';
+import { ClientsPage } from './pages/ClientsPage';
+import { ProcessesPage } from './pages/ProcessesPage';
+import { DocumentsPage } from './pages/DocumentsPage';
+import { InteractionsPage } from './pages/InteractionsPage';
+import type { Client, DocumentItem, ServiceInteraction, VisaProcess } from './domain';
 
-function PlaceholderPage({ title, description }: { title: string; description: string }) {
-  return (
-    <section className="management-page" aria-labelledby="management-page-title">
-      <div className="management-page__heading">
-        <span className="management-eyebrow">Módulo reservado</span>
-        <h1 id="management-page-title">{title}</h1>
-        <p>{description}</p>
-      </div>
-      <div className="management-empty-state">
-        <strong>Estrutura preparada.</strong>
-        <span>Este módulo receberá regras de negócio, dados e permissões nas próximas etapas.</span>
-      </div>
-    </section>
-  );
+function normalizePath() {
+  return window.location.pathname.replace(/\/+$/, '') || '/app';
 }
 
 export function ManagementApp() {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/app';
+  const [path, setPath] = useState(normalizePath);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [processes, setProcesses] = useState<VisaProcess[]>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [interactions, setInteractions] = useState<ServiceInteraction[]>([]);
 
-  let content = <ManagementDashboardPage />;
+  useEffect(() => {
+    const handlePopState = () => setPath(normalizePath());
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
-  if (path === '/app/clientes') {
-    content = <PlaceholderPage title="Clientes" description="Base para cadastro, consulta e acompanhamento dos clientes da Visa Fácil." />;
-  } else if (path === '/app/processos') {
-    content = <PlaceholderPage title="Processos" description="Base para organizar solicitações de visto e acompanhar suas etapas." />;
-  } else if (path === '/app/documentos') {
-    content = <PlaceholderPage title="Documentos" description="Base para checklists, pendências e organização documental." />;
-  } else if (path === '/app/atendimentos') {
-    content = <PlaceholderPage title="Atendimentos" description="Base para histórico de contato e acompanhamento do cliente." />;
+  function navigate(nextPath: string) {
+    if (nextPath === path) return;
+    window.history.pushState({}, '', nextPath);
+    setPath(normalizePath());
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  return <ManagementShell>{content}</ManagementShell>;
+  function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) {
+    const now = new Date().toISOString();
+    const client: Client = { ...input, id: `session-client-${clients.length + 1}`, createdAt: now, updatedAt: now };
+    setClients((current) => [client, ...current]);
+  }
+
+  function createProcess(input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) {
+    const now = new Date().toISOString();
+    const process: VisaProcess = { ...input, id: `session-process-${processes.length + 1}`, createdAt: now, updatedAt: now };
+    setProcesses((current) => [process, ...current]);
+  }
+
+  function createDocument(input: Omit<DocumentItem, 'id' | 'updatedAt'>) {
+    const document: DocumentItem = { ...input, id: `session-document-${documents.length + 1}`, updatedAt: new Date().toISOString() };
+    setDocuments((current) => [document, ...current]);
+  }
+
+  function toggleDocumentReceived(documentId: string) {
+    setDocuments((current) => current.map((document) => document.id === documentId ? { ...document, received: !document.received, updatedAt: new Date().toISOString() } : document));
+  }
+
+  function createInteraction(input: Omit<ServiceInteraction, 'id'>) {
+    const interaction: ServiceInteraction = { ...input, id: `session-interaction-${interactions.length + 1}` };
+    setInteractions((current) => [interaction, ...current]);
+  }
+
+  let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} />;
+  if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
+  else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
+  else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
+  else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
+
+  return <ManagementShell path={path} onNavigate={navigate}>{content}</ManagementShell>;
 }
