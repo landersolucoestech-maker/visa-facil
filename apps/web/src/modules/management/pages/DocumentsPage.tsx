@@ -1,0 +1,37 @@
+import { FormEvent, useState } from 'react';
+import { DESTINATION_LABELS, type DocumentItem, type VisaProcess } from '../domain';
+
+type DocumentsPageProps = {
+  processes: VisaProcess[];
+  documents: DocumentItem[];
+  onCreateDocument: (input: Omit<DocumentItem, 'id' | 'updatedAt'>) => void;
+  onToggleReceived: (documentId: string) => void;
+};
+
+export function DocumentsPage({ processes, documents, onCreateDocument, onToggleReceived }: DocumentsPageProps) {
+  const [processId, setProcessId] = useState('');
+  const [title, setTitle] = useState('');
+  const [required, setRequired] = useState(true);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onCreateDocument({ processId, title: title.trim(), required, received: false, notes: '' });
+    setTitle('');
+  }
+
+  return (
+    <section className="management-page" aria-labelledby="documents-title">
+      <div className="management-page__heading"><span className="management-eyebrow">Controle documental</span><h1 id="documents-title">Documentos</h1><p>Checklist por processo para acompanhar itens obrigatórios, recebidos e pendentes.</p></div>
+      <div className="management-session-note">Nesta fundação são registrados somente os metadados do checklist. Upload de arquivos exige armazenamento seguro e fica reservado ao backend.</div>
+      {processes.length === 0 ? <div className="management-empty-state"><strong>Nenhum processo disponível.</strong><span>Crie um processo antes de montar o checklist documental.</span><a className="management-inline-link" href="/app/processos">Ir para Processos →</a></div> : <form className="management-form-card management-form-card--compact" onSubmit={submit}>
+        <div className="management-form-grid">
+          <label><span>Processo</span><select required value={processId} onChange={(e) => setProcessId(e.target.value)}><option value="">Selecione</option>{processes.map((process) => <option key={process.id} value={process.id}>{DESTINATION_LABELS[process.destination]} · {process.category}</option>)}</select></label>
+          <label><span>Documento</span><input required placeholder="Ex.: passaporte válido" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
+          <label className="management-checkbox"><input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)} /><span>Item obrigatório</span></label>
+        </div>
+        <div className="management-form-actions"><button className="management-primary-button" type="submit">Adicionar ao checklist</button></div>
+      </form>}
+      {documents.length === 0 ? <div className="management-empty-state"><strong>Nenhum item documental na sessão.</strong><span>O checklist aparecerá aqui conforme os requisitos de cada processo forem definidos.</span></div> : <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Documento</th><th>Processo</th><th>Obrigatório</th><th>Situação</th></tr></thead><tbody>{documents.map((document) => { const process = processes.find((item) => item.id === document.processId); return <tr key={document.id}><td><strong>{document.title}</strong></td><td>{process ? `${DESTINATION_LABELS[process.destination]} · ${process.category}` : 'Processo não encontrado'}</td><td>{document.required ? 'Sim' : 'Não'}</td><td><button type="button" className={`management-status-button ${document.received ? 'is-complete' : ''}`} onClick={() => onToggleReceived(document.id)}>{document.received ? 'Recebido' : 'Pendente'}</button></td></tr>; })}</tbody></table></div>}
+    </section>
+  );
+}
