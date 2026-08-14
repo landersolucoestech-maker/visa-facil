@@ -1,4 +1,4 @@
-name: Deploy Frontend to GitHub Pages
+name: Deploy Visa Fácil Website
 
 on:
   push:
@@ -35,10 +35,8 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Validate contracts
-        run: |
-          node scripts/validate-public-site.mjs
-          node scripts/validate-management.mjs
+      - name: Validate public website
+        run: node scripts/validate-public-site.mjs
 
       - name: Typecheck
         run: npm run typecheck
@@ -47,9 +45,6 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
         run: npm run build
-
-      - name: Add SPA fallback
-        run: cp apps/web/dist/index.html apps/web/dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
