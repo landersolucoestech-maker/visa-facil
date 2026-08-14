@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { ManagementShell } from './components/ManagementShell';
 import { ManagementDashboardPage } from './pages/ManagementDashboardPage';
 import { ClientsPage } from '../clients/pages/ClientsPage';
+import { ClientDetailPage } from '../clients/pages/ClientDetailPage';
 import { ProcessesPage } from '../processes/pages/ProcessesPage';
+import { ProcessDetailPage } from '../processes/pages/ProcessDetailPage';
 import { DocumentsPage } from '../documents/pages/DocumentsPage';
 import { InteractionsPage } from '../interactions/pages/InteractionsPage';
 import { ChatPage } from '../chat/pages/ChatPage';
@@ -64,7 +66,16 @@ export function ManagementApp() {
 
   let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} />;
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
+  else if (path.startsWith('/app/clientes/')) {
+    const clientId = decodeURIComponent(path.slice('/app/clientes/'.length));
+    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} />;
+  }
   else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
+  else if (path.startsWith('/app/processos/')) {
+    const processId = decodeURIComponent(path.slice('/app/processos/'.length));
+    const process = processes.find((item) => item.id === processId);
+    content = <ProcessDetailPage process={process} client={clients.find((client) => client.id === process?.clientId)} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} />;
+  }
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
   else if (path === '/app/chat') content = <ChatPage clients={clients} processes={processes} conversations={conversations} messages={messages} onCreateConversation={createConversation} onSendMessage={sendChatMessage} onToggleFavorite={toggleChatFavorite} onMarkRead={markChatRead} onSetStatus={setChatStatus} />;
