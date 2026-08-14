@@ -30,6 +30,10 @@ function VisaFacilLogo() {
   );
 }
 
+function UsaFlagDetail() {
+  return <div className="management-us-flag" aria-hidden="true"><div className="management-us-flag__canton">★ ★ ★<br/> ★ ★ ★<br/>★ ★ ★</div><div className="management-us-flag__stripes">{Array.from({length:7},(_,index)=><i key={index} />)}</div></div>;
+}
+
 export function ManagementShell({ children, path, onNavigate }: ManagementShellProps) {
   function handleInternalNavigation(event: MouseEvent<HTMLAnchorElement>, href: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -52,7 +56,7 @@ export function ManagementShell({ children, path, onNavigate }: ManagementShellP
             return <a key={item.href} className={active ? 'is-active' : ''} href={item.href} onClick={(event) => handleInternalNavigation(event, item.href)}>{item.label}</a>;
           })}
         </nav>
-        <div className="management-sidebar__footer"><a href="/">← Voltar ao site</a><span>Ambiente interno · dev</span></div>
+        <div className="management-sidebar__footer"><UsaFlagDetail /><a href="/">← Voltar ao site</a><span>Ambiente interno · dev</span></div>
       </aside>
       <div className="management-workspace">
         <header className="management-topbar">
