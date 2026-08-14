@@ -1,21 +1,53 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import type { Client } from '../../clients/types/client';
 import { PROCESS_PRIORITY_LABELS, type ProcessPriority, type VisaProcess } from '../../processes/types/process';
 import type { ManagementTask } from '../types/task';
 
 type TasksPageProps = { clients: Client[]; processes: VisaProcess[]; tasks: ManagementTask[]; onCreateTask: (input: Omit<ManagementTask, 'id' | 'createdAt'>) => void; onToggleTask: (taskId: string) => void; };
+type TaskFilter = 'all' | 'open' | 'overdue' | 'done';
+
+function localDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export function TasksPage({ clients, processes, tasks, onCreateTask, onToggleTask }: TasksPageProps) {
-  const [title, setTitle] = useState(''); const [clientId, setClientId] = useState(''); const [processId, setProcessId] = useState(''); const [dueDate, setDueDate] = useState(''); const [priority, setPriority] = useState<ProcessPriority>('normal'); const [notes, setNotes] = useState('');
+  const [title, setTitle] = useState(''); const [clientId, setClientId] = useState(''); const [processId, setProcessId] = useState(''); const [dueDate, setDueDate] = useState(''); const [priority, setPriority] = useState<ProcessPriority>('normal'); const [notes, setNotes] = useState(''); const [filter, setFilter] = useState<TaskFilter>('all');
   const availableProcesses = processes.filter((process) => !clientId || process.clientId === clientId);
+  const today = localDateKey();
   const openCount = tasks.filter((task) => task.status === 'open').length;
   const doneCount = tasks.length - openCount;
+  const overdueCount = tasks.filter((task) => task.status === 'open' && task.dueDate && task.dueDate < today).length;
+  const todayCount = tasks.filter((task) => task.status === 'open' && task.dueDate === today).length;
+  const urgentCount = tasks.filter((task) => task.status === 'open' && task.priority === 'urgent').length;
+  const filteredTasks = useMemo(() => tasks.filter((task) => {
+    if (filter === 'open') return task.status === 'open';
+    if (filter === 'done') return task.status === 'done';
+    if (filter === 'overdue') return task.status === 'open' && Boolean(task.dueDate) && task.dueDate < today;
+    return true;
+  }).sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return a.dueDate.localeCompare(b.dueDate);
+  }), [filter, tasks, today]);
+
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onCreateTask({ title: title.trim(), clientId: clientId || undefined, processId: processId || undefined, dueDate, priority, status: 'open', notes: notes.trim() }); setTitle(''); setDueDate(''); setNotes(''); }
+
   return <section className="management-page tasks-page" aria-labelledby="tasks-title">
-    <div className="management-page__heading management-page__heading--row"><div><span className="management-eyebrow">Execução</span><h1 id="tasks-title">Tarefas</h1><p>Pendências internas vinculadas opcionalmente a clientes e processos.</p></div><span className="management-status">{openCount} aberta(s)</span></div>
-    <div className="tasks-summary"><article><span>Abertas</span><strong>{openCount}</strong></article><article><span>Concluídas</span><strong>{doneCount}</strong></article><article><span>Total da sessão</span><strong>{tasks.length}</strong></article></div>
-    <div className="management-session-note">Agenda temporária da sessão. Notificações, responsáveis e automações ficam reservados para a camada autenticada.</div>
-    <form className="management-form-card tasks-form" onSubmit={submit}><div className="management-form-grid"><label><span>Tarefa</span><input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: revisar DS-160" /></label><label><span>Prazo</span><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></label><label><span>Cliente</span><select value={clientId} onChange={(e) => { setClientId(e.target.value); setProcessId(''); }}><option value="">Sem cliente específico</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.fullName}</option>)}</select></label><label><span>Processo</span><select value={processId} onChange={(e) => setProcessId(e.target.value)}><option value="">Sem processo específico</option>{availableProcesses.map((process) => <option key={process.id} value={process.id}>{process.category}</option>)}</select></label><label><span>Prioridade</span><select value={priority} onChange={(e) => setPriority(e.target.value as ProcessPriority)}>{Object.entries(PROCESS_PRIORITY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="management-field--full"><span>Observações</span><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></label></div><div className="management-form-actions"><button className="management-primary-button" type="submit">Adicionar tarefa</button></div></form>
-    {tasks.length === 0 ? <div className="management-empty-state"><strong>Nenhuma tarefa na sessão.</strong><span>As pendências operacionais aparecerão aqui.</span></div> : <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Tarefa</th><th>Vínculo</th><th>Prazo</th><th>Prioridade</th><th>Status</th></tr></thead><tbody>{tasks.map((task) => { const client = clients.find((item) => item.id === task.clientId); const process = processes.find((item) => item.id === task.processId); return <tr key={task.id}><td><strong>{task.title}</strong>{task.notes && <small>{task.notes}</small>}</td><td>{client?.fullName ?? '—'}{process && <small>{process.category}</small>}</td><td>{task.dueDate ? new Date(`${task.dueDate}T00:00:00`).toLocaleDateString('pt-BR') : '—'}</td><td>{PROCESS_PRIORITY_LABELS[task.priority]}</td><td><button className={`management-status-button ${task.status === 'done' ? 'is-complete' : ''}`} type="button" onClick={() => onToggleTask(task.id)}>{task.status === 'done' ? 'Concluída' : 'Aberta'}</button></td></tr>; })}</tbody></table></div>}
+    <div className="management-page__heading management-page__heading--row"><div><span className="management-eyebrow">Execução</span><h1 id="tasks-title">Tarefas</h1><p>Agenda operacional para pendências, prazos e próximos passos vinculados opcionalmente a clientes e processos.</p></div><span className="management-status">{openCount} aberta(s)</span></div>
+
+    <div className="tasks-alert-strip"><div><span className="management-eyebrow">Foco do dia</span><strong>{overdueCount ? `${overdueCount} tarefa(s) atrasada(s)` : todayCount ? `${todayCount} tarefa(s) vencendo hoje` : 'Nenhum prazo crítico hoje'}</strong><p>{urgentCount ? `${urgentCount} tarefa(s) urgente(s) ainda aberta(s).` : 'As prioridades urgentes aparecerão aqui quando existirem.'}</p></div><a href="/app/processos">Ver processos →</a></div>
+
+    <div className="tasks-summary"><article><span>Abertas</span><strong>{openCount}</strong><small>Pendências em execução</small></article><article><span>Atrasadas</span><strong>{overdueCount}</strong><small>Prazo anterior a hoje</small></article><article><span>Hoje</span><strong>{todayCount}</strong><small>Vencimento na data atual</small></article><article><span>Urgentes</span><strong>{urgentCount}</strong><small>Prioridade máxima em aberto</small></article><article><span>Concluídas</span><strong>{doneCount}</strong><small>Finalizadas nesta sessão</small></article></div>
+
+    <div className="management-session-note">Agenda temporária da sessão. Responsáveis, notificações e automações ficam reservados para a futura camada autenticada.</div>
+
+    <form className="management-form-card tasks-form" onSubmit={submit}><div className="tasks-form__heading"><div><span className="management-eyebrow">Nova pendência</span><h2>Adicionar tarefa</h2><p>Registre um próximo passo objetivo e, quando fizer sentido, associe-o ao cliente e ao processo correspondente.</p></div></div><div className="management-form-grid"><label><span>Tarefa</span><input required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: revisar DS-160" /></label><label><span>Prazo</span><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></label><label><span>Cliente</span><select value={clientId} onChange={(e) => { setClientId(e.target.value); setProcessId(''); }}><option value="">Sem cliente específico</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.fullName}</option>)}</select></label><label><span>Processo</span><select value={processId} onChange={(e) => setProcessId(e.target.value)}><option value="">Sem processo específico</option>{availableProcesses.map((process) => <option key={process.id} value={process.id}>{process.category}</option>)}</select></label><label><span>Prioridade</span><select value={priority} onChange={(e) => setPriority(e.target.value as ProcessPriority)}>{Object.entries(PROCESS_PRIORITY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="management-field--full"><span>Observações</span><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Contexto, dependências ou orientação necessária." /></label></div><div className="management-form-actions"><button className="management-primary-button" type="submit">Adicionar tarefa</button></div></form>
+
+    <section className="tasks-list-card"><div className="tasks-list-card__heading"><div><span className="management-eyebrow">Agenda</span><h2>Pendências operacionais</h2></div><span>{filteredTasks.length} item(ns)</span></div><div className="tasks-filters" aria-label="Filtros de tarefas"><button className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')} type="button">Todas</button><button className={filter === 'open' ? 'is-active' : ''} onClick={() => setFilter('open')} type="button">Abertas</button><button className={filter === 'overdue' ? 'is-active' : ''} onClick={() => setFilter('overdue')} type="button">Atrasadas</button><button className={filter === 'done' ? 'is-active' : ''} onClick={() => setFilter('done')} type="button">Concluídas</button></div>{filteredTasks.length === 0 ? <div className="management-empty-state"><strong>Nenhuma tarefa neste filtro.</strong><span>As pendências operacionais aparecerão aqui.</span></div> : <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Tarefa</th><th>Vínculo</th><th>Prazo</th><th>Prioridade</th><th>Status</th></tr></thead><tbody>{filteredTasks.map((task) => { const client = clients.find((item) => item.id === task.clientId); const process = processes.find((item) => item.id === task.processId); const overdue = task.status === 'open' && Boolean(task.dueDate) && task.dueDate < today; const dueToday = task.status === 'open' && task.dueDate === today; return <tr key={task.id} className={overdue ? 'is-overdue' : dueToday ? 'is-due-today' : ''}><td><strong>{task.title}</strong>{task.notes && <small>{task.notes}</small>}</td><td>{client?.fullName ?? '—'}{process && <small>{process.category}</small>}</td><td><span className={overdue ? 'tasks-deadline tasks-deadline--overdue' : dueToday ? 'tasks-deadline tasks-deadline--today' : 'tasks-deadline'}>{task.dueDate ? new Date(`${task.dueDate}T00:00:00`).toLocaleDateString('pt-BR') : '—'}</span></td><td><span className={`tasks-priority tasks-priority--${task.priority}`}>{PROCESS_PRIORITY_LABELS[task.priority]}</span></td><td><button className={`management-status-button ${task.status === 'done' ? 'is-complete' : ''}`} type="button" onClick={() => onToggleTask(task.id)}>{task.status === 'done' ? 'Concluída' : 'Aberta'}</button></td></tr>; })}</tbody></table></div>}</section>
   </section>;
 }
