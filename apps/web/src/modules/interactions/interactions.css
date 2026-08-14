@@ -1,0 +1,15 @@
+.interaction-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
+.interaction-summary-grid article { min-height: 116px; display: flex; flex-direction: column; padding: 17px; border: 1px solid var(--management-border); border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(16,33,59,.035); }
+.interaction-summary-grid article > span { color: var(--management-muted); font-size: 9px; font-weight: 800; }
+.interaction-summary-grid article strong { margin: 13px 0 4px; color: var(--management-navy); font-size: 28px; line-height: 1; }
+.interaction-summary-grid article small { margin-top: auto; color: #98a4b4; font-size: 8px; line-height: 1.5; }
+.interaction-prerequisite { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 20px; padding: 21px; border: 1px solid #dbe5f0; border-radius: 17px; background: #f7fbff; }
+.interaction-prerequisite h2, .interaction-form__heading h2, .interaction-history-card__heading h2 { margin: 0; color: var(--management-navy); font-size: 20px; letter-spacing: -.02em; }
+.interaction-prerequisite p, .interaction-form__heading p { max-width: 640px; margin: 7px 0 0; color: var(--management-muted); font-size: 10px; line-height: 1.65; }
+.interaction-form__heading, .interaction-history-card__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+.interaction-history-card { padding: 21px; border: 1px solid var(--management-border); border-radius: 18px; background: #fff; box-shadow: 0 10px 34px rgba(16,33,59,.04); }
+.interaction-history-card__heading > span { color: var(--management-muted); font-size: 9px; }
+.interaction-timeline__item { background: #fbfcfe; }
+.interaction-empty-state__icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: #eef4fa; color: var(--management-blue) !important; font-size: 9px !important; font-weight: 900; }
+@media (max-width: 900px) { .interaction-summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 620px) { .interaction-summary-grid { grid-template-columns: 1fr; } .interaction-prerequisite, .interaction-form__heading, .interaction-history-card__heading { align-items: flex-start; flex-direction: column; } .interaction-history-card, .interaction-form { padding: 17px; } }
