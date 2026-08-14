@@ -2,7 +2,7 @@ import type { MouseEvent, ReactNode } from 'react';
 
 const navItems = [
   { href: '/app', label: 'Dashboard' },
-  { href: '/app/clientes', label: 'Clientes' },
+  { href: '/app/clientes', label: 'CRM' },
   { href: '/app/processos', label: 'Processos' },
   { href: '/app/documentos', label: 'Documentos' },
   { href: '/app/atendimentos', label: 'Atendimentos' },
@@ -16,8 +16,8 @@ const navItems = [
 
 const pageMeta = [
   { match: (path: string) => path === '/app', title: 'Dashboard', subtitle: 'Visão geral do sistema' },
-  { match: (path: string) => path === '/app/clientes', title: 'Clientes', subtitle: 'Organize leads e clientes atendidos pela Visa Fácil.' },
-  { match: (path: string) => path.startsWith('/app/clientes/'), title: 'Cliente', subtitle: 'Dados, processos e histórico do cliente.' },
+  { match: (path: string) => path === '/app/clientes', title: 'CRM', subtitle: 'Contatos, clientes e leads em uma única central de relacionamento.' },
+  { match: (path: string) => path.startsWith('/app/clientes/'), title: 'Contato', subtitle: 'Dados, processos e histórico do relacionamento.' },
   { match: (path: string) => path === '/app/processos', title: 'Processos', subtitle: 'Acompanhe solicitações de visto do diagnóstico à conclusão.' },
   { match: (path: string) => path.startsWith('/app/processos/'), title: 'Processo', subtitle: 'Acompanhamento completo da jornada do processo.' },
   { match: (path: string) => path === '/app/documentos', title: 'Documentos', subtitle: 'Checklist e controle documental dos processos.' },
