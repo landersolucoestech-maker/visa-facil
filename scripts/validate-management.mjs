@@ -52,6 +52,7 @@ assert(main.includes("./modules/clients/client-controls.css") && main.includes("
 assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/notifications/notifications.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/notifications/reports/settings visual styles must remain loaded');
 assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Management foundation must not persist client data in browser storage');
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
+assert(app.includes('import.meta.env.BASE_URL') && app.includes('toBrowserPath') && app.includes('deploymentBase'), 'Management routing must normalize the deployment base path so /visa-facil/app renders Dashboard immediately');
 assert(!app.includes('GlobalSearch'), 'Global search field must remain removed from the management topbar');
 assert(!shell.includes('Buscar cliente, processo ou tarefa'), 'Management topbar must not expose a search field');
 assert(app.includes('NotificationCenter'), 'Frontend alert center must remain connected to the management shell');
