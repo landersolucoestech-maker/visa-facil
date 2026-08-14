@@ -1,0 +1,55 @@
+import { FormEvent, useState } from 'react';
+import { DESTINATION_LABELS, PROCESS_PRIORITY_LABELS, PROCESS_STAGE_LABELS, type Client, type ProcessPriority, type ProcessStage, type VisaDestination, type VisaProcess } from '../domain';
+
+type ProcessesPageProps = {
+  clients: Client[];
+  processes: VisaProcess[];
+  onCreateProcess: (input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) => void;
+};
+
+const emptyForm = {
+  clientId: '',
+  destination: 'usa' as VisaDestination,
+  category: '',
+  stage: 'diagnosis' as ProcessStage,
+  priority: 'normal' as ProcessPriority,
+  targetDate: '',
+  notes: '',
+};
+
+export function ProcessesPage({ clients, processes, onCreateProcess }: ProcessesPageProps) {
+  const [form, setForm] = useState(emptyForm);
+  const [showForm, setShowForm] = useState(false);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onCreateProcess({ ...form, category: form.category.trim(), notes: form.notes.trim() });
+    setForm(emptyForm);
+    setShowForm(false);
+  }
+
+  return (
+    <section className="management-page" aria-labelledby="processes-title">
+      <div className="management-page__heading management-page__heading--row">
+        <div><span className="management-eyebrow">Operação</span><h1 id="processes-title">Processos</h1><p>Acompanhamento das solicitações de visto desde o diagnóstico até a conclusão.</p></div>
+        <button className="management-primary-button" type="button" disabled={clients.length === 0} onClick={() => setShowForm((value) => !value)}>{showForm ? 'Fechar cadastro' : 'Novo processo'}</button>
+      </div>
+      <div className="management-session-note">Um processo só pode ser criado para um cliente existente na sessão. O fluxo atual valida estrutura e relacionamento sem persistência de servidor.</div>
+      {clients.length === 0 && <div className="management-empty-state"><strong>Cadastre um cliente primeiro.</strong><span>Clientes e processos são relacionados desde a fundação para evitar registros órfãos.</span><a className="management-inline-link" href="/app/clientes">Ir para Clientes →</a></div>}
+      {showForm && clients.length > 0 && <form className="management-form-card" onSubmit={submit}>
+        <div className="management-form-grid">
+          <label><span>Cliente</span><select required value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}><option value="">Selecione</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.fullName}</option>)}</select></label>
+          <label><span>Destino</span><select value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value as VisaDestination })}>{Object.entries(DESTINATION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Categoria / objetivo</span><input required placeholder="Ex.: turismo B1/B2" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></label>
+          <label><span>Etapa atual</span><select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value as ProcessStage })}>{Object.entries(PROCESS_STAGE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Prioridade</span><select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as ProcessPriority })}>{Object.entries(PROCESS_PRIORITY_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label><span>Data-alvo</span><input type="date" value={form.targetDate} onChange={(e) => setForm({ ...form, targetDate: e.target.value })} /></label>
+          <label className="management-field--full"><span>Observações</span><textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+        </div>
+        <div className="management-form-actions"><button type="button" className="management-secondary-button" onClick={() => setShowForm(false)}>Cancelar</button><button className="management-primary-button" type="submit">Adicionar à sessão</button></div>
+      </form>}
+      {processes.length > 0 && <div className="management-table-wrap"><table className="management-table"><thead><tr><th>Cliente</th><th>Destino</th><th>Etapa</th><th>Prioridade</th><th>Data-alvo</th></tr></thead><tbody>{processes.map((process) => { const client = clients.find((item) => item.id === process.clientId); return <tr key={process.id}><td><strong>{client?.fullName ?? 'Cliente não encontrado'}</strong><small>{process.category}</small></td><td>{DESTINATION_LABELS[process.destination]}</td><td><span className="management-badge">{PROCESS_STAGE_LABELS[process.stage]}</span></td><td>{PROCESS_PRIORITY_LABELS[process.priority]}</td><td>{process.targetDate ? new Date(`${process.targetDate}T00:00:00`).toLocaleDateString('pt-BR') : '—'}</td></tr>; })}</tbody></table></div>}
+      {clients.length > 0 && processes.length === 0 && <div className="management-empty-state"><strong>Nenhum processo na sessão.</strong><span>Crie o primeiro processo para validar o fluxo operacional vinculado a um cliente.</span></div>}
+    </section>
+  );
+}
