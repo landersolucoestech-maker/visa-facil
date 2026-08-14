@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
 
       - name: Validate migration contract
         run: node scripts/validate-public-site.mjs
@@ -35,3 +34,20 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Production runtime smoke
+        shell: bash
+        run: |
+          npm --workspace @visa-facil/web run preview -- --port 4173 > /tmp/visa-facil-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/ >/tmp/root.html; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/ >/tmp/root.html
+          curl -fsS http://127.0.0.1:4173/app/ >/tmp/app.html
+          grep -q '<div id="root"></div>' /tmp/root.html
+          grep -q '<div id="root"></div>' /tmp/app.html
