@@ -64,7 +64,7 @@ export function ManagementApp() {
   function toggleTask(taskId: string) { setTasks((current) => current.map((task) => task.id === taskId ? { ...task, status: task.status === 'open' ? 'done' : 'open' } : task)); }
   function createFinancialEntry(input: Omit<FinancialEntry, 'id' | 'createdAt'>) { setFinancialEntries((current) => [{ ...input, id: `session-finance-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]); }
 
-  let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} />;
+  let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} conversations={conversations} tasks={tasks} financialEntries={financialEntries} />;
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
   else if (path.startsWith('/app/clientes/')) {
     const clientId = decodeURIComponent(path.slice('/app/clientes/'.length));
