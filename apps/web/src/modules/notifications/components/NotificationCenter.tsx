@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatConversation } from '../../chat/types/chat';
 import type { DocumentItem } from '../../documents/types/document';
 import type { ManagementTask } from '../../tasks/types/task';
@@ -21,6 +21,7 @@ function todayKey() {
 
 export function NotificationCenter({ tasks, conversations, documents, onNavigate }: NotificationCenterProps) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const today = todayKey();
   const alerts = useMemo<ManagementAlert[]>(() => {
     const taskAlerts = tasks.filter((task) => task.status === 'open' && task.dueDate && task.dueDate <= today).map((task) => ({ id: `task-${task.id}`, type: 'task' as const, severity: task.dueDate < today ? 'critical' as const : 'warning' as const, title: task.dueDate < today ? 'Tarefa atrasada' : 'Tarefa vence hoje', description: task.title, href: '/app/tarefas' }));
@@ -29,7 +30,16 @@ export function NotificationCenter({ tasks, conversations, documents, onNavigate
     return [...taskAlerts, ...chatAlerts, ...documentAlerts].slice(0, 12);
   }, [conversations, documents, tasks, today]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
+    const handlePointerDown = (event: PointerEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => { document.removeEventListener('keydown', handleKeyDown); document.removeEventListener('pointerdown', handlePointerDown); };
+  }, [open]);
+
   function openAlert(alert: ManagementAlert) { setOpen(false); onNavigate(alert.href); }
 
-  return <div className="notification-center"><button className="notification-center__trigger" type="button" aria-label="Abrir alertas" aria-expanded={open} onClick={() => setOpen((value) => !value)}>⌁{alerts.length > 0 && <b>{alerts.length}</b>}</button>{open && <div className="notification-center__popover"><div className="notification-center__heading"><div><span className="management-eyebrow">Central de alertas</span><strong>{alerts.length ? `${alerts.length} item(ns) exigem atenção` : 'Tudo em ordem nesta sessão'}</strong></div><button type="button" onClick={() => setOpen(false)}>×</button></div>{alerts.length === 0 ? <div className="notification-center__empty">Nenhuma tarefa crítica, mensagem não lida ou documento obrigatório pendente.</div> : <div className="notification-center__list">{alerts.map((alert) => <button type="button" key={alert.id} className={`notification-center__item notification-center__item--${alert.severity}`} onClick={() => openAlert(alert)}><span>{alert.type === 'task' ? 'TA' : alert.type === 'chat' ? 'CH' : 'DO'}</span><div><strong>{alert.title}</strong><small>{alert.description}</small></div><i>→</i></button>)}</div>}<div className="notification-center__footer"><span>Alertas derivados apenas dos dados temporários da sessão.</span></div></div>}</div>;
+  return <div className="notification-center" ref={rootRef}><button className="notification-center__trigger" type="button" aria-label="Abrir alertas" aria-expanded={open} onClick={() => setOpen((value) => !value)}>⌁{alerts.length > 0 && <b>{alerts.length}</b>}</button>{open && <div className="notification-center__popover" role="dialog" aria-label="Central de alertas"><div className="notification-center__heading"><div><span className="management-eyebrow">Central de alertas</span><strong>{alerts.length ? `${alerts.length} item(ns) exigem atenção` : 'Tudo em ordem nesta sessão'}</strong></div><button type="button" aria-label="Fechar alertas" onClick={() => setOpen(false)}>×</button></div>{alerts.length === 0 ? <div className="notification-center__empty">Nenhuma tarefa crítica, mensagem não lida ou documento obrigatório pendente.</div> : <div className="notification-center__list">{alerts.map((alert) => <button type="button" key={alert.id} className={`notification-center__item notification-center__item--${alert.severity}`} onClick={() => openAlert(alert)}><span>{alert.type === 'task' ? 'TA' : alert.type === 'chat' ? 'CH' : 'DO'}</span><div><strong>{alert.title}</strong><small>{alert.description}</small></div><i>→</i></button>)}</div>}<div className="notification-center__footer"><span>Alertas derivados apenas dos dados temporários da sessão.</span></div></div>}</div>;
 }
