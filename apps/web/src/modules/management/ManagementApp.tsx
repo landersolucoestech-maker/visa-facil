@@ -18,18 +18,34 @@ export function ManagementApp() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [interactions, setInteractions] = useState<ServiceInteraction[]>([]);
 
-  useEffect(() => {
-    const handlePopState = () => setPath(normalizePath());
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   function navigate(nextPath: string) {
     if (nextPath === path) return;
     window.history.pushState({}, '', nextPath);
     setPath(normalizePath());
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
+
+  useEffect(() => {
+    const handlePopState = () => setPath(normalizePath());
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target as Element | null;
+      const anchor = target?.closest('a[href^="/app"]') as HTMLAnchorElement | null;
+      if (!anchor || anchor.target === '_blank') return;
+      const url = new URL(anchor.href, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+      event.preventDefault();
+      window.history.pushState({}, '', url.pathname);
+      setPath(normalizePath());
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    };
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleDocumentClick);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, []);
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) {
     const now = new Date().toISOString();
