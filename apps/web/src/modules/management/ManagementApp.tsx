@@ -5,7 +5,9 @@ import { ClientsPage } from './pages/ClientsPage';
 import { ProcessesPage } from './pages/ProcessesPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { InteractionsPage } from './pages/InteractionsPage';
-import type { Client, DocumentItem, ServiceInteraction, VisaProcess } from './domain';
+import { TasksPage } from './pages/TasksPage';
+import { FinancePage } from './pages/FinancePage';
+import type { Client, DocumentItem, FinancialEntry, ManagementTask, ServiceInteraction, VisaProcess } from './domain';
 
 function normalizePath() {
   return window.location.pathname.replace(/\/+$/, '') || '/app';
@@ -17,6 +19,8 @@ export function ManagementApp() {
   const [processes, setProcesses] = useState<VisaProcess[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [interactions, setInteractions] = useState<ServiceInteraction[]>([]);
+  const [tasks, setTasks] = useState<ManagementTask[]>([]);
+  const [financialEntries, setFinancialEntries] = useState<FinancialEntry[]>([]);
 
   function navigate(nextPath: string) {
     if (nextPath === path) return;
@@ -49,28 +53,29 @@ export function ManagementApp() {
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) {
     const now = new Date().toISOString();
-    const client: Client = { ...input, id: `session-client-${clients.length + 1}`, createdAt: now, updatedAt: now };
-    setClients((current) => [client, ...current]);
+    setClients((current) => [{ ...input, id: `session-client-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]);
   }
-
   function createProcess(input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) {
     const now = new Date().toISOString();
-    const process: VisaProcess = { ...input, id: `session-process-${processes.length + 1}`, createdAt: now, updatedAt: now };
-    setProcesses((current) => [process, ...current]);
+    setProcesses((current) => [{ ...input, id: `session-process-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]);
   }
-
   function createDocument(input: Omit<DocumentItem, 'id' | 'updatedAt'>) {
-    const document: DocumentItem = { ...input, id: `session-document-${documents.length + 1}`, updatedAt: new Date().toISOString() };
-    setDocuments((current) => [document, ...current]);
+    setDocuments((current) => [{ ...input, id: `session-document-${current.length + 1}`, updatedAt: new Date().toISOString() }, ...current]);
   }
-
   function toggleDocumentReceived(documentId: string) {
     setDocuments((current) => current.map((document) => document.id === documentId ? { ...document, received: !document.received, updatedAt: new Date().toISOString() } : document));
   }
-
   function createInteraction(input: Omit<ServiceInteraction, 'id'>) {
-    const interaction: ServiceInteraction = { ...input, id: `session-interaction-${interactions.length + 1}` };
-    setInteractions((current) => [interaction, ...current]);
+    setInteractions((current) => [{ ...input, id: `session-interaction-${current.length + 1}` }, ...current]);
+  }
+  function createTask(input: Omit<ManagementTask, 'id' | 'createdAt'>) {
+    setTasks((current) => [{ ...input, id: `session-task-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]);
+  }
+  function toggleTask(taskId: string) {
+    setTasks((current) => current.map((task) => task.id === taskId ? { ...task, status: task.status === 'open' ? 'done' : 'open' } : task));
+  }
+  function createFinancialEntry(input: Omit<FinancialEntry, 'id' | 'createdAt'>) {
+    setFinancialEntries((current) => [{ ...input, id: `session-finance-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]);
   }
 
   let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} />;
@@ -78,6 +83,8 @@ export function ManagementApp() {
   else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
+  else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} />;
+  else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} />;
 
   return <ManagementShell path={path} onNavigate={navigate}>{content}</ManagementShell>;
 }
