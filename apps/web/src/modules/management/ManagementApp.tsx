@@ -25,7 +25,8 @@ import type { FinancialEntry } from '../finance/types/finance';
 
 function normalizePath() { return window.location.pathname.replace(/\/+$/, '') || '/app'; }
 
-type ProcessUpdate = Partial<Pick<VisaProcess, 'stage' | 'priority' | 'targetDate'>>;
+type ClientUpdate = Partial<Pick<Client, 'fullName' | 'email' | 'phone' | 'status' | 'notes'>>;
+type ProcessUpdate = Partial<Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>>;
 
 export function ManagementApp() {
   const [path, setPath] = useState(normalizePath);
@@ -56,7 +57,8 @@ export function ManagementApp() {
   }, []);
 
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setClients((current) => [{ ...input, id: `session-client-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
-  function updateClientStatus(clientId: string, status: ClientStatus) { const now = new Date().toISOString(); setClients((current) => current.map((client) => client.id === clientId ? { ...client, status, updatedAt: now } : client)); }
+  function updateClient(clientId: string, patch: ClientUpdate) { const now = new Date().toISOString(); setClients((current) => current.map((client) => client.id === clientId ? { ...client, ...patch, updatedAt: now } : client)); }
+  function updateClientStatus(clientId: string, status: ClientStatus) { updateClient(clientId, { status }); }
   function createProcess(input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setProcesses((current) => [{ ...input, id: `session-process-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
   function updateProcess(processId: string, patch: ProcessUpdate) { const now = new Date().toISOString(); setProcesses((current) => current.map((process) => process.id === processId ? { ...process, ...patch, updatedAt: now } : process)); }
   function createDocument(input: Omit<DocumentItem, 'id' | 'updatedAt'>) { setDocuments((current) => [{ ...input, id: `session-document-${current.length + 1}`, updatedAt: new Date().toISOString() }, ...current]); }
@@ -75,7 +77,7 @@ export function ManagementApp() {
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
   else if (path.startsWith('/app/clientes/')) {
     const clientId = decodeURIComponent(path.slice('/app/clientes/'.length));
-    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} onUpdateStatus={updateClientStatus} />;
+    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} onUpdateStatus={updateClientStatus} onUpdateClient={updateClient} />;
   }
   else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
   else if (path.startsWith('/app/processos/')) {
