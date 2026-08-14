@@ -27,6 +27,7 @@ function normalizePath() { return window.location.pathname.replace(/\/+$/, '') |
 
 type ClientUpdate = Partial<Pick<Client, 'fullName' | 'email' | 'phone' | 'status' | 'notes'>>;
 type ProcessUpdate = Partial<Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>>;
+type TaskUpdate = Partial<Pick<ManagementTask, 'dueDate' | 'priority'>>;
 
 export function ManagementApp() {
   const [path, setPath] = useState(normalizePath);
@@ -71,6 +72,7 @@ export function ManagementApp() {
   function setChatStatus(conversationId: string, status: ChatConversationStatus) { setConversations((current) => current.map((conversation) => conversation.id === conversationId ? { ...conversation, status, updatedAt: new Date().toISOString() } : conversation)); }
   function createTask(input: Omit<ManagementTask, 'id' | 'createdAt'>) { setTasks((current) => [{ ...input, id: `session-task-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]); }
   function toggleTask(taskId: string) { setTasks((current) => current.map((task) => task.id === taskId ? { ...task, status: task.status === 'open' ? 'done' : 'open' } : task)); }
+  function updateTask(taskId: string, patch: TaskUpdate) { setTasks((current) => current.map((task) => task.id === taskId ? { ...task, ...patch } : task)); }
   function createFinancialEntry(input: Omit<FinancialEntry, 'id' | 'createdAt'>) { setFinancialEntries((current) => [{ ...input, id: `session-finance-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]); }
   function updateFinancialStatus(entryId: string, status: FinancialEntryStatus) { setFinancialEntries((current) => current.map((entry) => entry.id === entryId ? { ...entry, status } : entry)); }
 
@@ -89,7 +91,7 @@ export function ManagementApp() {
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
   else if (path === '/app/chat') content = <ChatPage clients={clients} processes={processes} conversations={conversations} messages={messages} onCreateConversation={createConversation} onSendMessage={sendChatMessage} onToggleFavorite={toggleChatFavorite} onMarkRead={markChatRead} onSetStatus={setChatStatus} />;
-  else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} />;
+  else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} onUpdateTask={updateTask} />;
   else if (path === '/app/agenda') content = <CalendarPage clients={clients} processes={processes} tasks={tasks} />;
   else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} onUpdateStatus={updateFinancialStatus} />;
   else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} interactions={interactions} conversations={conversations} />;
