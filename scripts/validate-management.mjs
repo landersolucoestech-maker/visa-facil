@@ -27,6 +27,7 @@ const domainFiles = {
   chat: 'apps/web/src/modules/chat/types/chat.ts',
   tasks: 'apps/web/src/modules/tasks/types/task.ts',
   finance: 'apps/web/src/modules/finance/types/finance.ts',
+  notifications: 'apps/web/src/modules/notifications/types/notification.ts',
 };
 
 const pageFiles = {
@@ -47,11 +48,13 @@ const pageFiles = {
 assert(rootApplication.includes("path === '/app'") && rootApplication.includes("path.startsWith('/app/')"), 'Management application must remain isolated under /app/*');
 assert(rootApplication.includes('<ManagementApp />'), 'Root application must render ManagementApp for /app/*');
 assert(main.includes("./modules/management/management.css") && main.includes("./modules/management/dashboard.css"), 'Management visual styles must remain loaded');
-assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/reports/settings visual styles must remain loaded');
+assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/notifications/notifications.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/notifications/reports/settings visual styles must remain loaded');
 assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Management foundation must not persist client data in browser storage');
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
 assert(app.includes('GlobalSearch'), 'Global frontend search must remain connected to the management shell');
+assert(app.includes('NotificationCenter'), 'Frontend alert center must remain connected to the management shell');
 assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
+assert(existsSync(resolve(root, 'apps/web/src/modules/notifications/components/NotificationCenter.tsx')), 'Alert center component must remain inside its own module');
 
 const routes = ['/app/clientes','/app/processos','/app/documentos','/app/atendimentos','/app/chat','/app/tarefas','/app/agenda','/app/financeiro','/app/relatorios','/app/configuracoes'];
 for (const route of routes) {
@@ -76,6 +79,8 @@ const processDomain = read(domainFiles.processes);
 assert(processDomain.includes("'diagnosis'") && processDomain.includes("'documents'") && processDomain.includes("'forms'") && processDomain.includes("'scheduling'") && processDomain.includes("'preparation'") && processDomain.includes("'submitted'") && processDomain.includes("'completed'"), 'Visa process stage model is incomplete');
 const chatDomain = read(domainFiles.chat);
 assert(chatDomain.includes("'open'") && chatDomain.includes("'waiting'") && chatDomain.includes("'closed'") && chatDomain.includes('unreadCount'), 'VisaChat lifecycle model is incomplete');
+const notificationComponent = read('apps/web/src/modules/notifications/components/NotificationCenter.tsx');
+assert(notificationComponent.includes('Tarefa atrasada') && notificationComponent.includes('Mensagem não lida') && notificationComponent.includes('Documento obrigatório pendente'), 'Alert center must derive operational alerts from session data');
 const calendarPage = read(pageFiles.calendar);
 assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && calendarPage.includes('Processo'), 'Agenda must remain a temporal calendar/list view');
 const processDetail = read(pageFiles.processDetail);
