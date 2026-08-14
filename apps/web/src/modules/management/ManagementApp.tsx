@@ -23,66 +23,18 @@ import type { ManagementTask } from '../tasks/types/task';
 import type { FinancialEntry, FinancialEntryStatus } from '../finance/types/finance';
 
 const deploymentBase = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-function normalizePath(pathname = window.location.pathname) {
-  let normalized = pathname.replace(/\/+$/, '') || '/';
-  if (deploymentBase && deploymentBase !== '/' && (normalized === deploymentBase || normalized.startsWith(`${deploymentBase}/`))) {
-    normalized = normalized.slice(deploymentBase.length) || '/';
-  }
-  return normalized === '/' ? '/app' : normalized;
-}
-
-function toBrowserPath(appPath: string) {
-  if (!deploymentBase || deploymentBase === '/') return appPath;
-  return `${deploymentBase}${appPath}`;
-}
-
+function normalizePath(pathname = window.location.pathname) { let normalized = pathname.replace(/\/+$/, '') || '/'; if (deploymentBase && deploymentBase !== '/' && (normalized === deploymentBase || normalized.startsWith(`${deploymentBase}/`))) normalized = normalized.slice(deploymentBase.length) || '/'; return normalized === '/' ? '/app' : normalized; }
+function toBrowserPath(appPath: string) { return !deploymentBase || deploymentBase === '/' ? appPath : `${deploymentBase}${appPath}`; }
 type ClientUpdate = Partial<Pick<Client, 'fullName' | 'email' | 'phone' | 'status' | 'notes'>>;
 type ProcessUpdate = Partial<Pick<VisaProcess, 'destination' | 'category' | 'stage' | 'priority' | 'targetDate' | 'notes'>>;
 type TaskUpdate = Partial<Pick<ManagementTask, 'dueDate' | 'priority'>>;
 
 export function ManagementApp() {
   const [path, setPath] = useState(normalizePath);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [processes, setProcesses] = useState<VisaProcess[]>([]);
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [interactions, setInteractions] = useState<ServiceInteraction[]>([]);
-  const [conversations, setConversations] = useState<ChatConversation[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [tasks, setTasks] = useState<ManagementTask[]>([]);
-  const [financialEntries, setFinancialEntries] = useState<FinancialEntry[]>([]);
-
-  function navigate(nextPath: string) {
-    if (nextPath === path) return;
-    window.history.pushState({}, '', toBrowserPath(nextPath));
-    setPath(nextPath);
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }
-
-  useEffect(() => {
-    const handlePopState = () => setPath(normalizePath());
-    const handleDocumentClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const target = event.target as Element | null;
-      const anchor = target?.closest('a[href^="/app"]') as HTMLAnchorElement | null;
-      if (!anchor || anchor.target === '_blank') return;
-      const url = new URL(anchor.href, window.location.origin);
-      if (url.origin !== window.location.origin) return;
-      const nextPath = normalizePath(url.pathname);
-      if (!nextPath.startsWith('/app')) return;
-      event.preventDefault();
-      window.history.pushState({}, '', toBrowserPath(nextPath));
-      setPath(nextPath);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    };
-    window.addEventListener('popstate', handlePopState);
-    document.addEventListener('click', handleDocumentClick);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleDocumentClick);
-    };
-  }, []);
-
+  const [clients, setClients] = useState<Client[]>([]); const [processes, setProcesses] = useState<VisaProcess[]>([]); const [documents, setDocuments] = useState<DocumentItem[]>([]); const [interactions, setInteractions] = useState<ServiceInteraction[]>([]); const [conversations, setConversations] = useState<ChatConversation[]>([]); const [messages, setMessages] = useState<ChatMessage[]>([]); const [tasks, setTasks] = useState<ManagementTask[]>([]); const [financialEntries, setFinancialEntries] = useState<FinancialEntry[]>([]);
+  const [showClientForm, setShowClientForm] = useState(false); const [showProcessForm, setShowProcessForm] = useState(false);
+  function navigate(nextPath: string) { if (nextPath === path) return; window.history.pushState({}, '', toBrowserPath(nextPath)); setPath(nextPath); window.scrollTo({ top: 0, behavior: 'instant' }); }
+  useEffect(() => { const handlePopState = () => setPath(normalizePath()); const handleDocumentClick = (event: MouseEvent) => { if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; const target = event.target as Element | null; const anchor = target?.closest('a[href^="/app"]') as HTMLAnchorElement | null; if (!anchor || anchor.target === '_blank') return; const url = new URL(anchor.href, window.location.origin); if (url.origin !== window.location.origin) return; const nextPath = normalizePath(url.pathname); if (!nextPath.startsWith('/app')) return; event.preventDefault(); window.history.pushState({}, '', toBrowserPath(nextPath)); setPath(nextPath); window.scrollTo({ top: 0, behavior: 'instant' }); }; window.addEventListener('popstate', handlePopState); document.addEventListener('click', handleDocumentClick); return () => { window.removeEventListener('popstate', handlePopState); document.removeEventListener('click', handleDocumentClick); }; }, []);
   function createClient(input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) { const now = new Date().toISOString(); setClients((current) => [{ ...input, id: `session-client-${current.length + 1}`, createdAt: now, updatedAt: now }, ...current]); }
   function updateClient(clientId: string, patch: ClientUpdate) { const now = new Date().toISOString(); setClients((current) => current.map((client) => client.id === clientId ? { ...client, ...patch, updatedAt: now } : client)); }
   function updateClientStatus(clientId: string, status: ClientStatus) { updateClient(clientId, { status }); }
@@ -103,17 +55,10 @@ export function ManagementApp() {
   function updateFinancialStatus(entryId: string, status: FinancialEntryStatus) { setFinancialEntries((current) => current.map((entry) => entry.id === entryId ? { ...entry, status } : entry)); }
 
   let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} conversations={conversations} tasks={tasks} financialEntries={financialEntries} />;
-  if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
-  else if (path.startsWith('/app/clientes/')) {
-    const clientId = decodeURIComponent(path.slice('/app/clientes/'.length));
-    content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} onUpdateStatus={updateClientStatus} onUpdateClient={updateClient} />;
-  }
-  else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} />;
-  else if (path.startsWith('/app/processos/')) {
-    const processId = decodeURIComponent(path.slice('/app/processos/'.length));
-    const process = processes.find((item) => item.id === processId);
-    content = <ProcessDetailPage process={process} client={clients.find((client) => client.id === process?.clientId)} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} onUpdateProcess={updateProcess} />;
-  }
+  if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} showForm={showClientForm} onCloseForm={() => setShowClientForm(false)} />;
+  else if (path.startsWith('/app/clientes/')) { const clientId = decodeURIComponent(path.slice('/app/clientes/'.length)); content = <ClientDetailPage client={clients.find((client) => client.id === clientId)} processes={processes} interactions={interactions} tasks={tasks} conversations={conversations} financialEntries={financialEntries} onUpdateStatus={updateClientStatus} onUpdateClient={updateClient} />; }
+  else if (path === '/app/processos') content = <ProcessesPage clients={clients} processes={processes} onCreateProcess={createProcess} showForm={showProcessForm} onCloseForm={() => setShowProcessForm(false)} />;
+  else if (path.startsWith('/app/processos/')) { const processId = decodeURIComponent(path.slice('/app/processos/'.length)); const process = processes.find((item) => item.id === processId); content = <ProcessDetailPage process={process} client={clients.find((client) => client.id === process?.clientId)} documents={documents} interactions={interactions} tasks={tasks} financialEntries={financialEntries} onUpdateProcess={updateProcess} />; }
   else if (path === '/app/documentos') content = <DocumentsPage processes={processes} documents={documents} onCreateDocument={createDocument} onToggleReceived={toggleDocumentReceived} />;
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
   else if (path === '/app/chat') content = <ChatPage clients={clients} processes={processes} conversations={conversations} messages={messages} onCreateConversation={createConversation} onSendMessage={sendChatMessage} onToggleFavorite={toggleChatFavorite} onMarkRead={markChatRead} onSetStatus={setChatStatus} />;
@@ -123,6 +68,7 @@ export function ManagementApp() {
   else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} interactions={interactions} conversations={conversations} />;
   else if (path === '/app/configuracoes') content = <SettingsPage />;
 
-  const topbarTools = <div className="management-topbar__actions"><NotificationCenter tasks={tasks} conversations={conversations} documents={documents} onNavigate={navigate} /></div>;
+  const createAction = path === '/app/clientes' ? <button className="management-primary-button" type="button" onClick={() => setShowClientForm((value) => !value)}>{showClientForm ? 'Fechar cadastro' : 'Novo cliente'}</button> : path === '/app/processos' ? <button className="management-primary-button" type="button" disabled={clients.length === 0} onClick={() => setShowProcessForm((value) => !value)}>{showProcessForm ? 'Fechar cadastro' : 'Novo processo'}</button> : null;
+  const topbarTools = <div className="management-topbar__actions">{createAction}<NotificationCenter tasks={tasks} conversations={conversations} documents={documents} onNavigate={navigate} /></div>;
   return <ManagementShell path={path} onNavigate={navigate} tools={topbarTools}>{content}</ManagementShell>;
 }
