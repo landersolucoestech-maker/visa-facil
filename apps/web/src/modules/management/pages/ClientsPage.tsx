@@ -3,8 +3,12 @@ import { CLIENT_STATUS_LABELS, type Client, type ClientStatus } from '../domain'
 
 const emptyForm = { fullName: '', email: '', phone: '', status: 'lead' as ClientStatus, notes: '' };
 
-export function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+type ClientsPageProps = {
+  clients: Client[];
+  onCreateClient: (input: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => void;
+};
+
+export function ClientsPage({ clients, onCreateClient }: ClientsPageProps) {
   const [query, setQuery] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
@@ -17,18 +21,7 @@ export function ClientsPage() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const now = new Date().toISOString();
-    const client: Client = {
-      id: `session-client-${clients.length + 1}`,
-      fullName: form.fullName.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      status: form.status,
-      notes: form.notes.trim(),
-      createdAt: now,
-      updatedAt: now,
-    };
-    setClients((current) => [client, ...current]);
+    onCreateClient({ ...form, fullName: form.fullName.trim(), email: form.email.trim(), phone: form.phone.trim(), notes: form.notes.trim() });
     setForm(emptyForm);
     setShowForm(false);
   }
@@ -39,7 +32,7 @@ export function ClientsPage() {
         <div><span className="management-eyebrow">Relacionamento</span><h1 id="clients-title">Clientes</h1><p>Cadastro central de leads e clientes atendidos pela Visa Fácil.</p></div>
         <button className="management-primary-button" type="button" onClick={() => setShowForm((value) => !value)}>{showForm ? 'Fechar cadastro' : 'Novo cliente'}</button>
       </div>
-      <div className="management-session-note">Modo de fundação: registros criados nesta tela existem somente durante a sessão atual e não são enviados a servidor.</div>
+      <div className="management-session-note">Modo de fundação: registros existem somente durante a sessão atual da interface e não são enviados a servidor.</div>
       {showForm && <form className="management-form-card" onSubmit={submit}>
         <div className="management-form-grid">
           <label><span>Nome completo</span><input required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} /></label>
