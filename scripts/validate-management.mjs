@@ -10,8 +10,25 @@ const rootApplication = read('apps/web/src/RootApplication.tsx');
 const main = read('apps/web/src/main.tsx');
 const app = read('apps/web/src/modules/management/ManagementApp.tsx');
 const shell = read('apps/web/src/modules/management/components/ManagementShell.tsx');
-const domain = read('apps/web/src/modules/management/domain.ts');
 const dashboard = read('apps/web/src/modules/management/pages/ManagementDashboardPage.tsx');
+
+const domainFiles = {
+  clients: 'apps/web/src/modules/clients/types/client.ts',
+  processes: 'apps/web/src/modules/processes/types/process.ts',
+  documents: 'apps/web/src/modules/documents/types/document.ts',
+  interactions: 'apps/web/src/modules/interactions/types/interaction.ts',
+  tasks: 'apps/web/src/modules/tasks/types/task.ts',
+  finance: 'apps/web/src/modules/finance/types/finance.ts',
+};
+
+const pageFiles = {
+  clients: 'apps/web/src/modules/clients/pages/ClientsPage.tsx',
+  processes: 'apps/web/src/modules/processes/pages/ProcessesPage.tsx',
+  documents: 'apps/web/src/modules/documents/pages/DocumentsPage.tsx',
+  interactions: 'apps/web/src/modules/interactions/pages/InteractionsPage.tsx',
+  tasks: 'apps/web/src/modules/tasks/pages/TasksPage.tsx',
+  finance: 'apps/web/src/modules/finance/pages/FinancePage.tsx',
+};
 
 assert(rootApplication.includes("path === '/app'") && rootApplication.includes("path.startsWith('/app/')"), 'Management application must remain isolated under /app/*');
 assert(rootApplication.includes('<ManagementApp />'), 'Root application must render ManagementApp for /app/*');
@@ -20,19 +37,24 @@ assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Manage
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
 assert(app.includes("'/app/clientes'") && app.includes("'/app/processos'") && app.includes("'/app/documentos'") && app.includes("'/app/atendimentos'") && app.includes("'/app/tarefas'") && app.includes("'/app/financeiro'"), 'All management routes must remain registered');
 
-for (const typeName of ['Client', 'VisaProcess', 'DocumentItem', 'ServiceInteraction', 'ManagementTask', 'FinancialEntry']) {
-  assert(domain.includes(`interface ${typeName}`), `Missing management domain contract: ${typeName}`);
+for (const [moduleName, file] of Object.entries(domainFiles)) {
+  assert(existsSync(resolve(root, file)), `Missing ${moduleName} domain type file: ${file}`);
+}
+for (const [moduleName, file] of Object.entries(pageFiles)) {
+  assert(existsSync(resolve(root, file)), `Missing ${moduleName} page inside its module: ${file}`);
 }
 
-for (const page of ['ClientsPage.tsx', 'ProcessesPage.tsx', 'DocumentsPage.tsx', 'InteractionsPage.tsx', 'TasksPage.tsx', 'FinancePage.tsx']) {
-  assert(existsSync(resolve(root, `apps/web/src/modules/management/pages/${page}`)), `Missing management page: ${page}`);
+assert(!existsSync(resolve(root, 'apps/web/src/modules/management/domain.ts')), 'Shared management/domain.ts must not return; domain types belong to their own modules');
+for (const legacyPage of ['ClientsPage.tsx', 'ProcessesPage.tsx', 'DocumentsPage.tsx', 'InteractionsPage.tsx', 'TasksPage.tsx', 'FinancePage.tsx', 'ManagementReservedPage.tsx']) {
+  assert(!existsSync(resolve(root, `apps/web/src/modules/management/pages/${legacyPage}`)), `Legacy page must not remain under management/pages: ${legacyPage}`);
 }
 
 for (const route of ['/app/clientes', '/app/processos', '/app/documentos', '/app/atendimentos', '/app/tarefas', '/app/financeiro']) {
   assert(shell.includes(route) || dashboard.includes(route), `Management route is not exposed in navigation: ${route}`);
 }
 
-assert(domain.includes("'diagnosis'") && domain.includes("'documents'") && domain.includes("'forms'") && domain.includes("'scheduling'") && domain.includes("'preparation'") && domain.includes("'submitted'") && domain.includes("'completed'"), 'Visa process stage model is incomplete');
+const processDomain = read(domainFiles.processes);
+assert(processDomain.includes("'diagnosis'") && processDomain.includes("'documents'") && processDomain.includes("'forms'") && processDomain.includes("'scheduling'") && processDomain.includes("'preparation'") && processDomain.includes("'submitted'") && processDomain.includes("'completed'"), 'Visa process stage model is incomplete');
 assert(!app.includes('fetch('), 'No backend endpoint should be simulated in the management foundation');
 
 if (failures.length) {
