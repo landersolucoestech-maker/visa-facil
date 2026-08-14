@@ -9,6 +9,7 @@ import { DocumentsPage } from '../documents/pages/DocumentsPage';
 import { InteractionsPage } from '../interactions/pages/InteractionsPage';
 import { ChatPage } from '../chat/pages/ChatPage';
 import { TasksPage } from '../tasks/pages/TasksPage';
+import { CalendarPage } from '../calendar/pages/CalendarPage';
 import { FinancePage } from '../finance/pages/FinancePage';
 import { ReportsPage } from '../reports/pages/ReportsPage';
 import { SettingsPage } from '../settings/pages/SettingsPage';
@@ -80,6 +81,7 @@ export function ManagementApp() {
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
   else if (path === '/app/chat') content = <ChatPage clients={clients} processes={processes} conversations={conversations} messages={messages} onCreateConversation={createConversation} onSendMessage={sendChatMessage} onToggleFavorite={toggleChatFavorite} onMarkRead={markChatRead} onSetStatus={setChatStatus} />;
   else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} />;
+  else if (path === '/app/agenda') content = <CalendarPage clients={clients} processes={processes} tasks={tasks} />;
   else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} />;
   else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} interactions={interactions} conversations={conversations} />;
   else if (path === '/app/configuracoes') content = <SettingsPage />;
