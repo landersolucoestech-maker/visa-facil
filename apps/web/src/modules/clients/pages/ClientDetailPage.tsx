@@ -37,6 +37,8 @@ export function ClientDetailPage({ client, processes, interactions, tasks, conve
       <div className="client-detail-actions"><span className={`management-badge management-badge--${client.status}`}>{CLIENT_STATUS_LABELS[client.status]}</span><a className="management-secondary-button" href="/app/clientes">← Clientes</a><a className="management-primary-button" href="/app/chat">Abrir VisaChat</a></div>
     </div>
 
+    <nav className="client-quick-actions" aria-label="Ações rápidas do cliente"><a href="/app/processos"><span>PR</span><strong>Novo processo</strong><small>Abrir solicitação vinculada</small></a><a href="/app/chat"><span>CH</span><strong>VisaChat</strong><small>Iniciar ou continuar conversa</small></a><a href="/app/atendimentos"><span>AT</span><strong>Atendimento</strong><small>Registrar marco relevante</small></a><a href="/app/tarefas"><span>TA</span><strong>Tarefa</strong><small>Criar próximo passo</small></a><a href="/app/financeiro"><span>FI</span><strong>Financeiro</strong><small>Registrar movimentação</small></a></nav>
+
     <div className="client-detail-kpis"><article><span>Processos ativos</span><strong>{openProcesses}</strong><small>{clientProcesses.length} no total</small></article><article><span>Tarefas abertas</span><strong>{openTasks}</strong><small>{clientTasks.length} vinculada(s)</small></article><article><span>Conversas</span><strong>{clientConversations.length}</strong><small>VisaChat nesta sessão</small></article><article><span>Receita realizada</span><strong>{money(realizedIncome)}</strong><small>Lançamentos pagos vinculados</small></article></div>
 
     <div className="client-detail-grid">
