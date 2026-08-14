@@ -1,21 +1,32 @@
-# Public Site
+# Website público Visa Fácil
 
-Migração React controlada do website oficial Visa Fácil.
+Este projeto agora contém somente o website/landing page comercial da Visa Fácil.
 
-A fonte visual e de conteúdo é o HTML oficial fornecido pelo usuário.
+## Alterar banners do Hero
 
-## Componentes
+O slideshow é controlado por um único arquivo:
 
-- `PublicHeader`
-- `HeroSection`
-- `ServicesSection`
-- `ExperienceSection`
-- `PainPointsSection`
-- `ProcessSection`
-- `DifferenceSection`
-- `FaqSection`
-- `ContactSection`
-- `PublicFooter`
+`apps/web/src/modules/public-site/content/heroSlides.ts`
 
-As interações do HTML original foram migradas para `usePublicSiteInteractions.ts`.
-A cascata CSS oficial foi preservada inicialmente para maximizar fidelidade visual antes de qualquer consolidação futura.
+Para trocar uma propaganda:
+
+1. abra `heroSlides.ts`;
+2. altere o campo `src` do banner desejado;
+3. ajuste o `alt` com uma descrição curta da nova arte;
+4. commit/push no branch `dev`;
+5. o GitHub Actions publica automaticamente o novo website no GitHub Pages.
+
+O campo `src` pode receber uma URL HTTPS de imagem. Imagens permanentes da marca podem ser adicionadas em `apps/web/src/modules/public-site/assets/` e importadas no arquivo de slides.
+
+Para adicionar ou remover banners, basta adicionar ou remover objetos de `HERO_SLIDES`. O componente cria automaticamente os slides, setas e indicadores conforme a quantidade.
+
+## Estrutura pública
+
+- `components/` — seções visuais do website
+- `content/heroSlides.ts` — campanhas/banners do Hero
+- `assets/` — imagens permanentes do website
+- `styles/` — identidade visual e responsividade
+- `pages/PublicSitePage.tsx` — composição da landing page
+- `usePublicSiteInteractions.ts` — slideshow, menu, FAQ e demais interações
+
+O website preserva a migração React da página oficial e não utiliza iframe nem `dangerouslySetInnerHTML`.
