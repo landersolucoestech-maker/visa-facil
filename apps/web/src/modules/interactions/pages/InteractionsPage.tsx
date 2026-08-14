@@ -1,12 +1,17 @@
+import { useMemo, useState } from 'react';
 import type { Client } from '../../clients/types/client';
 import type { VisaProcess } from '../../processes/types/process';
-import { InteractionForm } from '../components/InteractionForm';
+import { InteractionForm, INTERACTION_CHANNEL_LABELS } from '../components/InteractionForm';
 import { InteractionTimeline } from '../components/InteractionTimeline';
 import type { ServiceInteraction } from '../types/interaction';
 
 type InteractionsPageProps = { clients: Client[]; processes: VisaProcess[]; interactions: ServiceInteraction[]; onCreateInteraction: (input: Omit<ServiceInteraction, 'id'>) => void; };
 
 export function InteractionsPage({ clients, processes, interactions, onCreateInteraction }: InteractionsPageProps) {
+  const [query, setQuery] = useState('');
+  const [channel, setChannel] = useState<ServiceInteraction['channel'] | 'all'>('all');
+  const [clientId, setClientId] = useState('all');
+  const [linkedOnly, setLinkedOnly] = useState(false);
   const whatsappCount = interactions.filter((interaction) => interaction.channel === 'whatsapp').length;
   const meetingCount = interactions.filter((interaction) => interaction.channel === 'meeting').length;
   const emailCount = interactions.filter((interaction) => interaction.channel === 'email').length;
@@ -14,6 +19,15 @@ export function InteractionsPage({ clients, processes, interactions, onCreateInt
   const linkedRate = interactions.length ? Math.round((linkedToProcess / interactions.length) * 100) : 0;
   const latest = interactions[0];
   const latestClient = clients.find((client) => client.id === latest?.clientId);
+  const filteredInteractions = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return interactions.filter((interaction) => {
+      const client = clients.find((item) => item.id === interaction.clientId);
+      const process = processes.find((item) => item.id === interaction.processId);
+      const matchesQuery = !normalized || `${client?.fullName ?? ''} ${interaction.subject} ${interaction.notes} ${process?.category ?? ''}`.toLowerCase().includes(normalized);
+      return matchesQuery && (channel === 'all' || interaction.channel === channel) && (clientId === 'all' || interaction.clientId === clientId) && (!linkedOnly || Boolean(interaction.processId));
+    });
+  }, [channel, clientId, clients, interactions, linkedOnly, processes, query]);
 
   return <section className="management-page interaction-page" aria-labelledby="interactions-title">
     <div className="management-page__heading management-page__heading--row">
@@ -41,6 +55,6 @@ export function InteractionsPage({ clients, processes, interactions, onCreateInt
       <aside className="interaction-guide-card" aria-label="Fluxo recomendado"><span className="management-eyebrow">Quando registrar aqui?</span><h2>Marcos que merecem histórico</h2><p>Não replique cada mensagem do chat. Registre apenas fatos que precisam continuar visíveis para a operação.</p><div className="interaction-guide-list"><span><b>1</b> Reuniões e ligações</span><span><b>2</b> Decisões e orientações</span><span><b>3</b> Próximos passos relevantes</span><span><b>4</b> Contato por canal externo</span></div></aside>
     </div>
 
-    <section className="interaction-history-card"><div className="interaction-history-card__heading"><div><span className="management-eyebrow">Histórico</span><h2>Linha do tempo operacional</h2></div><span>{interactions.length} registro(s)</span></div><InteractionTimeline clients={clients} processes={processes} interactions={interactions} /></section>
+    <section className="interaction-history-card"><div className="interaction-history-card__heading"><div><span className="management-eyebrow">Histórico</span><h2>Linha do tempo operacional</h2></div><span>{filteredInteractions.length} resultado(s)</span></div><div className="interaction-filter-bar"><label><span>Buscar</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cliente, assunto, observação ou processo" /></label><label><span>Canal</span><select value={channel} onChange={(event) => setChannel(event.target.value as ServiceInteraction['channel'] | 'all')}><option value="all">Todos</option>{Object.entries(INTERACTION_CHANNEL_LABELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></label><label><span>Cliente</span><select value={clientId} onChange={(event) => setClientId(event.target.value)}><option value="all">Todos</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.fullName}</option>)}</select></label><label className="interaction-filter-check"><input type="checkbox" checked={linkedOnly} onChange={(event) => setLinkedOnly(event.target.checked)} /><span>Somente vinculados a processo</span></label></div><InteractionTimeline clients={clients} processes={processes} interactions={filteredInteractions} /></section>
   </section>;
 }
