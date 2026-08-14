@@ -4,27 +4,6 @@ import { RootApplication } from './RootApplication';
 import './modules/public-site/styles/01-base.css';
 import './modules/public-site/styles/02-sections-responsive.css';
 import './modules/public-site/styles/03-hero-v3.css';
-import './modules/management/management.css';
-import './modules/management/dashboard.css';
-import './modules/management/flag.css';
-import './modules/management/accessibility.css';
-import './modules/management/forms.css';
-import './modules/management/modal.css';
-import './modules/clients/clients.css';
-import './modules/clients/client-controls.css';
-import './modules/processes/processes.css';
-import './modules/processes/process-controls.css';
-import './modules/documents/documents.css';
-import './modules/interactions/interactions.css';
-import './modules/chat/chat.css';
-import './modules/tasks/tasks.css';
-import './modules/calendar/calendar.css';
-import './modules/search/search.css';
-import './modules/notifications/notifications.css';
-import './modules/finance/finance.css';
-import './modules/reports/reports.css';
-import './modules/settings/settings.css';
-import './modules/management/layout-responsive.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
