@@ -53,7 +53,7 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:4173/ >/tmp/root.html
-          for route in app app/clientes app/processos app/documentos app/atendimentos app/tarefas app/financeiro; do
+          for route in app app/clientes app/processos app/documentos app/atendimentos app/tarefas app/financeiro app/relatorios app/configuracoes; do
             curl -fsS "http://127.0.0.1:4173/$route" >"/tmp/${route//\//-}.html"
             grep -q '<div id="root"></div>' "/tmp/${route//\//-}.html"
           done
