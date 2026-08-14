@@ -14,6 +14,22 @@ const navItems = [
   { href: '/app/configuracoes', label: 'Configurações' },
 ];
 
+const pageMeta = [
+  { match: (path: string) => path === '/app', title: 'Dashboard', subtitle: 'Visão geral do sistema' },
+  { match: (path: string) => path === '/app/clientes', title: 'Clientes', subtitle: 'Organize leads e clientes atendidos pela Visa Fácil.' },
+  { match: (path: string) => path.startsWith('/app/clientes/'), title: 'Cliente', subtitle: 'Dados, processos e histórico do cliente.' },
+  { match: (path: string) => path === '/app/processos', title: 'Processos', subtitle: 'Acompanhe solicitações de visto do diagnóstico à conclusão.' },
+  { match: (path: string) => path.startsWith('/app/processos/'), title: 'Processo', subtitle: 'Acompanhamento completo da jornada do processo.' },
+  { match: (path: string) => path === '/app/documentos', title: 'Documentos', subtitle: 'Checklist e controle documental dos processos.' },
+  { match: (path: string) => path === '/app/atendimentos', title: 'Atendimentos', subtitle: 'Histórico de contatos, reuniões, orientações e decisões.' },
+  { match: (path: string) => path === '/app/chat', title: 'VisaChat', subtitle: 'Central de conversas vinculadas a clientes e processos.' },
+  { match: (path: string) => path === '/app/tarefas', title: 'Tarefas', subtitle: 'Pendências, prazos e próximos passos da operação.' },
+  { match: (path: string) => path === '/app/agenda', title: 'Agenda', subtitle: 'Visão temporal de prazos e datas-alvo da operação.' },
+  { match: (path: string) => path === '/app/financeiro', title: 'Financeiro', subtitle: 'Receitas, despesas e movimentações da assessoria.' },
+  { match: (path: string) => path === '/app/relatorios', title: 'Relatórios', subtitle: 'Leitura consolidada do estado atual da operação.' },
+  { match: (path: string) => path === '/app/configuracoes', title: 'Configurações', subtitle: 'Preferências de interface e integrações futuras.' },
+];
+
 type ManagementShellProps = { children: ReactNode; path: string; onNavigate: (path: string) => void; tools?: ReactNode };
 
 function VisaFacilLogo() { return <svg className="management-brand__logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M7 8h17l8 39L20 56 7 8Z" fill="#FFFFFF" /><path d="M29 19c7-6 15-9 26-10-1 6-4 11-9 15-6 4-11 6-17 8v-13Z" fill="#B22234" /><path d="M31 31c7-5 14-7 24-8-2 6-5 10-10 13-5 3-10 5-14 7V31Z" fill="#E31B23" /><path d="M32 43c6-4 13-6 21-7-2 6-6 10-10 13-4 3-8 5-11 6V43Z" fill="#B22234" /><path d="m18 19 1.8 3.7 4.1.6-3 2.9.7 4.1-3.6-1.9-3.6 1.9.7-4.1-3-2.9 4.1-.6L18 19Z" fill="#FFFFFF" /></svg>; }
@@ -21,7 +37,7 @@ function UsaFlagDetail() { return <div className="management-us-flag" aria-hidde
 
 export function ManagementShell({ children, path, onNavigate, tools }: ManagementShellProps) {
   function handleInternalNavigation(event: MouseEvent<HTMLAnchorElement>, href: string) { if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); onNavigate(href); }
-  const isDashboard = path === '/app';
+  const currentPage = pageMeta.find((page) => page.match(path)) ?? { title: 'Visa Fácil', subtitle: 'Sistema interno de operações' };
 
-  return <div className="management-shell"><a className="management-skip-link" href="#management-main">Pular para o conteúdo</a><aside className="management-sidebar" aria-label="Navegação do sistema"><a className="management-brand" href="/app" aria-label="Visa Fácil Gestão" onClick={(event) => handleInternalNavigation(event, '/app')}><span className="management-brand__mark"><VisaFacilLogo /></span><span><strong>VISA FÁCIL</strong><small>seu visto, sem complicação</small></span></a><div className="management-brand-stripes" aria-hidden="true"><i /><i /><i /></div><nav className="management-nav"><span className="management-nav__label">Operação</span>{navItems.map((item) => { const active = item.href === '/app' ? path === '/app' : path.startsWith(item.href); return <a key={item.href} className={active ? 'is-active' : ''} href={item.href} onClick={(event) => handleInternalNavigation(event, item.href)}>{item.label}</a>; })}</nav><div className="management-sidebar__footer"><UsaFlagDetail /><a href="/">← Voltar ao site</a><span>Ambiente interno · dev</span></div></aside><div className="management-workspace"><header className="management-topbar"><div className="management-topbar__page-title">{isDashboard ? <><strong>Dashboard</strong><small>Visão geral do sistema</small></> : <><span className="management-topbar__label">VISA FÁCIL · ASSESSORIA INTERNACIONAL</span><strong>Central de Operações</strong></>}</div><div className="management-topbar__right">{tools}<div className="management-user" aria-label="Usuário do sistema"><span>VF</span><div><strong>Administrador</strong><small>Autenticação pendente</small></div></div></div></header><main className="management-content" id="management-main" tabIndex={-1}>{children}</main></div></div>;
+  return <div className="management-shell"><a className="management-skip-link" href="#management-main">Pular para o conteúdo</a><aside className="management-sidebar" aria-label="Navegação do sistema"><a className="management-brand" href="/app" aria-label="Visa Fácil Gestão" onClick={(event) => handleInternalNavigation(event, '/app')}><span className="management-brand__mark"><VisaFacilLogo /></span><span><strong>VISA FÁCIL</strong><small>seu visto, sem complicação</small></span></a><div className="management-brand-stripes" aria-hidden="true"><i /><i /><i /></div><nav className="management-nav"><span className="management-nav__label">Operação</span>{navItems.map((item) => { const active = item.href === '/app' ? path === '/app' : path.startsWith(item.href); return <a key={item.href} className={active ? 'is-active' : ''} href={item.href} onClick={(event) => handleInternalNavigation(event, item.href)}>{item.label}</a>; })}</nav><div className="management-sidebar__footer"><UsaFlagDetail /><a href="/">← Voltar ao site</a><span>Ambiente interno · dev</span></div></aside><div className="management-workspace"><header className="management-topbar"><div className="management-topbar__page-title"><strong>{currentPage.title}</strong><small>{currentPage.subtitle}</small></div><div className="management-topbar__right">{tools}<div className="management-user" aria-label="Usuário do sistema"><span>VF</span><div><strong>Administrador</strong><small>Autenticação pendente</small></div></div></div></header><main className="management-content" id="management-main" tabIndex={-1}>{children}</main></div></div>;
 }
