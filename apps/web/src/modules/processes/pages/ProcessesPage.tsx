@@ -26,7 +26,7 @@ export function ProcessesPage({ clients, processes, onCreateProcess }: Processes
 
     <div className="process-summary-grid" aria-label="Resumo de processos">
       <article><span>Total</span><strong>{processes.length}</strong><small>Processos criados nesta sessão</small></article>
-      <article><span>Em andamento</span><strong>{inProgress}</strong><small>Fluxos ainda não concluídos</small></article>
+      <article><span>Em andamento</span><strong>{inProgress}</strong><small>Processos ainda não concluídos</small></article>
       <article><span>Urgentes</span><strong>{urgent}</strong><small>Prioridade operacional máxima</small></article>
       <article><span>Concluídos</span><strong>{completed}</strong><small>Processos finalizados</small></article>
     </div>
@@ -34,6 +34,6 @@ export function ProcessesPage({ clients, processes, onCreateProcess }: Processes
     {clients.length === 0 && <div className="process-prerequisite"><div><span className="management-eyebrow">Pré-requisito</span><h2>Cadastre um cliente primeiro</h2><p>Todo processo precisa nascer vinculado a um cliente para evitar registros órfãos.</p></div><a className="management-primary-button" href="/app/clientes">Ir para Clientes</a></div>}
     {showForm && clients.length > 0 && <ProcessForm clients={clients} onCreateProcess={createProcess} onCancel={() => setShowForm(false)} />}
 
-    <section className="process-list-card" aria-labelledby="process-list-title"><div className="process-list-card__heading"><div><span className="management-eyebrow">Pipeline</span><h2 id="process-list-title">Processos registrados</h2></div><span>{processes.length} registro(s)</span></div><div className="process-stage-strip" aria-label="Etapas disponíveis">{Object.values(PROCESS_STAGE_LABELS).map((label) => <span key={label}>{label}</span>)}</div><ProcessTable clients={clients} processes={processes} /></section>
+    <section className="process-list-card" aria-labelledby="process-list-title"><div className="process-list-card__heading"><div><span className="management-eyebrow">Acompanhamento</span><h2 id="process-list-title">Processos registrados</h2></div><span>{processes.length} registro(s)</span></div><div className="process-stage-strip" aria-label="Sequência de etapas">{Object.values(PROCESS_STAGE_LABELS).map((label) => <span key={label}>{label}</span>)}</div><ProcessTable clients={clients} processes={processes} /></section>
   </section>;
 }
