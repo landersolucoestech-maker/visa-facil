@@ -1,25 +1,23 @@
-import heroVisaFacil from '../assets/hero-visa-facil.webp';
+import { HERO_SLIDES } from '../content/heroSlides';
 
 export function HeroSection() {
   return (
     <section className="hero" aria-label="Destaques VISA FÁCIL">
       <div className="hero-slider hero-slider--background" data-hero-slider="" aria-label="Destaques e campanhas">
-        <article className="hero-slide is-active" data-hero-slide="">
-          <img src={heroVisaFacil} alt="Estátua da Liberdade, skyline de Nova York e bandeira dos Estados Unidos" />
-        </article>
-        <article className="hero-slide" data-hero-slide="">
-          <img src="https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=1800&q=90" alt="Nova York, Estados Unidos" />
-        </article>
-        <article className="hero-slide" data-hero-slide="">
-          <img src="https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1800&q=90" alt="Toronto, Canadá" />
-        </article>
-        <button type="button" className="hero-slider__side hero-slider__side--prev" aria-label="Banner anterior" data-hero-prev="">‹</button>
-        <button type="button" className="hero-slider__side hero-slider__side--next" aria-label="Próximo banner" data-hero-next="">›</button>
-        <div className="hero-slider__dots" aria-label="Selecionar banner">
-          <button className="hero-slider__dot is-active" type="button" aria-label="Mostrar banner 1" data-hero-dot="0" />
-          <button className="hero-slider__dot" type="button" aria-label="Mostrar banner 2" data-hero-dot="1" />
-          <button className="hero-slider__dot" type="button" aria-label="Mostrar banner 3" data-hero-dot="2" />
-        </div>
+        {HERO_SLIDES.map((slide, index) => (
+          <article className={`hero-slide${index === 0 ? ' is-active' : ''}`} data-hero-slide="" key={`${slide.src}-${index}`}>
+            <img src={slide.src} alt={slide.alt} />
+          </article>
+        ))}
+        {HERO_SLIDES.length > 1 && <>
+          <button type="button" className="hero-slider__side hero-slider__side--prev" aria-label="Banner anterior" data-hero-prev="">‹</button>
+          <button type="button" className="hero-slider__side hero-slider__side--next" aria-label="Próximo banner" data-hero-next="">›</button>
+          <div className="hero-slider__dots" aria-label="Selecionar banner">
+            {HERO_SLIDES.map((_, index) => (
+              <button className={`hero-slider__dot${index === 0 ? ' is-active' : ''}`} type="button" aria-label={`Mostrar banner ${index + 1}`} data-hero-dot={index} key={index} />
+            ))}
+          </div>
+        </>}
       </div>
 
       <div className="container hero__grid">
