@@ -1,4 +1,4 @@
-import { CLIENT_STATUS_LABELS, type Client } from '../types/client';
+import { CLIENT_STATUS_LABELS, type Client, type ClientStatus } from '../types/client';
 import { DESTINATION_LABELS, PROCESS_STAGE_LABELS, type VisaProcess } from '../../processes/types/process';
 import type { ServiceInteraction } from '../../interactions/types/interaction';
 import type { ManagementTask } from '../../tasks/types/task';
@@ -12,13 +12,14 @@ type ClientDetailPageProps = {
   tasks: ManagementTask[];
   conversations: ChatConversation[];
   financialEntries: FinancialEntry[];
+  onUpdateStatus: (clientId: string, status: ClientStatus) => void;
 };
 
 function money(valueCents: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valueCents / 100);
 }
 
-export function ClientDetailPage({ client, processes, interactions, tasks, conversations, financialEntries }: ClientDetailPageProps) {
+export function ClientDetailPage({ client, processes, interactions, tasks, conversations, financialEntries, onUpdateStatus }: ClientDetailPageProps) {
   if (!client) return <section className="management-page client-detail-page"><div className="management-empty-state"><strong>Cliente não encontrado nesta sessão.</strong><span>Os dados temporários são perdidos ao recarregar a página.</span><a className="management-primary-button" href="/app/clientes">Voltar para Clientes</a></div></section>;
 
   const clientProcesses = processes.filter((process) => process.clientId === client.id);
@@ -34,7 +35,7 @@ export function ClientDetailPage({ client, processes, interactions, tasks, conve
   return <section className="management-page client-detail-page" aria-labelledby="client-detail-title">
     <div className="client-detail-hero">
       <div className="client-detail-identity"><span className="client-detail-avatar">{client.fullName.slice(0, 2).toUpperCase()}</span><div><span className="management-eyebrow">Cliente</span><h1 id="client-detail-title">{client.fullName}</h1><p>{client.email} · {client.phone}</p></div></div>
-      <div className="client-detail-actions"><span className={`management-badge management-badge--${client.status}`}>{CLIENT_STATUS_LABELS[client.status]}</span><a className="management-secondary-button" href="/app/clientes">← Clientes</a><a className="management-primary-button" href="/app/chat">Abrir VisaChat</a></div>
+      <div className="client-detail-actions"><label className="client-status-control"><span>Status</span><select aria-label="Status do cliente" value={client.status} onChange={(event) => onUpdateStatus(client.id, event.target.value as ClientStatus)}>{Object.entries(CLIENT_STATUS_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><a className="management-secondary-button" href="/app/clientes">← Clientes</a><a className="management-primary-button" href="/app/chat">Abrir VisaChat</a></div>
     </div>
 
     <nav className="client-quick-actions" aria-label="Ações rápidas do cliente"><a href="/app/processos"><span>PR</span><strong>Novo processo</strong><small>Abrir solicitação vinculada</small></a><a href="/app/chat"><span>CH</span><strong>VisaChat</strong><small>Iniciar ou continuar conversa</small></a><a href="/app/atendimentos"><span>AT</span><strong>Atendimento</strong><small>Registrar marco relevante</small></a><a href="/app/tarefas"><span>TA</span><strong>Tarefa</strong><small>Criar próximo passo</small></a><a href="/app/financeiro"><span>FI</span><strong>Financeiro</strong><small>Registrar movimentação</small></a></nav>
@@ -44,7 +45,7 @@ export function ClientDetailPage({ client, processes, interactions, tasks, conve
     <div className="client-detail-grid">
       <section className="client-detail-card client-detail-card--processes"><div className="client-detail-card__heading"><div><span className="management-eyebrow">Jornada</span><h2>Processos do cliente</h2></div><a href="/app/processos">Novo processo →</a></div>{clientProcesses.length ? <div className="client-detail-process-list">{clientProcesses.map((process) => <a key={process.id} href={`/app/processos/${encodeURIComponent(process.id)}`}><div><strong>{process.category}</strong><small>{DESTINATION_LABELS[process.destination]}</small></div><span>{PROCESS_STAGE_LABELS[process.stage]}</span></a>)}</div> : <div className="client-detail-empty">Nenhum processo vinculado ainda.</div>}</section>
 
-      <aside className="client-detail-card"><span className="management-eyebrow">Contato</span><h2>Dados principais</h2><dl className="client-detail-data"><div><dt>E-mail</dt><dd>{client.email}</dd></div><div><dt>Telefone</dt><dd>{client.phone}</dd></div><div><dt>Status</dt><dd>{CLIENT_STATUS_LABELS[client.status]}</dd></div><div><dt>Cadastrado em</dt><dd>{new Date(client.createdAt).toLocaleDateString('pt-BR')}</dd></div></dl></aside>
+      <aside className="client-detail-card"><span className="management-eyebrow">Contato</span><h2>Dados principais</h2><dl className="client-detail-data"><div><dt>E-mail</dt><dd>{client.email}</dd></div><div><dt>Telefone</dt><dd>{client.phone}</dd></div><div><dt>Status</dt><dd>{CLIENT_STATUS_LABELS[client.status]}</dd></div><div><dt>Atualizado em</dt><dd>{new Date(client.updatedAt).toLocaleString('pt-BR')}</dd></div></dl></aside>
 
       <section className="client-detail-card"><div className="client-detail-card__heading"><div><span className="management-eyebrow">Relacionamento</span><h2>Último atendimento</h2></div><a href="/app/atendimentos">Histórico →</a></div>{latestInteraction ? <div className="client-detail-latest"><strong>{latestInteraction.subject}</strong><small>{new Date(latestInteraction.occurredAt).toLocaleString('pt-BR')}</small><p>{latestInteraction.notes}</p></div> : <div className="client-detail-empty">Nenhum atendimento manual registrado.</div>}</section>
 
