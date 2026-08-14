@@ -25,8 +25,11 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Validate migration contract
+      - name: Validate public-site contract
         run: node scripts/validate-public-site.mjs
+
+      - name: Validate management contract
+        run: node scripts/validate-management.mjs
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -50,6 +53,7 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:4173/ >/tmp/root.html
-          curl -fsS http://127.0.0.1:4173/app/ >/tmp/app.html
-          grep -q '<div id="root"></div>' /tmp/root.html
-          grep -q '<div id="root"></div>' /tmp/app.html
+          for route in app app/clientes app/processos app/documentos app/atendimentos app/tarefas app/financeiro; do
+            curl -fsS "http://127.0.0.1:4173/$route" >"/tmp/${route//\//-}.html"
+            grep -q '<div id="root"></div>' "/tmp/${route//\//-}.html"
+          done
