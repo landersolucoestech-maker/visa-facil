@@ -54,7 +54,7 @@ assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Manage
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
 assert(app.includes('GlobalSearch'), 'Global frontend search must remain connected to the management shell');
 assert(app.includes('NotificationCenter'), 'Frontend alert center must remain connected to the management shell');
-assert(app.includes('updateClientStatus') && app.includes('updateClient') && app.includes('updateProcess'), 'Existing session records must remain editable and evolvable in the frontend');
+assert(app.includes('updateClientStatus') && app.includes('updateClient') && app.includes('updateProcess') && app.includes('updateTask') && app.includes('updateFinancialStatus'), 'Existing session records must remain editable and evolvable in the frontend');
 assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/notifications/components/NotificationCenter.tsx')), 'Alert center component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/clients/components/ClientEditForm.tsx')), 'Client edit form must remain inside the clients module');
@@ -95,6 +95,10 @@ assert(calendarPage.includes('Agenda') && calendarPage.includes('Tarefa') && cal
 const processDetail = read(pageFiles.processDetail);
 assert(processDetail.includes('process-stage-timeline') && processDetail.includes('operationalStages'), 'Process detail must retain its sequential stage timeline');
 assert(processDetail.includes('process-update-card') && processDetail.includes('onUpdateProcess') && processDetail.includes('ProcessEditForm'), 'Process detail must retain progression and full edit controls');
+const tasksPage = read(pageFiles.tasks);
+assert(tasksPage.includes('onUpdateTask') && tasksPage.includes('tasks-inline-date') && tasksPage.includes('tasks-inline-priority'), 'Tasks must retain inline deadline and priority progression controls');
+const financePage = read(pageFiles.finance);
+assert(financePage.includes('onUpdateStatus') && financePage.includes('finance-status-select'), 'Finance must retain planned/paid progression controls');
 
 const validatedForms = [
   'apps/web/src/modules/clients/components/ClientForm.tsx',
