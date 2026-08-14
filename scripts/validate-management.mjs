@@ -52,16 +52,17 @@ assert(main.includes("./modules/clients/client-controls.css") && main.includes("
 assert(main.includes("./modules/chat/chat.css") && main.includes("./modules/calendar/calendar.css") && main.includes("./modules/search/search.css") && main.includes("./modules/notifications/notifications.css") && main.includes("./modules/reports/reports.css") && main.includes("./modules/settings/settings.css"), 'Chat/calendar/search/notifications/reports/settings visual styles must remain loaded');
 assert(!app.includes('localStorage') && !app.includes('sessionStorage'), 'Management foundation must not persist client data in browser storage');
 assert(app.includes('history.pushState'), 'Management navigation must preserve SPA session state');
-assert(app.includes('GlobalSearch'), 'Global frontend search must remain connected to the management shell');
+assert(!app.includes('GlobalSearch'), 'Global search field must remain removed from the management topbar');
+assert(!shell.includes('Buscar cliente, processo ou tarefa'), 'Management topbar must not expose a search field');
 assert(app.includes('NotificationCenter'), 'Frontend alert center must remain connected to the management shell');
 assert(app.includes('updateClientStatus') && app.includes('updateClient') && app.includes('updateProcess') && app.includes('updateTask') && app.includes('updateFinancialStatus'), 'Existing session records must remain editable and evolvable in the frontend');
-assert(existsSync(resolve(root, 'apps/web/src/modules/search/components/GlobalSearch.tsx')), 'Global search component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/notifications/components/NotificationCenter.tsx')), 'Alert center component must remain inside its own module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/clients/components/ClientEditForm.tsx')), 'Client edit form must remain inside the clients module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/processes/components/ProcessEditForm.tsx')), 'Process edit form must remain inside the processes module');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/accessibility.css')), 'Management keyboard accessibility stylesheet must remain present');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/forms.css')), 'Shared form feedback stylesheet must remain present');
 assert(shell.includes('management-skip-link') && shell.includes('management-main'), 'Management shell must retain skip-link keyboard navigation');
+assert(shell.includes('<strong>Dashboard</strong>') && shell.includes('<small>Visão geral do sistema</small>'), 'Dashboard title and subtitle must remain in the topbar');
 
 const routes = ['/app/clientes','/app/processos','/app/documentos','/app/atendimentos','/app/chat','/app/tarefas','/app/agenda','/app/financeiro','/app/relatorios','/app/configuracoes'];
 for (const route of routes) {
