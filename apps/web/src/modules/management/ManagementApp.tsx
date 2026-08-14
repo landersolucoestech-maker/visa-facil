@@ -74,7 +74,7 @@ export function ManagementApp() {
   else if (path === '/app/configuracoes') content = <SettingsPage />;
 
   let createAction = null;
-  if (path === '/app/clientes') createAction = <button className="management-primary-button" type="button" onClick={() => setShowClientForm(true)}>Novo cliente</button>;
+  if (path === '/app/clientes') createAction = <button className="management-primary-button" type="button" onClick={() => setShowClientForm(true)}>Novo contato</button>;
   else if (path === '/app/processos') createAction = <button className="management-primary-button" type="button" disabled={clients.length === 0} onClick={() => setShowProcessForm(true)}>Novo processo</button>;
   else if (path === '/app/documentos') createAction = <button className="management-primary-button" type="button" disabled={processes.length === 0} onClick={() => setShowDocumentForm(true)}>Adicionar documento</button>;
   else if (path === '/app/atendimentos') createAction = <button className="management-primary-button" type="button" disabled={clients.length === 0} onClick={() => setShowInteractionForm(true)}>Registrar atendimento</button>;
