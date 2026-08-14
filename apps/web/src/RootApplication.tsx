@@ -1,11 +1,11 @@
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
-import { ManagementReservedPage } from './modules/management/pages/ManagementReservedPage';
+import { ManagementApp } from './modules/management/ManagementApp';
 
 export function RootApplication() {
   const path = window.location.pathname;
 
   if (path === '/app' || path.startsWith('/app/')) {
-    return <ManagementReservedPage />;
+    return <ManagementApp />;
   }
 
   return <PublicSitePage />;
