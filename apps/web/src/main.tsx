@@ -10,6 +10,8 @@ import './modules/clients/clients.css';
 import './modules/processes/processes.css';
 import './modules/documents/documents.css';
 import './modules/interactions/interactions.css';
+import './modules/reports/reports.css';
+import './modules/settings/settings.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
