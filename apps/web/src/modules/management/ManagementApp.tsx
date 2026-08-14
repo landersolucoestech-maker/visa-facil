@@ -21,7 +21,7 @@ import type { DocumentItem } from '../documents/types/document';
 import type { ServiceInteraction } from '../interactions/types/interaction';
 import type { ChatConversation, ChatConversationStatus, ChatMessage } from '../chat/types/chat';
 import type { ManagementTask } from '../tasks/types/task';
-import type { FinancialEntry } from '../finance/types/finance';
+import type { FinancialEntry, FinancialEntryStatus } from '../finance/types/finance';
 
 function normalizePath() { return window.location.pathname.replace(/\/+$/, '') || '/app'; }
 
@@ -72,6 +72,7 @@ export function ManagementApp() {
   function createTask(input: Omit<ManagementTask, 'id' | 'createdAt'>) { setTasks((current) => [{ ...input, id: `session-task-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]); }
   function toggleTask(taskId: string) { setTasks((current) => current.map((task) => task.id === taskId ? { ...task, status: task.status === 'open' ? 'done' : 'open' } : task)); }
   function createFinancialEntry(input: Omit<FinancialEntry, 'id' | 'createdAt'>) { setFinancialEntries((current) => [{ ...input, id: `session-finance-${current.length + 1}`, createdAt: new Date().toISOString() }, ...current]); }
+  function updateFinancialStatus(entryId: string, status: FinancialEntryStatus) { setFinancialEntries((current) => current.map((entry) => entry.id === entryId ? { ...entry, status } : entry)); }
 
   let content = <ManagementDashboardPage clients={clients} processes={processes} documents={documents} interactions={interactions} conversations={conversations} tasks={tasks} financialEntries={financialEntries} />;
   if (path === '/app/clientes') content = <ClientsPage clients={clients} onCreateClient={createClient} />;
@@ -90,7 +91,7 @@ export function ManagementApp() {
   else if (path === '/app/chat') content = <ChatPage clients={clients} processes={processes} conversations={conversations} messages={messages} onCreateConversation={createConversation} onSendMessage={sendChatMessage} onToggleFavorite={toggleChatFavorite} onMarkRead={markChatRead} onSetStatus={setChatStatus} />;
   else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} />;
   else if (path === '/app/agenda') content = <CalendarPage clients={clients} processes={processes} tasks={tasks} />;
-  else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} />;
+  else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} onUpdateStatus={updateFinancialStatus} />;
   else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} interactions={interactions} conversations={conversations} />;
   else if (path === '/app/configuracoes') content = <SettingsPage />;
 
