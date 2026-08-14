@@ -14,7 +14,7 @@ export function InteractionTimeline({ clients, processes, interactions }: Intera
     return <article className="interaction-timeline__item" key={interaction.id}>
       <div className="interaction-timeline__rail"><span>{INTERACTION_CHANNEL_LABELS[interaction.channel]}</span><i /></div>
       <div className="interaction-timeline__content">
-        <div className="interaction-timeline__header"><div><strong>{interaction.subject}</strong><small>{client?.fullName ?? 'Cliente não encontrado'} · {new Date(interaction.occurredAt).toLocaleString('pt-BR')}</small></div>{process && <span className="interaction-process-pill">{process.category} · {PROCESS_STAGE_LABELS[process.stage]}</span>}</div>
+        <div className="interaction-timeline__header"><div><strong>{interaction.subject}</strong><small>{client ? <a href={`/app/clientes/${encodeURIComponent(client.id)}`}>{client.fullName}</a> : 'Cliente não encontrado'} · {new Date(interaction.occurredAt).toLocaleString('pt-BR')}</small></div>{process && <a className="interaction-process-pill" href={`/app/processos/${encodeURIComponent(process.id)}`}>{process.category} · {PROCESS_STAGE_LABELS[process.stage]}</a>}</div>
         <p>{interaction.notes}</p>
       </div>
     </article>;
