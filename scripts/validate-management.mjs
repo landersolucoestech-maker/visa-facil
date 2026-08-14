@@ -63,7 +63,10 @@ assert(existsSync(resolve(root, 'apps/web/src/modules/processes/components/Proce
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/accessibility.css')), 'Management keyboard accessibility stylesheet must remain present');
 assert(existsSync(resolve(root, 'apps/web/src/modules/management/forms.css')), 'Shared form feedback stylesheet must remain present');
 assert(shell.includes('management-skip-link') && shell.includes('management-main'), 'Management shell must retain skip-link keyboard navigation');
-assert(shell.includes('<strong>Dashboard</strong>') && shell.includes('<small>Visão geral do sistema</small>'), 'Dashboard title and subtitle must remain in the topbar');
+
+const requiredTopbarPages = ['Dashboard','Clientes','Cliente','Processos','Processo','Documentos','Atendimentos','VisaChat','Tarefas','Agenda','Financeiro','Relatórios','Configurações'];
+for (const title of requiredTopbarPages) assert(shell.includes(`title: '${title}'`), `Topbar page metadata missing for: ${title}`);
+assert(shell.includes('Visão geral do sistema') && shell.includes('currentPage.title') && shell.includes('currentPage.subtitle'), 'Every management route must render its title/subtitle in the topbar');
 
 const routes = ['/app/clientes','/app/processos','/app/documentos','/app/atendimentos','/app/chat','/app/tarefas','/app/agenda','/app/financeiro','/app/relatorios','/app/configuracoes'];
 for (const route of routes) {
