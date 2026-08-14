@@ -8,6 +8,7 @@ import './modules/management/management.css';
 import './modules/management/dashboard.css';
 import './modules/management/flag.css';
 import './modules/management/accessibility.css';
+import './modules/management/forms.css';
 import './modules/clients/clients.css';
 import './modules/clients/client-controls.css';
 import './modules/processes/processes.css';
