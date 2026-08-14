@@ -8,10 +8,11 @@ type ProcessesPageProps = {
   clients: Client[];
   processes: VisaProcess[];
   onCreateProcess: (input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  showForm: boolean;
+  onCloseForm: () => void;
 };
 
-export function ProcessesPage({ clients, processes, onCreateProcess }: ProcessesPageProps) {
-  const [showForm, setShowForm] = useState(false);
+export function ProcessesPage({ clients, processes, onCreateProcess, showForm, onCloseForm }: ProcessesPageProps) {
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState<ProcessStage | 'all'>('all');
   const [destination, setDestination] = useState<VisaDestination | 'all'>('all');
@@ -30,11 +31,11 @@ export function ProcessesPage({ clients, processes, onCreateProcess }: Processes
 
   function createProcess(input: Omit<VisaProcess, 'id' | 'createdAt' | 'updatedAt'>) {
     onCreateProcess(input);
-    setShowForm(false);
+    onCloseForm();
   }
 
   return <section className="management-page process-page" aria-labelledby="processes-title">
-    <div className="management-page__heading management-page__heading--row"><div><span className="management-eyebrow">Operação</span><h1 id="processes-title">Processos</h1><p>Acompanhe solicitações de visto desde o diagnóstico inicial até a conclusão do atendimento.</p></div><button className="management-primary-button" type="button" disabled={clients.length === 0} onClick={() => setShowForm((value) => !value)}>{showForm ? 'Fechar cadastro' : 'Novo processo'}</button></div>
+    <div className="management-page__heading"><div><span className="management-eyebrow">Operação</span><h1 id="processes-title">Processos</h1><p>Acompanhe solicitações de visto desde o diagnóstico inicial até a conclusão do atendimento.</p></div></div>
 
     <div className="process-summary-grid" aria-label="Resumo de processos">
       <article><span>Total</span><strong>{processes.length}</strong><small>Processos criados nesta sessão</small></article>
@@ -44,7 +45,7 @@ export function ProcessesPage({ clients, processes, onCreateProcess }: Processes
     </div>
 
     {clients.length === 0 && <div className="process-prerequisite"><div><span className="management-eyebrow">Pré-requisito</span><h2>Cadastre um cliente primeiro</h2><p>Todo processo precisa nascer vinculado a um cliente para evitar registros órfãos.</p></div><a className="management-primary-button" href="/app/clientes">Ir para Clientes</a></div>}
-    {showForm && clients.length > 0 && <ProcessForm clients={clients} onCreateProcess={createProcess} onCancel={() => setShowForm(false)} />}
+    {showForm && clients.length > 0 && <ProcessForm clients={clients} onCreateProcess={createProcess} onCancel={onCloseForm} />}
 
     <section className="process-list-card" aria-labelledby="process-list-title"><div className="process-list-card__heading"><div><span className="management-eyebrow">Acompanhamento</span><h2 id="process-list-title">Processos registrados</h2></div><span>{filteredProcesses.length} resultado(s)</span></div><div className="process-filter-bar"><label><span>Buscar</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cliente, categoria, destino ou etapa" /></label><label><span>Etapa</span><select value={stage} onChange={(event) => setStage(event.target.value as ProcessStage | 'all')}><option value="all">Todas</option>{Object.entries(PROCESS_STAGE_LABELS).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>Destino</span><select value={destination} onChange={(event) => setDestination(event.target.value as VisaDestination | 'all')}><option value="all">Todos</option>{Object.entries(DESTINATION_LABELS).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label><label><span>Prioridade</span><select value={priority} onChange={(event) => setPriority(event.target.value as ProcessPriority | 'all')}><option value="all">Todas</option>{Object.entries(PROCESS_PRIORITY_LABELS).map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label></div><div className="process-stage-strip" aria-label="Sequência de etapas">{Object.values(PROCESS_STAGE_LABELS).map((label) => <span key={label}>{label}</span>)}</div><ProcessTable clients={clients} processes={filteredProcesses} /></section>
   </section>;
