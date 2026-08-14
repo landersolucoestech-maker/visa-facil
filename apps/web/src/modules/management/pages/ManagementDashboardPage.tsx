@@ -12,6 +12,8 @@ const modules = [
   { href: '/app/processos', index: '02', title: 'Processos', copy: 'Organização das solicitações e acompanhamento das etapas.' },
   { href: '/app/documentos', index: '03', title: 'Documentos', copy: 'Checklists e pendências documentais por processo.' },
   { href: '/app/atendimentos', index: '04', title: 'Atendimentos', copy: 'Histórico de contatos e acompanhamento operacional.' },
+  { href: '/app/tarefas', index: '05', title: 'Tarefas', copy: 'Pendências, prazos e prioridades da operação.' },
+  { href: '/app/financeiro', index: '06', title: 'Financeiro', copy: 'Receitas e despesas vinculadas à operação e aos processos.' },
 ];
 
 export function ManagementDashboardPage({ clients, processes, documents, interactions }: ManagementDashboardPageProps) {
@@ -30,9 +32,9 @@ export function ManagementDashboardPage({ clients, processes, documents, interac
       </div>
       <div className="management-session-note">Os números abaixo não são dados de produção. Eles refletem apenas registros temporários criados nesta sessão, sem backend.</div>
       <div className="management-metrics" aria-label="Indicadores operacionais">{metrics.map((metric) => <article className="management-metric" key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.note}</small></article>)}</div>
-      <div className="management-section-heading"><div><span className="management-eyebrow">Módulos</span><h2>Fluxo operacional</h2></div><span>Cliente → Processo → Documentos → Atendimento</span></div>
+      <div className="management-section-heading"><div><span className="management-eyebrow">Módulos</span><h2>Fluxo operacional</h2></div><span>Cliente → Processo → Documentos → Atendimento → Tarefas → Financeiro</span></div>
       <div className="management-modules">{modules.map((module) => <a className="management-module-card" href={module.href} key={module.href}><span className="management-module-card__index">{module.index}</span><div><h3>{module.title}</h3><p>{module.copy}</p></div><span className="management-module-card__arrow" aria-hidden="true">→</span></a>)}</div>
-      <div className="management-foundation-note"><div><span className="management-eyebrow">Arquitetura desta fase</span><h2>Contratos definidos antes do backend</h2></div><p>Clientes, processos, checklists e atendimentos já compartilham um modelo de domínio no frontend. Persistência, autenticação, permissões e arquivos permanecem fora até a fundação ser validada.</p></div>
+      <div className="management-foundation-note"><div><span className="management-eyebrow">Arquitetura desta fase</span><h2>Contratos definidos antes do backend</h2></div><p>Clientes, processos, checklists, atendimentos, tarefas e lançamentos financeiros compartilham um modelo de domínio no frontend. Persistência, autenticação, permissões, arquivos e integrações externas permanecem fora até a próxima fase.</p></div>
     </section>
   );
 }
