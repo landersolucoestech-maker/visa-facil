@@ -14,6 +14,7 @@ export interface ChatConversation {
   processId?: string;
   status: ChatConversationStatus;
   unread: boolean;
+  unreadCount: number;
   favorite: boolean;
   createdAt: string;
   updatedAt: string;
