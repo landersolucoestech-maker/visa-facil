@@ -7,6 +7,7 @@ import './modules/public-site/styles/03-hero-v3.css';
 import './modules/management/management.css';
 import './modules/management/dashboard.css';
 import './modules/management/flag.css';
+import './modules/management/accessibility.css';
 import './modules/clients/clients.css';
 import './modules/processes/processes.css';
 import './modules/documents/documents.css';
