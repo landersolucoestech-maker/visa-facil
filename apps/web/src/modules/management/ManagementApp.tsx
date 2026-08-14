@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { ManagementShell } from './components/ManagementShell';
 import { ManagementDashboardPage } from './pages/ManagementDashboardPage';
-import { ClientsPage } from './pages/ClientsPage';
-import { ProcessesPage } from './pages/ProcessesPage';
-import { DocumentsPage } from './pages/DocumentsPage';
-import { InteractionsPage } from './pages/InteractionsPage';
-import { TasksPage } from './pages/TasksPage';
-import { FinancePage } from './pages/FinancePage';
-import type { Client, DocumentItem, FinancialEntry, ManagementTask, ServiceInteraction, VisaProcess } from './domain';
+import { ClientsPage } from '../clients/pages/ClientsPage';
+import { ProcessesPage } from '../processes/pages/ProcessesPage';
+import { DocumentsPage } from '../documents/pages/DocumentsPage';
+import { InteractionsPage } from '../interactions/pages/InteractionsPage';
+import { TasksPage } from '../tasks/pages/TasksPage';
+import { FinancePage } from '../finance/pages/FinancePage';
+import type { Client } from '../clients/types/client';
+import type { VisaProcess } from '../processes/types/process';
+import type { DocumentItem } from '../documents/types/document';
+import type { ServiceInteraction } from '../interactions/types/interaction';
+import type { ManagementTask } from '../tasks/types/task';
+import type { FinancialEntry } from '../finance/types/finance';
 
 function normalizePath() {
   return window.location.pathname.replace(/\/+$/, '') || '/app';
