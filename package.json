@@ -1,0 +1,11 @@
+{
+  "name": "visa-facil",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "npm --workspace @visa-facil/web run dev",
+    "build": "npm --workspace @visa-facil/web run build",
+    "typecheck": "npm --workspace @visa-facil/web run typecheck"
+  }
+}
