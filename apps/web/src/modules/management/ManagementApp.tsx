@@ -7,6 +7,8 @@ import { DocumentsPage } from '../documents/pages/DocumentsPage';
 import { InteractionsPage } from '../interactions/pages/InteractionsPage';
 import { TasksPage } from '../tasks/pages/TasksPage';
 import { FinancePage } from '../finance/pages/FinancePage';
+import { ReportsPage } from '../reports/pages/ReportsPage';
+import { SettingsPage } from '../settings/pages/SettingsPage';
 import type { Client } from '../clients/types/client';
 import type { VisaProcess } from '../processes/types/process';
 import type { DocumentItem } from '../documents/types/document';
@@ -90,6 +92,8 @@ export function ManagementApp() {
   else if (path === '/app/atendimentos') content = <InteractionsPage clients={clients} processes={processes} interactions={interactions} onCreateInteraction={createInteraction} />;
   else if (path === '/app/tarefas') content = <TasksPage clients={clients} processes={processes} tasks={tasks} onCreateTask={createTask} onToggleTask={toggleTask} />;
   else if (path === '/app/financeiro') content = <FinancePage clients={clients} processes={processes} entries={financialEntries} onCreateEntry={createFinancialEntry} />;
+  else if (path === '/app/relatorios') content = <ReportsPage clients={clients} processes={processes} documents={documents} tasks={tasks} financialEntries={financialEntries} />;
+  else if (path === '/app/configuracoes') content = <SettingsPage />;
 
   return <ManagementShell path={path} onNavigate={navigate}>{content}</ManagementShell>;
 }
