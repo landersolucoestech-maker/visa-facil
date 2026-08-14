@@ -8,6 +8,7 @@ const navItems = [
   { href: '/app/atendimentos', label: 'Atendimentos' },
   { href: '/app/chat', label: 'VisaChat' },
   { href: '/app/tarefas', label: 'Tarefas' },
+  { href: '/app/agenda', label: 'Agenda' },
   { href: '/app/financeiro', label: 'Financeiro' },
   { href: '/app/relatorios', label: 'Relatórios' },
   { href: '/app/configuracoes', label: 'Configurações' },
