@@ -11,6 +11,8 @@ import './modules/clients/clients.css';
 import './modules/processes/processes.css';
 import './modules/documents/documents.css';
 import './modules/interactions/interactions.css';
+import './modules/tasks/tasks.css';
+import './modules/finance/finance.css';
 import './modules/reports/reports.css';
 import './modules/settings/settings.css';
 
