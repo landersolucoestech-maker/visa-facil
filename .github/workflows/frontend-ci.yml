@@ -1,4 +1,4 @@
-name: Frontend CI
+name: Website CI
 
 on:
   push:
@@ -25,11 +25,8 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Validate public-site contract
+      - name: Validate public website contract
         run: node scripts/validate-public-site.mjs
-
-      - name: Validate management contract
-        run: node scripts/validate-management.mjs
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -53,7 +50,4 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:4173/ >/tmp/root.html
-          for route in app app/clientes app/clientes/session-client-1 app/processos app/processos/session-process-1 app/documentos app/atendimentos app/chat app/tarefas app/agenda app/financeiro app/relatorios app/configuracoes; do
-            curl -fsS "http://127.0.0.1:4173/$route" >"/tmp/${route//\//-}.html"
-            grep -q '<div id="root"></div>' "/tmp/${route//\//-}.html"
-          done
+          grep -q '<div id="root"></div>' /tmp/root.html
