@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Client } from '../../clients/types/client';
 import { DESTINATION_LABELS, PROCESS_STAGE_LABELS, type VisaProcess } from '../../processes/types/process';
 import type { ManagementTask } from '../../tasks/types/task';
@@ -8,6 +8,9 @@ type SearchResult = { id: string; group: string; title: string; subtitle: string
 
 export function GlobalSearch({ clients, processes, tasks, onNavigate }: GlobalSearchProps) {
   const [query, setQuery] = useState('');
+  const [openPopover, setOpenPopover] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const normalized = query.trim().toLowerCase();
   const results = useMemo<SearchResult[]>(() => {
     if (!normalized) return [];
@@ -17,6 +20,16 @@ export function GlobalSearch({ clients, processes, tasks, onNavigate }: GlobalSe
     return [...clientResults,...processResults,...taskResults].slice(0,8);
   },[clients,processes,tasks,normalized]);
 
-  function open(result: SearchResult){ onNavigate(result.path); setQuery(''); }
-  return <div className="global-search"><span className="global-search__icon">⌕</span><input aria-label="Busca global" value={query} onChange={(event)=>setQuery(event.target.value)} placeholder="Buscar cliente, processo ou tarefa..." />{normalized && <div className="global-search__popover">{results.length===0?<div className="global-search__empty">Nenhum resultado nesta sessão.</div>:results.map((result)=><button type="button" key={result.id} onClick={()=>open(result)}><span>{result.group}</span><div><strong>{result.title}</strong><small>{result.subtitle}</small></div></button>)}</div>}</div>;
+  useEffect(()=>{
+    function handleKey(event: KeyboardEvent){
+      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();inputRef.current?.focus();setOpenPopover(true);}
+      if(event.key==='Escape'){setOpenPopover(false);inputRef.current?.blur();}
+    }
+    function handlePointer(event: MouseEvent){if(rootRef.current && !rootRef.current.contains(event.target as Node))setOpenPopover(false);}
+    window.addEventListener('keydown',handleKey);document.addEventListener('mousedown',handlePointer);
+    return()=>{window.removeEventListener('keydown',handleKey);document.removeEventListener('mousedown',handlePointer);};
+  },[]);
+
+  function open(result: SearchResult){ onNavigate(result.path); setQuery(''); setOpenPopover(false); }
+  return <div className="global-search" ref={rootRef}><span className="global-search__icon">⌕</span><input ref={inputRef} aria-label="Busca global" value={query} onFocus={()=>setOpenPopover(true)} onChange={(event)=>{setQuery(event.target.value);setOpenPopover(true);}} placeholder="Buscar cliente, processo ou tarefa..." /><kbd>Ctrl K</kbd>{openPopover&&normalized&&<div className="global-search__popover">{results.length===0?<div className="global-search__empty">Nenhum resultado nesta sessão.</div>:results.map((result)=><button type="button" key={result.id} onClick={()=>open(result)}><span>{result.group}</span><div><strong>{result.title}</strong><small>{result.subtitle}</small></div></button>)}</div>}</div>;
 }
