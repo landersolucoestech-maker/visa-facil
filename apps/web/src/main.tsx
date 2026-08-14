@@ -15,6 +15,7 @@ import './modules/chat/chat.css';
 import './modules/tasks/tasks.css';
 import './modules/calendar/calendar.css';
 import './modules/search/search.css';
+import './modules/notifications/notifications.css';
 import './modules/finance/finance.css';
 import './modules/reports/reports.css';
 import './modules/settings/settings.css';
