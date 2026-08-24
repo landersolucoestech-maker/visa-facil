@@ -1,0 +1,30 @@
+/* Final CRM header alignment override.
+   Keep the topbar aligned to the same compact gutters as page content. */
+.crm-global-page .crm-topbar{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+}
+.crm-global-page .crm-topbar>div:first-child{
+  min-width:0;
+  margin:0;
+  padding:0;
+}
+.crm-global-page .crm-topbar-actions{
+  margin-left:auto;
+  padding:0;
+}
+@media(max-width:1100px){
+  .crm-global-page .crm-topbar{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+}
+@media(max-width:680px){
+  .crm-global-page .crm-topbar{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+}
