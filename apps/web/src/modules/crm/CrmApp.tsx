@@ -24,6 +24,18 @@ const KPI_ITEMS = [
   { label: 'Tarefas', value: '0', detail: 'pendentes', tone: 'blue' },
 ];
 
+const SERVICE_OPTIONS = [
+  'Assessoria para visto de turismo',
+  'Renovação de visto',
+  'Visto de estudante',
+  'Visto de trabalho',
+  'Visto de negócios',
+  'Outro',
+];
+
+const DESTINATION_OPTIONS = ['Estados Unidos', 'Canadá', 'Outro'];
+const VISA_TYPE_OPTIONS = ['B1/B2', 'F-1', 'J-1', 'H-1B', 'L-1', 'O-1', 'EB', 'Outro'];
+
 type CrmTab = 'contacts' | 'leads';
 type RecordKind = 'contact' | 'lead';
 type ModalMode = 'create' | 'view' | 'edit';
@@ -97,7 +109,9 @@ function RecordForm({ kind, initial, onCancel, onSubmit }: { kind: RecordKind; i
       <Field label="Número do passaporte"><input value={draft.passportNumber} onChange={(e) => set('passportNumber', e.target.value)} placeholder="Número do passaporte" /></Field>
       {kind === 'contact' ? <Field label="Relacionamento"><select value={draft.relationship} onChange={(e) => set('relationship', e.target.value)}><option>Cliente</option><option>Parceiro</option><option>Outro</option></select></Field> : <>
         <Field label="Origem"><select value={draft.source} onChange={(e) => set('source', e.target.value)}><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Indicação</option><option>Google</option><option>Outro</option></select></Field>
-        <Field label="Interesse / Serviço"><input value={draft.interest} onChange={(e) => set('interest', e.target.value)} /></Field><Field label="Destino de interesse"><input value={draft.destination} onChange={(e) => set('destination', e.target.value)} /></Field><Field label="Tipo de visto / Interesse"><input value={draft.visaType} onChange={(e) => set('visaType', e.target.value)} /></Field>
+        <Field label="Interesse / Serviço"><select value={draft.interest} onChange={(e) => set('interest', e.target.value)}><option value="">Selecione o serviço</option>{SERVICE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field>
+        <Field label="Destino de interesse"><select value={draft.destination} onChange={(e) => set('destination', e.target.value)}><option value="">Selecione o destino</option>{DESTINATION_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field>
+        <Field label="Tipo de visto / Interesse"><select value={draft.visaType} onChange={(e) => set('visaType', e.target.value)}><option value="">Selecione o tipo de visto</option>{VISA_TYPE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field>
       </>}
     </div></div>
     <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Contato</strong><small>Canais e localização.</small></div><div className="crm-form-grid"><Field label="E-mail"><input required type="email" value={draft.email} onChange={(e) => set('email', e.target.value)} /></Field><Field label="Telefone"><input value={draft.phone} onChange={(e) => set('phone', e.target.value)} /></Field><Field label="WhatsApp"><input value={draft.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} /></Field><Field label="Cidade"><input value={draft.city} onChange={(e) => set('city', e.target.value)} /></Field><Field label="Estado"><input value={draft.state} onChange={(e) => set('state', e.target.value)} /></Field><Field label="País"><input value={draft.country} onChange={(e) => set('country', e.target.value)} /></Field></div></div>
