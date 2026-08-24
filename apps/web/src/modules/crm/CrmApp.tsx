@@ -32,6 +32,9 @@ export type CrmRecord = {
   id: string;
   kind: RecordKind;
   fullName: string;
+  cpf: string;
+  rg: string;
+  passportNumber: string;
   email: string;
   phone: string;
   whatsapp: string;
@@ -57,7 +60,7 @@ export type CrmRecord = {
 type RecordDraft = Omit<CrmRecord, 'id' | 'kind' | 'createdAt' | 'updatedAt'>;
 
 const EMPTY_DRAFT: RecordDraft = {
-  fullName: '', email: '', phone: '', whatsapp: '', city: '', state: '', country: 'Brasil', notes: '',
+  fullName: '', cpf: '', rg: '', passportNumber: '', email: '', phone: '', whatsapp: '', city: '', state: '', country: 'Brasil', notes: '',
   relationship: 'Cliente', contactStatus: 'Ativo', source: 'Website', owner: '', interest: '', destination: '',
   visaType: '', leadStatus: 'Novo', temperature: 'Morno', nextAction: '', nextActionDate: '',
 };
@@ -87,8 +90,11 @@ function RecordForm({ kind, initial, onCancel, onSubmit }: { kind: RecordKind; i
   const [draft, setDraft] = useState<RecordDraft>(initial);
   const set = (key: keyof RecordDraft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
   return <form className="crm-record-form" onSubmit={(event) => { event.preventDefault(); if (!draft.fullName.trim() || !draft.email.trim()) return; onSubmit(draft); }}>
-    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Identificação pessoal</strong><small>Dados principais da pessoa atendida.</small></div><div className="crm-form-grid">
+    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Identificação pessoal</strong><small>Dados principais e documentos da pessoa atendida.</small></div><div className="crm-form-grid">
       <Field label="Nome completo" wide><input required value={draft.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="Nome completo" /></Field>
+      <Field label="CPF"><input value={draft.cpf} onChange={(e) => set('cpf', e.target.value)} placeholder="000.000.000-00" /></Field>
+      <Field label="RG"><input value={draft.rg} onChange={(e) => set('rg', e.target.value)} placeholder="Número do RG" /></Field>
+      <Field label="Número do passaporte"><input value={draft.passportNumber} onChange={(e) => set('passportNumber', e.target.value)} placeholder="Número do passaporte" /></Field>
       {kind === 'contact' ? <Field label="Relacionamento"><select value={draft.relationship} onChange={(e) => set('relationship', e.target.value)}><option>Cliente</option><option>Parceiro</option><option>Outro</option></select></Field> : <>
         <Field label="Origem"><select value={draft.source} onChange={(e) => set('source', e.target.value)}><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Indicação</option><option>Google</option><option>Outro</option></select></Field>
         <Field label="Interesse / Serviço"><input value={draft.interest} onChange={(e) => set('interest', e.target.value)} /></Field><Field label="Destino de interesse"><input value={draft.destination} onChange={(e) => set('destination', e.target.value)} /></Field><Field label="Tipo de visto / Interesse"><input value={draft.visaType} onChange={(e) => set('visaType', e.target.value)} /></Field>
@@ -110,7 +116,7 @@ function RecordView({ record, onClose, onEdit }: { record: CrmRecord; onClose: (
   return <div className="crm-view-record">
     <div className="crm-view-hero"><div className="crm-view-avatar">{name.slice(0, 2).toUpperCase()}</div><div className="crm-view-identity"><span>{record.kind === 'contact' ? 'CONTATO' : 'LEAD'}</span><h2>{name}</h2><p>{record.email} · {record.whatsapp || record.phone || 'Sem telefone'}</p><div className="crm-view-badges"><b>{status}</b>{record.kind === 'lead' && <b className="is-warm">{record.temperature}</b>}{record.source && <b className="is-source">{record.source}</b>}</div></div><button className="crm-view-close" type="button" onClick={onClose} aria-label="Fechar">×</button></div>
     {record.kind === 'lead' && <div className="crm-view-commercial"><div><span>Status comercial</span><strong>{record.leadStatus}</strong></div><div><span>Interesse</span><strong>{record.interest || 'Não informado'}</strong></div><div><span>Responsável</span><strong>{record.owner || 'Não definido'}</strong></div><div><span>Próxima ação</span><strong>{record.nextAction || 'Não definida'}</strong><small>{record.nextActionDate || ''}</small></div></div>}
-    <section className="crm-view-section"><div className="crm-view-section__title"><span>01</span><div><strong>Identificação pessoal</strong><small>Dados da pessoa atendida.</small></div></div><div className="crm-view-grid"><DetailItem label="Nome completo" value={record.fullName} /></div></section>
+    <section className="crm-view-section"><div className="crm-view-section__title"><span>01</span><div><strong>Identificação pessoal</strong><small>Dados cadastrais e documentos da pessoa atendida.</small></div></div><div className="crm-view-grid"><DetailItem label="Nome completo" value={record.fullName} /><DetailItem label="CPF" value={record.cpf} /><DetailItem label="RG" value={record.rg} /><DetailItem label="Número do passaporte" value={record.passportNumber} /></div></section>
     <section className="crm-view-section"><div className="crm-view-section__title"><span>02</span><div><strong>Contato e localização</strong><small>Informações para relacionamento.</small></div></div><div className="crm-view-grid"><DetailItem label="E-mail" value={record.email} /><DetailItem label="Telefone" value={record.phone} /><DetailItem label="WhatsApp" value={record.whatsapp} /><DetailItem label="Cidade" value={record.city} /><DetailItem label="Estado" value={record.state} /><DetailItem label="País" value={record.country} /></div></section>
     <section className="crm-view-section"><div className="crm-view-section__title"><span>03</span><div><strong>{record.kind === 'contact' ? 'Relacionamento' : 'Qualificação'}</strong><small>Contexto operacional do registro.</small></div></div><div className="crm-view-grid">{record.kind === 'contact' ? <><DetailItem label="Relacionamento" value={record.relationship} /><DetailItem label="Origem" value={record.source} /><DetailItem label="Responsável" value={record.owner} /></> : <><DetailItem label="Origem" value={record.source} /><DetailItem label="Destino" value={record.destination} /><DetailItem label="Tipo de visto" value={record.visaType} /><DetailItem label="Temperatura" value={record.temperature} /></>}</div></section>
     <section className="crm-view-note"><span>OBSERVAÇÕES</span><p>{record.notes || 'Nenhuma observação registrada.'}</p></section>
