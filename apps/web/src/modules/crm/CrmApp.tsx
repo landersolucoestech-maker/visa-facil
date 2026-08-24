@@ -27,18 +27,11 @@ const KPI_ITEMS = [
 type CrmTab = 'contacts' | 'leads';
 type RecordKind = 'contact' | 'lead';
 type ModalMode = 'create' | 'view' | 'edit';
-type PersonType = 'Pessoa Física' | 'Pessoa Jurídica';
 
 export type CrmRecord = {
   id: string;
   kind: RecordKind;
-  personType: PersonType;
   fullName: string;
-  legalName: string;
-  tradeName: string;
-  cnpj: string;
-  contactPerson: string;
-  role: string;
   email: string;
   phone: string;
   whatsapp: string;
@@ -64,10 +57,9 @@ export type CrmRecord = {
 type RecordDraft = Omit<CrmRecord, 'id' | 'kind' | 'createdAt' | 'updatedAt'>;
 
 const EMPTY_DRAFT: RecordDraft = {
-  personType: 'Pessoa Física', fullName: '', legalName: '', tradeName: '', cnpj: '', contactPerson: '', role: '',
-  email: '', phone: '', whatsapp: '', city: '', state: '', country: 'Brasil', notes: '', relationship: 'Cliente',
-  contactStatus: 'Ativo', source: 'Website', owner: '', interest: '', destination: '', visaType: '', leadStatus: 'Novo',
-  temperature: 'Morno', nextAction: '', nextActionDate: '',
+  fullName: '', email: '', phone: '', whatsapp: '', city: '', state: '', country: 'Brasil', notes: '',
+  relationship: 'Cliente', contactStatus: 'Ativo', source: 'Website', owner: '', interest: '', destination: '',
+  visaType: '', leadStatus: 'Novo', temperature: 'Morno', nextAction: '', nextActionDate: '',
 };
 
 function getBasePath() { const base = import.meta.env.BASE_URL.replace(/\/$/, ''); return base || ''; }
@@ -75,7 +67,7 @@ function normalizePath(pathname: string) { const base = getBasePath(); const raw
 function browserHref(path: string) { return `${getBasePath()}${path}` || path; }
 function BrandMark() { return <span className="crm-brand-mark" aria-hidden="true"><i /><b /></span>; }
 function FlagCard() { return <div className="crm-flag" aria-hidden="true"><span className="crm-flag__blue">✦ ✦ ✦<br /> ✦ ✦</span><span className="crm-flag__stripes" /></div>; }
-function displayName(record: Pick<CrmRecord, 'personType' | 'fullName' | 'tradeName' | 'legalName'>) { return record.personType === 'Pessoa Jurídica' ? record.tradeName || record.legalName || 'Empresa sem nome' : record.fullName || 'Contato sem nome'; }
+function displayName(record: Pick<CrmRecord, 'fullName'>) { return record.fullName || 'Contato sem nome'; }
 
 function Dashboard() {
   return <>
@@ -94,32 +86,15 @@ function Field({ label, children, wide = false }: { label: string; children: Rea
 function RecordForm({ kind, initial, onCancel, onSubmit }: { kind: RecordKind; initial: RecordDraft; onCancel: () => void; onSubmit: (draft: RecordDraft) => void }) {
   const [draft, setDraft] = useState<RecordDraft>(initial);
   const set = (key: keyof RecordDraft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  const isCompany = draft.personType === 'Pessoa Jurídica';
-  const setPersonType = (value: PersonType) => setDraft((current) => value === 'Pessoa Física'
-    ? { ...current, personType: value, legalName: '', tradeName: '', cnpj: '', contactPerson: '', role: '' }
-    : { ...current, personType: value, fullName: '' });
-  const hasIdentity = isCompany ? draft.legalName.trim() && draft.tradeName.trim() : draft.fullName.trim();
-
-  return <form className="crm-record-form" onSubmit={(event) => { event.preventDefault(); if (!hasIdentity || !draft.email.trim()) return; onSubmit(draft); }}>
-    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Tipo de pessoa</strong><small>Os campos abaixo mudam conforme a natureza do cadastro.</small></div><div className="crm-form-grid"><Field label="Pessoa"><select value={draft.personType} onChange={(e) => setPersonType(e.target.value as PersonType)}><option>Pessoa Física</option><option>Pessoa Jurídica</option></select></Field></div></div>
-
-    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>{isCompany ? 'Dados da empresa' : 'Identificação pessoal'}</strong><small>{isCompany ? 'Informações exclusivas de pessoa jurídica.' : 'Informações exclusivas de pessoa física.'}</small></div><div className="crm-form-grid">
-      {isCompany ? <>
-        <Field label="Razão social" wide><input required value={draft.legalName} onChange={(e) => set('legalName', e.target.value)} placeholder="Razão social" /></Field>
-        <Field label="Nome fantasia"><input required value={draft.tradeName} onChange={(e) => set('tradeName', e.target.value)} placeholder="Nome fantasia" /></Field>
-        <Field label="CNPJ"><input value={draft.cnpj} onChange={(e) => set('cnpj', e.target.value)} placeholder="00.000.000/0000-00" /></Field>
-        <Field label="Pessoa de contato"><input value={draft.contactPerson} onChange={(e) => set('contactPerson', e.target.value)} placeholder="Nome do contato principal" /></Field>
-        <Field label="Cargo / Função"><input value={draft.role} onChange={(e) => set('role', e.target.value)} /></Field>
-      </> : <Field label="Nome completo" wide><input required value={draft.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="Nome completo" /></Field>}
-
-      {kind === 'contact' ? <Field label="Relacionamento"><select value={draft.relationship} onChange={(e) => set('relationship', e.target.value)}><option>Cliente</option><option>Parceiro</option><option>Fornecedor</option><option>Prestador</option><option>Outro</option></select></Field> : <>
+  return <form className="crm-record-form" onSubmit={(event) => { event.preventDefault(); if (!draft.fullName.trim() || !draft.email.trim()) return; onSubmit(draft); }}>
+    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Identificação pessoal</strong><small>Dados principais da pessoa atendida.</small></div><div className="crm-form-grid">
+      <Field label="Nome completo" wide><input required value={draft.fullName} onChange={(e) => set('fullName', e.target.value)} placeholder="Nome completo" /></Field>
+      {kind === 'contact' ? <Field label="Relacionamento"><select value={draft.relationship} onChange={(e) => set('relationship', e.target.value)}><option>Cliente</option><option>Parceiro</option><option>Outro</option></select></Field> : <>
         <Field label="Origem"><select value={draft.source} onChange={(e) => set('source', e.target.value)}><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Indicação</option><option>Google</option><option>Outro</option></select></Field>
         <Field label="Interesse / Serviço"><input value={draft.interest} onChange={(e) => set('interest', e.target.value)} /></Field><Field label="Destino de interesse"><input value={draft.destination} onChange={(e) => set('destination', e.target.value)} /></Field><Field label="Tipo de visto / Interesse"><input value={draft.visaType} onChange={(e) => set('visaType', e.target.value)} /></Field>
       </>}
     </div></div>
-
-    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>{isCompany ? 'Contato da empresa' : 'Contato'}</strong><small>Canais e localização.</small></div><div className="crm-form-grid"><Field label="E-mail"><input required type="email" value={draft.email} onChange={(e) => set('email', e.target.value)} /></Field><Field label="Telefone"><input value={draft.phone} onChange={(e) => set('phone', e.target.value)} /></Field><Field label="WhatsApp"><input value={draft.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} /></Field><Field label="Cidade"><input value={draft.city} onChange={(e) => set('city', e.target.value)} /></Field><Field label="Estado"><input value={draft.state} onChange={(e) => set('state', e.target.value)} /></Field><Field label="País"><input value={draft.country} onChange={(e) => set('country', e.target.value)} /></Field></div></div>
-
+    <div className="crm-form-section"><div className="crm-form-section__heading"><strong>Contato</strong><small>Canais e localização.</small></div><div className="crm-form-grid"><Field label="E-mail"><input required type="email" value={draft.email} onChange={(e) => set('email', e.target.value)} /></Field><Field label="Telefone"><input value={draft.phone} onChange={(e) => set('phone', e.target.value)} /></Field><Field label="WhatsApp"><input value={draft.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} /></Field><Field label="Cidade"><input value={draft.city} onChange={(e) => set('city', e.target.value)} /></Field><Field label="Estado"><input value={draft.state} onChange={(e) => set('state', e.target.value)} /></Field><Field label="País"><input value={draft.country} onChange={(e) => set('country', e.target.value)} /></Field></div></div>
     <div className="crm-form-section"><div className="crm-form-section__heading"><strong>{kind === 'contact' ? 'Relacionamento' : 'Qualificação comercial'}</strong><small>Contexto operacional.</small></div><div className="crm-form-grid">
       {kind === 'contact' ? <><Field label="Status"><select value={draft.contactStatus} onChange={(e) => set('contactStatus', e.target.value)}><option>Ativo</option><option>Inativo</option></select></Field><Field label="Origem do contato"><select value={draft.source} onChange={(e) => set('source', e.target.value)}><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Indicação</option><option>Outro</option></select></Field><Field label="Responsável" wide><input value={draft.owner} onChange={(e) => set('owner', e.target.value)} /></Field></> : <><Field label="Status do lead"><select value={draft.leadStatus} onChange={(e) => set('leadStatus', e.target.value)}><option>Novo</option><option>Em contato</option><option>Qualificado</option><option>Não qualificado</option><option>Convertido</option><option>Perdido</option></select></Field><Field label="Temperatura"><select value={draft.temperature} onChange={(e) => set('temperature', e.target.value)}><option>Frio</option><option>Morno</option><option>Quente</option></select></Field><Field label="Responsável"><input value={draft.owner} onChange={(e) => set('owner', e.target.value)} /></Field><Field label="Próxima ação"><input value={draft.nextAction} onChange={(e) => set('nextAction', e.target.value)} /></Field><Field label="Data da próxima ação"><input type="date" value={draft.nextActionDate} onChange={(e) => set('nextActionDate', e.target.value)} /></Field></>}
       <Field label="Observações" wide><textarea rows={4} value={draft.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Observações importantes..." /></Field>
@@ -131,17 +106,12 @@ function RecordForm({ kind, initial, onCancel, onSubmit }: { kind: RecordKind; i
 function DetailItem({ label, value }: { label: string; value?: string }) { return <div className="crm-view-item"><span>{label}</span><strong>{value || '—'}</strong></div>; }
 function RecordView({ record, onClose, onEdit }: { record: CrmRecord; onClose: () => void; onEdit: () => void }) {
   const status = record.kind === 'contact' ? record.contactStatus : record.leadStatus;
-  const isCompany = record.personType === 'Pessoa Jurídica';
   const name = displayName(record);
   return <div className="crm-view-record">
-    <div className="crm-view-hero"><div className="crm-view-avatar">{name.slice(0, 2).toUpperCase()}</div><div className="crm-view-identity"><span>{record.kind === 'contact' ? 'CONTATO' : 'LEAD'} · {record.personType.toUpperCase()}</span><h2>{name}</h2><p>{record.email} · {record.whatsapp || record.phone || 'Sem telefone'}</p><div className="crm-view-badges"><b>{status}</b>{record.kind === 'lead' && <b className="is-warm">{record.temperature}</b>}{record.source && <b className="is-source">{record.source}</b>}</div></div><button className="crm-view-close" type="button" onClick={onClose} aria-label="Fechar">×</button></div>
-
+    <div className="crm-view-hero"><div className="crm-view-avatar">{name.slice(0, 2).toUpperCase()}</div><div className="crm-view-identity"><span>{record.kind === 'contact' ? 'CONTATO' : 'LEAD'}</span><h2>{name}</h2><p>{record.email} · {record.whatsapp || record.phone || 'Sem telefone'}</p><div className="crm-view-badges"><b>{status}</b>{record.kind === 'lead' && <b className="is-warm">{record.temperature}</b>}{record.source && <b className="is-source">{record.source}</b>}</div></div><button className="crm-view-close" type="button" onClick={onClose} aria-label="Fechar">×</button></div>
     {record.kind === 'lead' && <div className="crm-view-commercial"><div><span>Status comercial</span><strong>{record.leadStatus}</strong></div><div><span>Interesse</span><strong>{record.interest || 'Não informado'}</strong></div><div><span>Responsável</span><strong>{record.owner || 'Não definido'}</strong></div><div><span>Próxima ação</span><strong>{record.nextAction || 'Não definida'}</strong><small>{record.nextActionDate || ''}</small></div></div>}
-
-    <section className="crm-view-section"><div className="crm-view-section__title"><span>01</span><div><strong>{isCompany ? 'Dados da empresa' : 'Identificação pessoal'}</strong><small>{isCompany ? 'Informações cadastrais da pessoa jurídica.' : 'Identificação da pessoa física.'}</small></div></div><div className="crm-view-grid">{isCompany ? <><DetailItem label="Razão social" value={record.legalName} /><DetailItem label="Nome fantasia" value={record.tradeName} /><DetailItem label="CNPJ" value={record.cnpj} /><DetailItem label="Pessoa de contato" value={record.contactPerson} /><DetailItem label="Cargo / Função" value={record.role} /></> : <DetailItem label="Nome completo" value={record.fullName} />}</div></section>
-
+    <section className="crm-view-section"><div className="crm-view-section__title"><span>01</span><div><strong>Identificação pessoal</strong><small>Dados da pessoa atendida.</small></div></div><div className="crm-view-grid"><DetailItem label="Nome completo" value={record.fullName} /></div></section>
     <section className="crm-view-section"><div className="crm-view-section__title"><span>02</span><div><strong>Contato e localização</strong><small>Informações para relacionamento.</small></div></div><div className="crm-view-grid"><DetailItem label="E-mail" value={record.email} /><DetailItem label="Telefone" value={record.phone} /><DetailItem label="WhatsApp" value={record.whatsapp} /><DetailItem label="Cidade" value={record.city} /><DetailItem label="Estado" value={record.state} /><DetailItem label="País" value={record.country} /></div></section>
-
     <section className="crm-view-section"><div className="crm-view-section__title"><span>03</span><div><strong>{record.kind === 'contact' ? 'Relacionamento' : 'Qualificação'}</strong><small>Contexto operacional do registro.</small></div></div><div className="crm-view-grid">{record.kind === 'contact' ? <><DetailItem label="Relacionamento" value={record.relationship} /><DetailItem label="Origem" value={record.source} /><DetailItem label="Responsável" value={record.owner} /></> : <><DetailItem label="Origem" value={record.source} /><DetailItem label="Destino" value={record.destination} /><DetailItem label="Tipo de visto" value={record.visaType} /><DetailItem label="Temperatura" value={record.temperature} /></>}</div></section>
     <section className="crm-view-note"><span>OBSERVAÇÕES</span><p>{record.notes || 'Nenhuma observação registrada.'}</p></section>
     <div className="crm-view-footer"><div><small>Criado em {new Date(record.createdAt).toLocaleString('pt-BR')}</small><small>Atualizado em {new Date(record.updatedAt).toLocaleString('pt-BR')}</small></div><button type="button" className="crm-btn-secondary" onClick={onClose}>Fechar</button><button type="button" className="crm-btn-primary" onClick={onEdit}>Editar</button></div>
@@ -151,7 +121,7 @@ function RecordView({ record, onClose, onEdit }: { record: CrmRecord; onClose: (
 function RecordModal({ mode, kind, record, onClose, onSave, onEdit }: { mode: ModalMode; kind: RecordKind; record?: CrmRecord; onClose: () => void; onSave: (draft: RecordDraft) => void; onEdit: () => void }) {
   if (mode === 'view' && record) return <div className="crm-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div className="crm-view-modal" role="dialog" aria-modal="true"><RecordView record={record} onClose={onClose} onEdit={onEdit} /></div></div>;
   const draft = record ? { ...EMPTY_DRAFT, ...record } : EMPTY_DRAFT;
-  return <div className="crm-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div className="crm-form-modal" role="dialog" aria-modal="true"><header><div><span>{mode === 'create' ? 'NOVO REGISTRO' : 'EDITAR REGISTRO'}</span><h2>{mode === 'create' ? 'Novo' : 'Editar'} {kind === 'contact' ? 'contato' : 'lead'}</h2><p>Selecione Pessoa Física ou Pessoa Jurídica para exibir somente os campos correspondentes.</p></div><button type="button" onClick={onClose} aria-label="Fechar">×</button></header><RecordForm kind={kind} initial={draft} onCancel={onClose} onSubmit={onSave} /></div></div>;
+  return <div className="crm-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div className="crm-form-modal" role="dialog" aria-modal="true"><header><div><span>{mode === 'create' ? 'NOVO REGISTRO' : 'EDITAR REGISTRO'}</span><h2>{mode === 'create' ? 'Novo' : 'Editar'} {kind === 'contact' ? 'contato' : 'lead'}</h2><p>Cadastre os dados da pessoa atendida.</p></div><button type="button" onClick={onClose} aria-label="Fechar">×</button></header><RecordForm kind={kind} initial={draft} onCancel={onClose} onSubmit={onSave} /></div></div>;
 }
 
 function RelationshipCrm({ tab, setTab, records, openModal }: { tab: CrmTab; setTab: (tab: CrmTab) => void; records: CrmRecord[]; openModal: (mode: ModalMode, kind: RecordKind, record?: CrmRecord) => void }) {
@@ -161,8 +131,8 @@ function RelationshipCrm({ tab, setTab, records, openModal }: { tab: CrmTab; set
   return <section className="crm-directory">
     <section className="crm-directory-summary" aria-label="Resumo do relacionamento">{summary.map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}</section>
     <div className="crm-directory-tabs" role="tablist" aria-label="CRM"><button type="button" role="tab" aria-selected={tab === 'contacts'} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => setTab('contacts')}><span aria-hidden="true">♧</span> Contatos <small>{contacts}</small></button><button type="button" role="tab" aria-selected={tab === 'leads'} className={tab === 'leads' ? 'is-active' : ''} onClick={() => setTab('leads')}><span aria-hidden="true">⌁</span> Leads <small>{leads}</small></button></div>
-    <div className="crm-directory-toolbar"><label className="crm-directory-search"><span aria-hidden="true">⌕</span><input type="search" aria-label="Buscar" placeholder={tab === 'contacts' ? 'Buscar por nome, empresa, e-mail, telefone ou cidade' : 'Buscar lead por nome, origem, e-mail ou telefone'} /></label><select aria-label="Filtrar registros"><option>Todos</option>{tab === 'contacts' ? <><option>Clientes</option><option>Parceiros</option><option>Fornecedores</option><option>Prestadores</option></> : <><option>Novo</option><option>Em contato</option><option>Qualificado</option><option>Convertido</option></>}</select></div>
-    <div className="crm-directory-table"><div className="crm-directory-table__head"><span>Nome</span><span>{tab === 'contacts' ? 'Relacionamento' : 'Origem'}</span><span>Status</span><span>E-mail / telefone</span><span>{tab === 'contacts' ? 'Cidade' : 'Próxima ação'}</span><span>Ações</span></div>{visible.length === 0 ? <div className="crm-directory-list"><p>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} encontrado.</p></div> : visible.map((record) => <div className="crm-directory-row" key={record.id}><div><strong>{displayName(record)}</strong><small>{record.personType === 'Pessoa Jurídica' ? record.legalName : record.personType}</small></div><span>{record.kind === 'contact' ? record.relationship : record.source}</span><span><b className="crm-status-pill">{record.kind === 'contact' ? record.contactStatus : record.leadStatus}</b></span><div><strong>{record.email}</strong><small>{record.whatsapp || record.phone}</small></div><span>{record.kind === 'contact' ? [record.city, record.state].filter(Boolean).join(' / ') : record.nextAction || '—'}</span><div className="crm-row-actions"><button type="button" onClick={() => openModal('view', record.kind, record)}>Ver</button><button type="button" onClick={() => openModal('edit', record.kind, record)}>Editar</button></div></div>)}</div>
+    <div className="crm-directory-toolbar"><label className="crm-directory-search"><span aria-hidden="true">⌕</span><input type="search" aria-label="Buscar" placeholder={tab === 'contacts' ? 'Buscar por nome, e-mail, telefone ou cidade' : 'Buscar lead por nome, origem, e-mail ou telefone'} /></label><select aria-label="Filtrar registros"><option>Todos</option>{tab === 'contacts' ? <><option>Clientes</option><option>Parceiros</option><option>Outros</option></> : <><option>Novo</option><option>Em contato</option><option>Qualificado</option><option>Convertido</option></>}</select></div>
+    <div className="crm-directory-table"><div className="crm-directory-table__head"><span>Nome</span><span>{tab === 'contacts' ? 'Relacionamento' : 'Origem'}</span><span>Status</span><span>E-mail / telefone</span><span>{tab === 'contacts' ? 'Cidade' : 'Próxima ação'}</span><span>Ações</span></div>{visible.length === 0 ? <div className="crm-directory-list"><p>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} encontrado.</p></div> : visible.map((record) => <div className="crm-directory-row" key={record.id}><div><strong>{displayName(record)}</strong><small>{record.kind === 'contact' ? record.relationship : record.interest}</small></div><span>{record.kind === 'contact' ? record.relationship : record.source}</span><span><b className="crm-status-pill">{record.kind === 'contact' ? record.contactStatus : record.leadStatus}</b></span><div><strong>{record.email}</strong><small>{record.whatsapp || record.phone}</small></div><span>{record.kind === 'contact' ? [record.city, record.state].filter(Boolean).join(' / ') : record.nextAction || '—'}</span><div className="crm-row-actions"><button type="button" onClick={() => openModal('view', record.kind, record)}>Ver</button><button type="button" onClick={() => openModal('edit', record.kind, record)}>Editar</button></div></div>)}</div>
   </section>;
 }
 
