@@ -1,0 +1,11 @@
+/* Marketing view-specific removals requested for the prototype. */
+
+/* Calendar: KPI cards are intentionally not part of this module. */
+.marketing-kpis:has(+ .marketing-calendar-toolbar) {
+  display: none;
+}
+
+/* Metrics: Spotify Ads is not a metrics platform in this module. */
+.marketing-metric-tabs > button:last-child {
+  display: none;
+}
