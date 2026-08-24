@@ -13,7 +13,7 @@ const MAIN_ITEMS = [
 ];
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
-  {label:'Lançamentos',href:'/crm/financeiro',section:'transactions'},
+  {label:'Transações',href:'/crm/financeiro',section:'transactions'},
   {label:'Invoices',href:'/crm/financeiro/invoices',section:'invoices'},
   {label:'P&L',href:'/crm/financeiro/pl',section:'pl'},
 ];
