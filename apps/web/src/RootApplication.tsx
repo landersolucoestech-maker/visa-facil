@@ -1,6 +1,7 @@
 import { AttendanceApp } from './modules/attendance/AttendanceApp';
 import { CrmApp } from './modules/crm/CrmApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
+import { TasksApp } from './modules/tasks/TasksApp';
 
 function normalizePath(pathname: string) {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -11,6 +12,7 @@ function normalizePath(pathname: string) {
 export function RootApplication() {
   const path = normalizePath(window.location.pathname);
   if (path === '/crm/atendimentos') return <AttendanceApp />;
+  if (path === '/crm/tarefas') return <TasksApp />;
   if (path === '/crm' || path.startsWith('/crm/')) return <CrmApp />;
   return <PublicSitePage />;
 }
