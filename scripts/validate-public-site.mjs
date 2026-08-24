@@ -47,6 +47,8 @@ assert(!footer.toLowerCase().includes('youtube'), 'YouTube must remain removed')
 assert(containsAll(crm, ['Dashboard', 'Contatos', 'Leads', 'Oportunidades', 'Atendimentos', 'Tarefas', 'Agenda', 'Financeiro', 'Relatórios', 'Configurações']), 'CRM shell navigation is incomplete');
 assert(containsAll(crm, ['Leads por status', 'Origem dos leads', 'Financeiro (Resumo)', 'Atendimentos recentes', 'Tarefas pendentes']), 'CRM dashboard blocks are incomplete');
 assert(crm.includes('import.meta.env.BASE_URL'), 'CRM must support subdirectory hosting');
+assert(containsAll(crm, ['cpf: string', 'rg: string', 'passportNumber: string', 'label="CPF"', 'label="RG"', 'label="Número do passaporte"', 'value={record.cpf}', 'value={record.rg}', 'value={record.passportNumber}']), 'CRM create/edit/view flows must include CPF, RG and passport number');
+assert(containsAll(crmMockProvider, ['cpf: raw.cpf', 'rg: raw.rg', 'passportNumber: raw.passportNumber']), 'CRM mock provider must support personal document fields');
 
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
