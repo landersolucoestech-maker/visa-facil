@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import './crm-relationship-layout.css';
 import './crm-record-modals.css';
+import { getCrmInitialRecords } from './mocks/mockDataProvider';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/crm', icon: '⌂' },
@@ -28,7 +29,7 @@ type RecordKind = 'contact' | 'lead';
 type ModalMode = 'create' | 'view' | 'edit';
 type PersonType = 'Pessoa Física' | 'Pessoa Jurídica';
 
-type CrmRecord = {
+export type CrmRecord = {
   id: string;
   kind: RecordKind;
   personType: PersonType;
@@ -169,7 +170,7 @@ function Placeholder({ title }: { title: string }) { return <section className="
 
 export function CrmApp() {
   const path = normalizePath(window.location.pathname); const active = useMemo(() => NAV_ITEMS.find((item) => path === item.href) ?? NAV_ITEMS[0], [path]); const isDashboard = path === '/crm'; const isRelationship = path === '/crm/relacionamento';
-  const [tab, setTab] = useState<CrmTab>('contacts'); const [records, setRecords] = useState<CrmRecord[]>([]); const [modal, setModal] = useState<{ mode: ModalMode; kind: RecordKind; record?: CrmRecord }>();
+  const [tab, setTab] = useState<CrmTab>('contacts'); const [records, setRecords] = useState<CrmRecord[]>(() => getCrmInitialRecords()); const [modal, setModal] = useState<{ mode: ModalMode; kind: RecordKind; record?: CrmRecord }>();
   const openModal = (mode: ModalMode, kind: RecordKind, record?: CrmRecord) => setModal({ mode, kind, record });
   const saveRecord = (draft: RecordDraft) => { const now = new Date().toISOString(); if (modal?.record) setRecords((current) => current.map((record) => record.id === modal.record?.id ? { ...record, ...draft, updatedAt: now } : record)); else if (modal) setRecords((current) => [...current, { ...draft, id: crypto.randomUUID(), kind: modal.kind, createdAt: now, updatedAt: now }]); setModal(undefined); };
   return <div className="crm-shell"><aside className="crm-sidebar"><a className="crm-brand" href={browserHref('/crm')}><BrandMark /><span><strong>VISA FÁCIL</strong><small>CRM · Relacionamento</small></span></a><div className="crm-sidebar-accent"><i /><i /><i /></div><span className="crm-sidebar-label">OPERAÇÃO</span><nav>{NAV_ITEMS.map((item) => <a key={item.href} className={path === item.href ? 'is-active' : ''} href={browserHref(item.href)}><span>{item.icon}</span>{item.label}</a>)}</nav><div className="crm-sidebar-footer"><FlagCard /><a href={browserHref('/')}>← Voltar ao site</a><small>Protótipo · branch dev</small></div></aside>
