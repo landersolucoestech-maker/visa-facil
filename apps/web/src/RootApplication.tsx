@@ -1,3 +1,4 @@
+import { AttendanceApp } from './modules/attendance/AttendanceApp';
 import { CrmApp } from './modules/crm/CrmApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 
@@ -9,6 +10,7 @@ function normalizePath(pathname: string) {
 
 export function RootApplication() {
   const path = normalizePath(window.location.pathname);
+  if (path === '/crm/atendimentos') return <AttendanceApp />;
   if (path === '/crm' || path.startsWith('/crm/')) return <CrmApp />;
   return <PublicSitePage />;
 }
