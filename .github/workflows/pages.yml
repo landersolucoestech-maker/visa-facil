@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Validate public website
+      - name: Validate website/CRM
         run: node scripts/validate-public-site.mjs
 
       - name: Typecheck
@@ -45,6 +45,9 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
         run: npm run build
+
+      - name: Create SPA fallback
+        run: cp apps/web/dist/index.html apps/web/dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
