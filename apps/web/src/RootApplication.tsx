@@ -11,8 +11,12 @@ import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import { ReportsApp } from './modules/reports/ReportsApp';
 import { TasksApp } from './modules/tasks/TasksApp';
 
+function basePath() {
+  return import.meta.env.BASE_URL.replace(/\/$/, '');
+}
+
 function normalizePath(pathname: string) {
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const base = basePath();
   const path = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname;
   return path.replace(/\/+$/, '') || '/';
 }
@@ -25,7 +29,11 @@ function withSharedSidebar(page: ReactNode) {
 }
 
 export function RootApplication() {
-  const path = normalizePath(window.location.pathname);
+  let path = normalizePath(window.location.pathname);
+  if (path === '/crm/marketing/ia-criativa') {
+    window.history.replaceState(null, '', `${basePath()}/crm/marketing` || '/crm/marketing');
+    path = '/crm/marketing';
+  }
   if (path === '/crm/atendimentos') return withSharedSidebar(<AttendanceApp />);
   if (path === '/crm/tarefas') return withSharedSidebar(<TasksApp />);
   if (path === '/crm/agenda') return withSharedSidebar(<AgendaApp />);
