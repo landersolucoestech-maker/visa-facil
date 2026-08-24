@@ -1,0 +1,44 @@
+/* Final CRM layout override: keep content close to the shared sidebar and use the full workspace width. */
+.crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+}
+
+.crm-global-page .crm-topbar{
+  width:100%!important;
+  max-width:none!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+}
+
+/* Dashboard currently has five KPI cards; distribute them across the entire available row. */
+.crm-global-page .crm-kpi-grid{
+  width:100%!important;
+  max-width:none!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+
+.crm-global-page :is(.crm-dashboard-grid,.crm-dashboard-grid--top,.crm-dashboard-grid--bottom){
+  width:100%!important;
+  max-width:none!important;
+}
+
+@media(max-width:1380px){
+  .crm-global-page .crm-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+
+@media(max-width:900px){
+  .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content),
+  .crm-global-page .crm-topbar{
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  .crm-global-page .crm-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+@media(max-width:440px){
+  .crm-global-page .crm-kpi-grid{grid-template-columns:1fr!important}
+}
