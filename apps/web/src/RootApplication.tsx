@@ -27,7 +27,7 @@ export function RootApplication(){
  if(path==='/crm/regras-financeiras')return withSharedSidebar(<FinancialRulesApp/>);
  if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
  if(path==='/crm/financeiro/pl')return withSharedSidebar(<FinancePLApp/>);
- if(path==='/crm/financeiro')return withSharedSidebar(<FinanceApp/>);
+ if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceApp/>);
  if(path==='/crm/marketing'||path.startsWith('/crm/marketing/'))return withSharedSidebar(<MarketingApp/>);
  if(path==='/crm/relatorios')return withSharedSidebar(<ReportsApp/>);
  if(path==='/crm'||path.startsWith('/crm/'))return withSharedSidebar(<CrmApp/>);
