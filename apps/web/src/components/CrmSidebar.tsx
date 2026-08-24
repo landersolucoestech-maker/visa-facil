@@ -13,7 +13,7 @@ const MAIN_ITEMS = [
 ];
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
-  {label:'Transações',href:'/crm/financeiro',section:'transactions'},
+  {label:'Transações',href:'/crm/financeiro/transacoes',section:'transactions'},
   {label:'Invoices',href:'/crm/financeiro/invoices',section:'invoices'},
   {label:'P&L',href:'/crm/financeiro/pl',section:'pl'},
 ];
@@ -48,7 +48,7 @@ export function CrmSidebar(){
  const fSection=financeSection(path);const mSection=marketingSection(path);
  return <aside className="crm-sidebar crm-sidebar--shared"><a className="crm-brand" href={href('/crm')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>CRM · Relacionamento</small></span></a><div className="crm-sidebar-accent"><i/><i/><i/></div><span className="crm-sidebar-label">OPERAÇÃO</span><nav>
   {MAIN_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
-  <div className={`crm-sidebar-marketing ${isFinance?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isFinance?'is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><span>$</span><b>Financeiro</b><i>{financeOpen?'⌃':'⌄'}</i></button>{financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={path.startsWith('/crm/financeiro')&&fSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
+  <div className={`crm-sidebar-marketing ${isFinance?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isFinance?'is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><span>$</span><b>Financeiro</b><i>{financeOpen?'⌃':'⌄'}</i></button>{financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   <div className={`crm-sidebar-marketing ${isMarketing?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isMarketing?'is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><span>◈</span><b>Marketing</b><i>{marketingOpen?'⌃':'⌄'}</i></button>{marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   {AFTER_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
  </nav><div className="crm-sidebar-footer"><FlagCard/><a href={href('/')}>← Voltar ao site</a><small>Protótipo · branch dev</small></div></aside>
