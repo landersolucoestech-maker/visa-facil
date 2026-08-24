@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/crm', icon: '⌂' },
-  { label: 'Contatos', href: '/crm/contatos', icon: '◎' },
-  { label: 'Leads', href: '/crm/leads', icon: '◉' },
+  { label: 'CRM', href: '/crm/relacionamento', icon: '◎' },
   { label: 'Oportunidades', href: '/crm/oportunidades', icon: '◇' },
   { label: 'Atendimentos', href: '/crm/atendimentos', icon: '◌' },
   { label: 'Tarefas', href: '/crm/tarefas', icon: '✓' },
@@ -22,6 +21,8 @@ const KPI_ITEMS = [
   { label: 'Tarefas', value: '0', detail: 'pendentes', tone: 'blue' },
 ];
 
+type CrmTab = 'contacts' | 'leads';
+
 function getBasePath() {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   return base || '';
@@ -29,8 +30,10 @@ function getBasePath() {
 
 function normalizePath(pathname: string) {
   const base = getBasePath();
-  const path = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname;
-  return path.replace(/\/+$/, '') || '/crm';
+  const rawPath = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname;
+  const path = rawPath.replace(/\/+$/, '') || '/crm';
+  if (path === '/crm/contatos' || path === '/crm/leads') return '/crm/relacionamento';
+  return path;
 }
 
 function browserHref(path: string) {
@@ -68,6 +71,41 @@ function Dashboard() {
   </>;
 }
 
+function RelationshipCrm() {
+  const [tab, setTab] = useState<CrmTab>('contacts');
+  return <section className="crm-relationship">
+    <div className="crm-relationship-summary">
+      <article><span>Todos os contatos</span><strong>0</strong><small>Base completa</small></article>
+      <article><span>Clientes</span><strong>0</strong><small>Relacionamentos ativos</small></article>
+      <article><span>Leads</span><strong>0</strong><small>Em acompanhamento</small></article>
+      <article><span>Convertidos</span><strong>0</strong><small>Leads convertidos</small></article>
+    </div>
+
+    <div className="crm-relationship-tabs" role="tablist" aria-label="CRM">
+      <button type="button" role="tab" aria-selected={tab === 'contacts'} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => setTab('contacts')}>Contatos</button>
+      <button type="button" role="tab" aria-selected={tab === 'leads'} className={tab === 'leads' ? 'is-active' : ''} onClick={() => setTab('leads')}>Leads</button>
+    </div>
+
+    <article className="crm-relationship-card">
+      <div className="crm-relationship-card__heading">
+        <div><span>CRM</span><h2>{tab === 'contacts' ? 'Contatos' : 'Leads'}</h2><p>{tab === 'contacts' ? 'Pessoas e empresas relacionadas à operação, independentemente do estágio comercial.' : 'Contatos que ainda estão em etapa de prospecção e qualificação.'}</p></div>
+        <button type="button">+ {tab === 'contacts' ? 'Novo contato' : 'Novo lead'}</button>
+      </div>
+
+      <div className="crm-relationship-filters">
+        <label><span>Buscar</span><input type="search" placeholder={tab === 'contacts' ? 'Nome, e-mail ou telefone' : 'Nome, origem ou telefone'} /></label>
+        <label><span>Status</span><select><option>Todos os status</option></select></label>
+        <label><span>Origem</span><select><option>Todas as origens</option><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option></select></label>
+      </div>
+
+      <div className="crm-relationship-table" role="table" aria-label={tab === 'contacts' ? 'Contatos' : 'Leads'}>
+        <div className="crm-relationship-table__head" role="row"><span>Nome</span><span>{tab === 'contacts' ? 'Tipo' : 'Origem'}</span><span>Status</span><span>E-mail / telefone</span><span>Última interação</span><span>Ações</span></div>
+        <div className="crm-relationship-empty"><strong>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} cadastrado.</strong><p>Os registros aparecerão aqui conforme a operação for configurada.</p></div>
+      </div>
+    </article>
+  </section>;
+}
+
 function Placeholder({ title }: { title: string }) {
   return <section className="crm-placeholder"><span>PROTÓTIPO</span><h2>{title}</h2><p>Estrutura visual criada. O conteúdo deste módulo será definido na próxima etapa.</p></section>;
 }
@@ -76,6 +114,7 @@ export function CrmApp() {
   const path = normalizePath(window.location.pathname);
   const active = useMemo(() => NAV_ITEMS.find((item) => path === item.href) ?? NAV_ITEMS[0], [path]);
   const isDashboard = path === '/crm';
+  const isRelationship = path === '/crm/relacionamento';
 
   return <div className="crm-shell">
     <aside className="crm-sidebar">
@@ -87,8 +126,8 @@ export function CrmApp() {
     </aside>
 
     <div className="crm-workspace">
-      <header className="crm-topbar"><div><small>VISA FÁCIL · CRM</small><h1>{active.label}</h1><p>{isDashboard ? 'Visão geral do relacionamento e da operação comercial.' : `Gestão de ${active.label.toLowerCase()} no CRM Visa Fácil.`}</p></div><div className="crm-topbar-actions"><button type="button" aria-label="Alertas">⌁</button><div className="crm-user"><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div></div></div></header>
-      <main className="crm-content">{isDashboard ? <Dashboard /> : <Placeholder title={active.label} />}</main>
+      <header className="crm-topbar"><div><small>VISA FÁCIL · CRM</small><h1>{active.label}</h1><p>{isDashboard ? 'Visão geral do relacionamento e da operação comercial.' : isRelationship ? 'Contatos e leads centralizados em uma única área de relacionamento.' : `Gestão de ${active.label.toLowerCase()} no CRM Visa Fácil.`}</p></div><div className="crm-topbar-actions"><button type="button" aria-label="Alertas">⌁</button><div className="crm-user"><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div></div></div></header>
+      <main className="crm-content">{isDashboard ? <Dashboard /> : isRelationship ? <RelationshipCrm /> : <Placeholder title={active.label} />}</main>
     </div>
   </div>;
 }
