@@ -17,14 +17,16 @@ const heroSlides = read('apps/web/src/modules/public-site/content/heroSlides.ts'
 const contact = read('apps/web/src/modules/public-site/components/ContactSection.tsx');
 const footer = read('apps/web/src/modules/public-site/components/PublicFooter.tsx');
 const interactions = read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
+const crm = read('apps/web/src/modules/crm/CrmApp.tsx');
 const allSource = [main, rootApp, publicPage, header, hero, heroSlides, contact, footer, interactions].join('\n');
 
-assert(rootApp.includes('<PublicSitePage />'), 'Root application must render the public website');
-assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Internal management application must not return');
-assert(!main.includes('/management/') && !main.includes('/clients/') && !main.includes('/processes/'), 'Internal system styles must not be loaded');
+assert(rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
+assert(rootApp.includes("path === '/crm'") && rootApp.includes('<CrmApp />'), 'CRM prototype must remain isolated under /crm/*');
+assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Obsolete internal management application must not return');
 assert(!allSource.includes('dangerouslySetInnerHTML'), 'dangerouslySetInnerHTML is forbidden');
 assert(!allSource.includes('<iframe'), 'iframe embedding is forbidden');
 assert(main.includes("01-base.css") && main.includes("02-sections-responsive.css") && main.includes("03-hero-v3.css"), 'Official public style cascade must remain loaded');
+assert(main.includes("./modules/crm/crm.css"), 'CRM stylesheet must remain loaded');
 
 assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D"']), 'Official metadata changed unexpectedly');
 assert(containsAll(header, ['EUA', 'Canadá', 'Vistos', 'Como Funciona', 'Dúvidas', 'Analisar meu perfil']), 'Public navigation changed unexpectedly');
@@ -39,12 +41,16 @@ assert(containsAll(contact, ['Nome completo', 'WhatsApp', 'E-mail', 'Enviar para
 assert(containsAll(footer, ['Instagram', 'Facebook', 'TikTok', '© 2026 VISA FÁCIL']), 'Footer/social contract changed unexpectedly');
 assert(!footer.toLowerCase().includes('youtube'), 'YouTube must remain removed');
 
-for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css']) assert(existsSync(resolve(root, css)), `Missing public stylesheet: ${css}`);
+assert(containsAll(crm, ['Dashboard', 'Contatos', 'Leads', 'Oportunidades', 'Atendimentos', 'Tarefas', 'Agenda', 'Financeiro', 'Relatórios', 'Configurações']), 'CRM shell navigation is incomplete');
+assert(containsAll(crm, ['Leads por status', 'Origem dos leads', 'Financeiro (Resumo)', 'Atendimentos recentes', 'Tarefas pendentes']), 'CRM dashboard blocks are incomplete');
+assert(crm.includes('import.meta.env.BASE_URL'), 'CRM must support subdirectory hosting');
+
+for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
 
 if (failures.length) {
-  console.error('Visa Fácil public-site contract validation failed:');
+  console.error('Visa Fácil website/CRM contract validation failed:');
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exit(1);
 }
 
-console.log('Visa Fácil public-site contract validation passed.');
+console.log('Visa Fácil website/CRM contract validation passed.');
