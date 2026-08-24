@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import './crm-relationship-layout.css';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/crm', icon: '⌂' },
@@ -71,38 +72,34 @@ function Dashboard() {
   </>;
 }
 
+const CRM_SUMMARY = [
+  ['Total de contatos', '0'],
+  ['Clientes', '0'],
+  ['Leads', '0'],
+  ['Qualificados', '0'],
+  ['Convertidos', '0'],
+];
+
 function RelationshipCrm() {
   const [tab, setTab] = useState<CrmTab>('contacts');
-  return <section className="crm-relationship">
-    <div className="crm-relationship-summary">
-      <article><span>Todos os contatos</span><strong>0</strong><small>Base completa</small></article>
-      <article><span>Clientes</span><strong>0</strong><small>Relacionamentos ativos</small></article>
-      <article><span>Leads</span><strong>0</strong><small>Em acompanhamento</small></article>
-      <article><span>Convertidos</span><strong>0</strong><small>Leads convertidos</small></article>
+  return <section className="crm-directory">
+    <section className="crm-directory-summary" aria-label="Resumo do relacionamento">
+      {CRM_SUMMARY.map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}
+    </section>
+
+    <div className="crm-directory-tabs" role="tablist" aria-label="CRM">
+      <button type="button" role="tab" aria-selected={tab === 'contacts'} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => setTab('contacts')}><span aria-hidden="true">♧</span> Contatos <small>0</small></button>
+      <button type="button" role="tab" aria-selected={tab === 'leads'} className={tab === 'leads' ? 'is-active' : ''} onClick={() => setTab('leads')}><span aria-hidden="true">⌁</span> Leads <small>0</small></button>
     </div>
 
-    <div className="crm-relationship-tabs" role="tablist" aria-label="CRM">
-      <button type="button" role="tab" aria-selected={tab === 'contacts'} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => setTab('contacts')}>Contatos</button>
-      <button type="button" role="tab" aria-selected={tab === 'leads'} className={tab === 'leads' ? 'is-active' : ''} onClick={() => setTab('leads')}>Leads</button>
+    <div className="crm-directory-toolbar">
+      <label className="crm-directory-search"><span aria-hidden="true">⌕</span><input type="search" aria-label="Buscar" placeholder={tab === 'contacts' ? 'Buscar por nome, empresa, e-mail, telefone ou cidade' : 'Buscar lead por nome, origem, e-mail ou telefone'} /></label>
+      <select aria-label="Filtrar registros"><option>Todos</option>{tab === 'contacts' ? <><option>Clientes</option><option>Leads</option><option>Inativos</option></> : <><option>Novo</option><option>Em contato</option><option>Qualificado</option><option>Convertido</option></>}</select>
     </div>
 
-    <article className="crm-relationship-card">
-      <div className="crm-relationship-card__heading">
-        <div><span>CRM</span><h2>{tab === 'contacts' ? 'Contatos' : 'Leads'}</h2><p>{tab === 'contacts' ? 'Pessoas e empresas relacionadas à operação, independentemente do estágio comercial.' : 'Contatos que ainda estão em etapa de prospecção e qualificação.'}</p></div>
-        <button type="button">+ {tab === 'contacts' ? 'Novo contato' : 'Novo lead'}</button>
-      </div>
-
-      <div className="crm-relationship-filters">
-        <label><span>Buscar</span><input type="search" placeholder={tab === 'contacts' ? 'Nome, e-mail ou telefone' : 'Nome, origem ou telefone'} /></label>
-        <label><span>Status</span><select><option>Todos os status</option></select></label>
-        <label><span>Origem</span><select><option>Todas as origens</option><option>Website</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option></select></label>
-      </div>
-
-      <div className="crm-relationship-table" role="table" aria-label={tab === 'contacts' ? 'Contatos' : 'Leads'}>
-        <div className="crm-relationship-table__head" role="row"><span>Nome</span><span>{tab === 'contacts' ? 'Tipo' : 'Origem'}</span><span>Status</span><span>E-mail / telefone</span><span>Última interação</span><span>Ações</span></div>
-        <div className="crm-relationship-empty"><strong>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} cadastrado.</strong><p>Os registros aparecerão aqui conforme a operação for configurada.</p></div>
-      </div>
-    </article>
+    <div className="crm-directory-list" role="region" aria-live="polite">
+      <p>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} encontrado.</p>
+    </div>
   </section>;
 }
 
@@ -126,7 +123,7 @@ export function CrmApp() {
     </aside>
 
     <div className="crm-workspace">
-      <header className="crm-topbar"><div><small>VISA FÁCIL · CRM</small><h1>{active.label}</h1><p>{isDashboard ? 'Visão geral do relacionamento e da operação comercial.' : isRelationship ? 'Contatos e leads centralizados em uma única área de relacionamento.' : `Gestão de ${active.label.toLowerCase()} no CRM Visa Fácil.`}</p></div><div className="crm-topbar-actions"><button type="button" aria-label="Alertas">⌁</button><div className="crm-user"><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div></div></div></header>
+      <header className="crm-topbar"><div><small>VISA FÁCIL · CRM</small><h1>{active.label}</h1><p>{isDashboard ? 'Visão geral do relacionamento e da operação comercial.' : isRelationship ? 'Central de relacionamento operacional.' : `Gestão de ${active.label.toLowerCase()} no CRM Visa Fácil.`}</p></div><div className="crm-topbar-actions">{isRelationship && <button className="crm-topbar-primary" type="button">+ Novo contato</button>}<button type="button" aria-label="Alertas">⌁</button><div className="crm-user"><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div></div></div></header>
       <main className="crm-content">{isDashboard ? <Dashboard /> : isRelationship ? <RelationshipCrm /> : <Placeholder title={active.label} />}</main>
     </div>
   </div>;
