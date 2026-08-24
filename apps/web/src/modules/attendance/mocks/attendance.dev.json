@@ -1,0 +1,100 @@
+{
+  "conversations": [
+    {
+      "id": "att-001",
+      "customer": "Mariana Alves Costa",
+      "handle": "+55 11 99876-1204",
+      "email": "mariana.alves@example.com",
+      "channel": "WhatsApp",
+      "status": "Em atendimento",
+      "assignee": "Administrador",
+      "queue": "Vistos EUA",
+      "protocol": "VF-824031",
+      "tags": ["B1/B2", "Prioridade normal"],
+      "lastMessage": "Perfeito, vou separar os documentos que você pediu.",
+      "lastMessageAt": "16:02",
+      "unread": 2,
+      "crmType": "Lead",
+      "service": "Assessoria para visto de turismo",
+      "destination": "Estados Unidos",
+      "visaType": "B1/B2",
+      "messages": [
+        {"id":"m1","sender":"customer","author":"Mariana","body":"Olá, gostaria de ajuda para tirar o visto americano.","time":"15:42"},
+        {"id":"m2","sender":"agent","author":"Administrador","body":"Olá, Mariana! Claro. Vou te orientar sobre todo o processo do B1/B2. Você já possui passaporte válido?","time":"15:45"},
+        {"id":"m3","sender":"customer","author":"Mariana","body":"Sim, meu passaporte está válido até 2031.","time":"15:48"},
+        {"id":"m4","sender":"agent","author":"Administrador","body":"Ótimo. Vou te enviar a relação inicial de informações necessárias para avançarmos.","time":"15:51"},
+        {"id":"m5","sender":"customer","author":"Mariana","body":"Perfeito, vou separar os documentos que você pediu.","time":"16:02"}
+      ]
+    },
+    {
+      "id": "att-002",
+      "customer": "Juliana Ferreira Santos",
+      "handle": "@juliana.ferreira",
+      "email": "juliana.ferreira@example.com",
+      "channel": "Instagram",
+      "status": "Aguardando atendimento",
+      "assignee": "Sem responsável",
+      "queue": "Triagem",
+      "protocol": "VF-824028",
+      "tags": ["F-1", "Lead quente"],
+      "lastMessage": "Queria entender quanto custa a assessoria para visto de estudante.",
+      "lastMessageAt": "15:37",
+      "unread": 1,
+      "crmType": "Lead",
+      "service": "Visto de estudante",
+      "destination": "Estados Unidos",
+      "visaType": "F-1",
+      "messages": [
+        {"id":"m6","sender":"customer","author":"Juliana","body":"Oi! Vi vocês pelo Instagram.","time":"15:35"},
+        {"id":"m7","sender":"customer","author":"Juliana","body":"Queria entender quanto custa a assessoria para visto de estudante.","time":"15:37"}
+      ]
+    },
+    {
+      "id": "att-003",
+      "customer": "Camila Oliveira Reis",
+      "handle": "+55 21 99714-8810",
+      "email": "camila.reis@example.com",
+      "channel": "WhatsApp",
+      "status": "Aguardando cliente",
+      "assignee": "Administrador",
+      "queue": "Renovações",
+      "protocol": "VF-824017",
+      "tags": ["Renovação", "B1/B2"],
+      "lastMessage": "Fico no aguardo da foto da página de dados do passaporte.",
+      "lastMessageAt": "14:58",
+      "unread": 0,
+      "crmType": "Contato",
+      "service": "Renovação de visto",
+      "destination": "Estados Unidos",
+      "visaType": "B1/B2",
+      "messages": [
+        {"id":"m8","sender":"customer","author":"Camila","body":"Meu visto venceu no ano passado e quero renovar.","time":"14:41"},
+        {"id":"m9","sender":"agent","author":"Administrador","body":"Consigo te ajudar com a renovação. Preciso confirmar alguns dados do visto anterior e do seu passaporte atual.","time":"14:45"},
+        {"id":"m10","sender":"agent","author":"Administrador","body":"Fico no aguardo da foto da página de dados do passaporte.","time":"14:58"}
+      ]
+    },
+    {
+      "id": "att-004",
+      "customer": "Rafael Mendes Lima",
+      "handle": "rafael.mendes@example.com",
+      "email": "rafael.mendes@example.com",
+      "channel": "Website",
+      "status": "Resolvida",
+      "assignee": "Administrador",
+      "queue": "Vistos EUA",
+      "protocol": "VF-823996",
+      "tags": ["B1/B2", "Convertido"],
+      "lastMessage": "Obrigado pelo atendimento!",
+      "lastMessageAt": "Ontem",
+      "unread": 0,
+      "crmType": "Contato",
+      "service": "Assessoria para visto de turismo",
+      "destination": "Estados Unidos",
+      "visaType": "B1/B2",
+      "messages": [
+        {"id":"m11","sender":"agent","author":"Administrador","body":"Seu atendimento foi concluído. Caso precise de algo, pode falar conosco por aqui.","time":"Ontem, 17:22"},
+        {"id":"m12","sender":"customer","author":"Rafael","body":"Obrigado pelo atendimento!","time":"Ontem, 17:25"}
+      ]
+    }
+  ]
+}
