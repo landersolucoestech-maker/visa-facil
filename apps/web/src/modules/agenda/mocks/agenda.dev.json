@@ -1,0 +1,6 @@
+[
+  {"id":"ag-001","title":"Entrevista consular — Ana Martins","type":"Entrevista consular","status":"Confirmado","date":"2026-08-25","startTime":"09:30","endTime":"10:30","location":"Consulado dos EUA","city":"São Paulo","relatedType":"Cliente","relatedName":"Ana Martins","owner":"Administrador","notes":"Levar comprovantes e passaporte original."},
+  {"id":"ag-002","title":"Reunião de documentação — Carlos Silva","type":"Reunião","status":"Pendente","date":"2026-08-26","startTime":"14:00","endTime":"15:00","location":"Online","city":"","relatedType":"Lead","relatedName":"Carlos Silva","owner":"Administrador","notes":"Revisar pendências do processo B1/B2."},
+  {"id":"ag-003","title":"Follow-up visto F-1 — Mariana Souza","type":"Follow-up","status":"Confirmado","date":"2026-08-28","startTime":"11:00","endTime":"11:30","location":"WhatsApp","city":"","relatedType":"Cliente","relatedName":"Mariana Souza","owner":"Administrador","notes":"Confirmar envio do I-20."},
+  {"id":"ag-004","title":"Entrega de documentos — Pedro Alves","type":"Prazo documental","status":"Pendente","date":"2026-09-02","startTime":"16:00","endTime":"17:00","location":"Escritório Visa Fácil","city":"São Paulo","relatedType":"Cliente","relatedName":"Pedro Alves","owner":"Administrador","notes":"Receber documentação física e conferir checklist."}
+]
