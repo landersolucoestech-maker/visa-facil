@@ -18,7 +18,10 @@ const contact = read('apps/web/src/modules/public-site/components/ContactSection
 const footer = read('apps/web/src/modules/public-site/components/PublicFooter.tsx');
 const interactions = read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
 const crm = read('apps/web/src/modules/crm/CrmApp.tsx');
+const crmMockProvider = read('apps/web/src/modules/crm/mocks/mockDataProvider.ts');
+const crmMockData = read('apps/web/src/modules/crm/mocks/crm-records.dev.json');
 const allSource = [main, rootApp, publicPage, header, hero, heroSlides, contact, footer, interactions].join('\n');
+const crmSource = [crm, crmMockProvider, crmMockData].join('\n');
 
 assert(rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
 assert(rootApp.includes("path === '/crm'") && rootApp.includes('<CrmApp />'), 'CRM prototype must remain isolated under /crm/*');
@@ -44,6 +47,10 @@ assert(!footer.toLowerCase().includes('youtube'), 'YouTube must remain removed')
 assert(containsAll(crm, ['Dashboard', 'Contatos', 'Leads', 'Oportunidades', 'Atendimentos', 'Tarefas', 'Agenda', 'Financeiro', 'Relatórios', 'Configurações']), 'CRM shell navigation is incomplete');
 assert(containsAll(crm, ['Leads por status', 'Origem dos leads', 'Financeiro (Resumo)', 'Atendimentos recentes', 'Tarefas pendentes']), 'CRM dashboard blocks are incomplete');
 assert(crm.includes('import.meta.env.BASE_URL'), 'CRM must support subdirectory hosting');
+
+for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
+  assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
+}
 
 for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
 
