@@ -1,0 +1,44 @@
+[
+  {
+    "id":"inv-001",
+    "invoiceNumber":"VF-2026-001",
+    "customer":"Ana Souza",
+    "service":"Assessoria visto B1/B2",
+    "reference":"LEAD-ANA-001",
+    "issueDate":"2026-08-20",
+    "dueDate":"2026-08-27",
+    "total":1850,
+    "paid":1850,
+    "status":"Pago",
+    "paymentTerms":"7 dias",
+    "notes":"Pagamento integral confirmado."
+  },
+  {
+    "id":"inv-002",
+    "invoiceNumber":"VF-2026-002",
+    "customer":"Mariana Costa",
+    "service":"Assessoria visto de estudante",
+    "reference":"LEAD-MAR-002",
+    "issueDate":"2026-08-21",
+    "dueDate":"2026-08-28",
+    "total":2600,
+    "paid":0,
+    "status":"Em aberto",
+    "paymentTerms":"7 dias",
+    "notes":"Aguardando pagamento."
+  },
+  {
+    "id":"inv-003",
+    "invoiceNumber":"VF-2026-003",
+    "customer":"Fernanda Alves",
+    "service":"Renovação de visto",
+    "reference":"CONT-FER-003",
+    "issueDate":"2026-08-17",
+    "dueDate":"2026-08-24",
+    "total":1400,
+    "paid":700,
+    "status":"Parcialmente pago",
+    "paymentTerms":"7 dias",
+    "notes":"Entrada recebida; saldo pendente."
+  }
+]
