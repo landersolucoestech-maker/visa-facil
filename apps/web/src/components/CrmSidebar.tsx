@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './crm-sidebar.css';
 
-type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics' | 'creative-ai';
+type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
 
 const MAIN_ITEMS = [
   { label: 'Dashboard', href: '/crm', icon: '⌂' },
@@ -17,7 +17,6 @@ const MARKETING_ITEMS: Array<{ label: string; href: string; section: MarketingSe
   { label: 'Campanhas', href: '/crm/marketing/campanhas', section: 'campaigns' },
   { label: 'Calendário', href: '/crm/marketing/calendario', section: 'calendar' },
   { label: 'Métricas', href: '/crm/marketing/metricas', section: 'metrics' },
-  { label: 'IA Criativa', href: '/crm/marketing/ia-criativa', section: 'creative-ai' },
 ];
 
 const AFTER_ITEMS = [
@@ -45,7 +44,6 @@ function marketingSection(path: string): MarketingSection {
   if (path.endsWith('/campanhas')) return 'campaigns';
   if (path.endsWith('/calendario')) return 'calendar';
   if (path.endsWith('/metricas')) return 'metrics';
-  if (path.endsWith('/ia-criativa')) return 'creative-ai';
   return 'overview';
 }
 
