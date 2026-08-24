@@ -5,6 +5,7 @@ import { FinanceApp } from './modules/finance/FinanceApp';
 import { FinancialCategoriesApp } from './modules/finance/FinancialCategoriesApp';
 import { FinancialRulesApp } from './modules/finance/FinancialRulesApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
+import { ReportsApp } from './modules/reports/ReportsApp';
 import { TasksApp } from './modules/tasks/TasksApp';
 
 function normalizePath(pathname: string) {
@@ -21,6 +22,7 @@ export function RootApplication() {
   if (path === '/crm/categorias-financeiras') return <FinancialCategoriesApp />;
   if (path === '/crm/regras-financeiras') return <FinancialRulesApp />;
   if (path === '/crm/financeiro') return <FinanceApp />;
+  if (path === '/crm/relatorios') return <ReportsApp />;
   if (path === '/crm' || path.startsWith('/crm/')) return <CrmApp />;
   return <PublicSitePage />;
 }
