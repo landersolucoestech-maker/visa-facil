@@ -8,6 +8,7 @@ import './modules/crm/crm.css';
 import './modules/marketing/marketing-overrides.css';
 import './modules/marketing/marketing-year-reference.css';
 import './modules/agenda/agenda-calendar-reference.css';
+import './styles/crm-design-system.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
