@@ -1,0 +1,8 @@
+[
+  {"id":"tx-001","description":"Assessoria visto B1/B2 - Ana Souza","type":"Receita","category":"Assessoria","amount":1850,"date":"2026-08-22","dueDate":"2026-08-22","status":"Recebido","paymentMethod":"Pix","relatedName":"Ana Souza","notes":"Pagamento integral"},
+  {"id":"tx-002","description":"Taxa consular - Carlos Lima","type":"Despesa","category":"Taxas consulares","amount":1075,"date":"2026-08-21","dueDate":"2026-08-21","status":"Pago","paymentMethod":"Cartão","relatedName":"Carlos Lima","notes":"Taxa de solicitação"},
+  {"id":"tx-003","description":"Assessoria visto estudante - Mariana Costa","type":"Receita","category":"Assessoria","amount":2600,"date":"2026-08-20","dueDate":"2026-08-28","status":"A receber","paymentMethod":"Transferência","relatedName":"Mariana Costa","notes":"Segunda parcela pendente"},
+  {"id":"tx-004","description":"Serviço de tradução juramentada","type":"Despesa","category":"Serviços terceiros","amount":480,"date":"2026-08-18","dueDate":"2026-08-26","status":"A pagar","paymentMethod":"Boleto","relatedName":"João Pereira","notes":"Documentação do processo"},
+  {"id":"tx-005","description":"Renovação de visto - Fernanda Alves","type":"Receita","category":"Renovação","amount":1400,"date":"2026-08-17","dueDate":"2026-08-17","status":"Recebido","paymentMethod":"Pix","relatedName":"Fernanda Alves","notes":"Pagamento confirmado"},
+  {"id":"tx-006","description":"Anúncios e captação de leads","type":"Despesa","category":"Marketing","amount":750,"date":"2026-08-15","dueDate":"2026-08-30","status":"A pagar","paymentMethod":"Cartão","relatedName":"","notes":"Campanha mensal"}
+]
