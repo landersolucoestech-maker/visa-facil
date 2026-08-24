@@ -10,6 +10,7 @@ import './modules/marketing/marketing-year-reference.css';
 import './modules/agenda/agenda-calendar-reference.css';
 import './styles/crm-design-system.css';
 import './styles/crm-fullwidth-overrides.css';
+import './styles/crm-header-fill.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
