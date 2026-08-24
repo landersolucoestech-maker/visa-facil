@@ -1,0 +1,11 @@
+/* Marketing UI overrides requested for the current prototype. */
+
+/* Calendar: KPI cards are intentionally removed from this module. */
+.marketing-content:has(.marketing-calendar-toolbar) > .marketing-kpis {
+  display: none !important;
+}
+
+/* Metrics: Spotify Ads is intentionally not exposed as a metrics platform. */
+.marketing-content:has(.marketing-metric-tabs) .marketing-metric-tabs > button:last-child {
+  display: none !important;
+}
