@@ -19,7 +19,6 @@ function getBasePath() { const base = import.meta.env.BASE_URL.replace(/\/$/, ''
 function browserHref(path: string) { return `${getBasePath()}${path}` || path; }
 function BrandMark() { return <span className="crm-brand-mark" aria-hidden="true"><i /><b /></span>; }
 function FlagCard() { return <div className="crm-flag" aria-hidden="true"><span className="crm-flag__blue">✦ ✦ ✦<br /> ✦ ✦</span><span className="crm-flag__stripes" /></div>; }
-
 function BellIcon() { return <span className="attendance-bell" aria-hidden="true" />; }
 
 export function AttendanceApp() {
@@ -39,6 +38,10 @@ export function AttendanceApp() {
     const matchesStatus = statusFilter === 'Todos' || item.status === statusFilter;
     return matchesQuery && matchesStatus;
   }), [conversations, query, statusFilter]);
+
+  const waitingCount = conversations.filter((item) => item.status === 'Aguardando atendimento').length;
+  const activeCount = conversations.filter((item) => item.status === 'Em atendimento').length;
+  const unreadCount = conversations.reduce((sum, item) => sum + item.unread, 0);
 
   const updateSelected = (patch: Partial<AttendanceConversation>) => {
     if (!selected) return;
@@ -83,17 +86,16 @@ export function AttendanceApp() {
       </header>
 
       <main className="attendance-content">
-        <section className="attendance-stats">
-          <article><span>Conversas</span><strong>{conversations.length}</strong><small>Total no atendimento</small></article>
-          <article><span>Aguardando</span><strong>{conversations.filter((item) => item.status === 'Aguardando atendimento').length}</strong><small>Precisam de responsável</small></article>
-          <article><span>Em atendimento</span><strong>{conversations.filter((item) => item.status === 'Em atendimento').length}</strong><small>Conversas ativas</small></article>
-          <article><span>Não lidas</span><strong>{conversations.reduce((sum, item) => sum + item.unread, 0)}</strong><small>Mensagens pendentes</small></article>
-        </section>
-
         <section className="attendance-inbox">
           <aside className="attendance-list-panel">
             <div className="attendance-list-header"><div><span>INBOX</span><h2>Conversas</h2></div><button type="button" onClick={() => setNewConversationOpen(true)}>+</button></div>
             <div className="attendance-filters"><label><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar conversa..." /></label><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option>Todos</option>{STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select></div>
+            <div className="attendance-sidebar-stats">
+              <article><span>Conversas</span><strong>{conversations.length}</strong></article>
+              <article><span>Aguardando</span><strong>{waitingCount}</strong></article>
+              <article><span>Em atendimento</span><strong>{activeCount}</strong></article>
+              <article><span>Não lidas</span><strong>{unreadCount}</strong></article>
+            </div>
             <div className="attendance-conversation-list">{filtered.length === 0 ? <p className="attendance-empty">Nenhuma conversa encontrada.</p> : filtered.map((conversation) => <button key={conversation.id} type="button" className={conversation.id === selected?.id ? 'is-active' : ''} onClick={() => selectConversation(conversation)}>
               <span className="attendance-avatar">{conversation.customer.slice(0, 2).toUpperCase()}</span>
               <span className="attendance-conversation-copy"><span className="attendance-conversation-line"><strong>{conversation.customer}</strong><small>{conversation.lastMessageAt}</small></span><span className="attendance-meta"><b>{conversation.channel}</b><em>{conversation.status}</em></span><span className="attendance-preview">{conversation.lastMessage}</span></span>
