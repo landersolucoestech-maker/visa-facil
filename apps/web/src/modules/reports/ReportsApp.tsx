@@ -95,9 +95,6 @@ export function ReportsApp() {
 
       <main className="reports-content">
         <section className="reports-card">
-          <div className="reports-card-head">
-            <div><span>CENTRAL DE DADOS</span><h2>Importar e exportar</h2><p>Selecione o módulo desejado e execute a ação diretamente, sem montar relatórios manualmente.</p></div>
-          </div>
           <div className="reports-entity-list">
             {ENTITIES.map(entity => <article key={entity.id} className="reports-entity-row">
               <div className="reports-entity-icon">▥</div>
