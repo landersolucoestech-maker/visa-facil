@@ -44,6 +44,7 @@ jobs:
       - name: Build for GitHub Pages
         env:
           GITHUB_PAGES: 'true'
+          VITE_CRM_MOCKS: 'true'
         run: npm run build
 
       - name: Create SPA fallback
