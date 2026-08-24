@@ -23,7 +23,7 @@ export function RootApplication() {
   if (path === '/crm/categorias-financeiras') return <FinancialCategoriesApp />;
   if (path === '/crm/regras-financeiras') return <FinancialRulesApp />;
   if (path === '/crm/financeiro') return <FinanceApp />;
-  if (path === '/crm/marketing') return <MarketingApp />;
+  if (path === '/crm/marketing' || path.startsWith('/crm/marketing/')) return <MarketingApp />;
   if (path === '/crm/relatorios') return <ReportsApp />;
   if (path === '/crm' || path.startsWith('/crm/')) return <CrmApp />;
   return <PublicSitePage />;
