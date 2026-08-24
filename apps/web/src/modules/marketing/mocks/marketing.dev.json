@@ -1,0 +1,16 @@
+{
+  "campaigns": [
+    {"id":"cmp-1","name":"Visto Americano B1/B2 — Agosto","channel":"Meta Ads","objective":"Geração de leads","status":"Ativa","budget":3500,"spent":2140,"leads":86,"conversions":19,"startDate":"2026-08-01","endDate":"2026-08-31"},
+    {"id":"cmp-2","name":"Renovação de visto — Search","channel":"Google Ads","objective":"Conversões","status":"Ativa","budget":2800,"spent":1675,"leads":54,"conversions":17,"startDate":"2026-08-05","endDate":"2026-09-05"},
+    {"id":"cmp-3","name":"Conteúdo orgânico — Instagram","channel":"Instagram","objective":"Reconhecimento","status":"Agendada","budget":0,"spent":0,"leads":21,"conversions":4,"startDate":"2026-08-25","endDate":"2026-09-15"}
+  ],
+  "calendar": [
+    {"id":"cal-1","date":"2026-08-25","title":"Reels: documentos para B1/B2","channel":"Instagram","status":"Agendado"},
+    {"id":"cal-2","date":"2026-08-27","title":"Carrossel: erros na entrevista","channel":"Facebook","status":"Produção"},
+    {"id":"cal-3","date":"2026-08-29","title":"Anúncio: renovação sem entrevista","channel":"Meta Ads","status":"Revisão"}
+  ],
+  "briefings": [
+    {"id":"br-1","title":"Campanha B1/B2 Setembro","type":"Campanha","status":"Em revisão","owner":"Marketing","objective":"Aumentar leads qualificados para assessoria de visto americano."},
+    {"id":"br-2","title":"Série de conteúdo FAQ consular","type":"Conteúdo","status":"Aprovado","owner":"Conteúdo","objective":"Reduzir objeções frequentes e gerar tráfego orgânico."}
+  ]
+}
