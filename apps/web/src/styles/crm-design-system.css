@@ -18,7 +18,6 @@
   --crm-shadow-card:0 8px 28px rgba(16,33,59,.035);
 }
 
-/* CRM-wide typography and box model */
 .crm-global-page,
 .crm-global-page .crm-shell{
   color:var(--crm-text);
@@ -26,302 +25,92 @@
   font-size:var(--crm-font-md);
   line-height:1.45;
 }
+.crm-global-page :is(button,input,select,textarea){font:inherit}
+.crm-global-page :is(input,select,textarea){color:var(--crm-text);border-color:var(--crm-border)}
+.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]){min-height:var(--crm-control-h)}
+.crm-global-page textarea{min-height:96px;line-height:1.45}
+.crm-global-page :is(input,select,textarea):focus{outline:none;border-color:#8fa9d6;box-shadow:0 0 0 3px rgba(47,95,183,.08)}
 
-.crm-global-page :is(button,input,select,textarea){
-  font:inherit;
-}
-
-.crm-global-page :is(input,select,textarea){
-  color:var(--crm-text);
-  border-color:var(--crm-border);
-}
-
-.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]){
-  min-height:var(--crm-control-h);
-}
-
-.crm-global-page textarea{
-  min-height:96px;
-  line-height:1.45;
-}
-
-.crm-global-page :is(input,select,textarea):focus{
-  outline:none;
-  border-color:#8fa9d6;
-  box-shadow:0 0 0 3px rgba(47,95,183,.08);
-}
-
-/* Main page spacing: same horizontal rhythm in every CRM module */
+/* Full workspace usage: every CRM module must consume 100% of the available area */
+.crm-global-page{width:auto;min-width:0;max-width:none}
+.crm-global-page>.crm-shell,
+.crm-global-page .crm-shell,
+.crm-global-page .crm-workspace{width:100%;min-width:0;max-width:none}
+.crm-global-page .crm-workspace{margin-left:0!important}
 .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){
-  width:100%;
-  max-width:none;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin-left:0!important;
+  margin-right:0!important;
   padding:24px clamp(24px,3vw,52px) 42px;
 }
-
-/* Unified sticky header */
-.crm-global-page .crm-topbar{
-  min-height:92px;
-  gap:24px;
-  padding:14px clamp(24px,3vw,52px);
+.crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content)>*{
+  width:100%;
+  min-width:0;
+  max-width:none;
 }
-.crm-global-page .crm-topbar>div:first-child>small{
-  font-size:12px;
-  line-height:1.2;
-}
-.crm-global-page .crm-topbar h1{
-  margin:4px 0 2px;
-  font-size:var(--crm-font-title);
-  line-height:1.15;
-  font-weight:800;
-}
-.crm-global-page .crm-topbar p{
-  margin:3px 0 0;
-  font-size:14px;
-  line-height:1.35;
-}
-.crm-global-page .crm-topbar-actions{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:10px;
-  flex-wrap:nowrap;
+.crm-global-page :is(.attendance-inbox,.crm-dashboard-grid,.crm-relationship-card,.crm-relationship-summary,.agenda-ref-calendar,.agenda-toolbar,.tasks-card,.tasks-panel,.tasks-toolbar,.finance-card,.finance-table-card,.finance-toolbar,.finance-kpis,.marketing-grid,.marketing-table-card,.marketing-calendar-toolbar,.marketing-day-view,.marketing-week-view,.marketing-month-view,.marketing-year-reference,.reports-card,.reports-toolbar){
+  width:100%!important;
+  min-width:0;
+  max-width:none!important;
 }
 
-/* All ordinary buttons: centered label/icon and stable height */
-.crm-global-page button{
-  line-height:1.2;
-}
-.crm-global-page :is(.crm-btn-primary,.crm-btn-secondary,.crm-topbar-primary,.marketing-new,
-  .finance-header-link,.finance-import-button,.reports-action-button,.tasks-new-button,
-  .crm-relationship-card__heading>button,.crm-relationship-tabs button,
-  .marketing-edit-btn,.agenda-period-nav button,.agenda-view-switch button,
-  .marketing-calendar-toolbar>button,.marketing-view-switch button){
-  min-height:var(--crm-control-h);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:0 14px;
-  border-radius:var(--crm-control-radius);
-  font-size:13px;
-  font-weight:800;
-  line-height:1;
-  text-align:center;
-  white-space:nowrap;
-}
+.crm-global-page .crm-topbar{min-height:92px;gap:24px;padding:14px clamp(24px,3vw,52px);width:100%;max-width:none}
+.crm-global-page .crm-topbar>div:first-child>small{font-size:12px;line-height:1.2}
+.crm-global-page .crm-topbar h1{margin:4px 0 2px;font-size:var(--crm-font-title);line-height:1.15;font-weight:800}
+.crm-global-page .crm-topbar p{margin:3px 0 0;font-size:14px;line-height:1.35}
+.crm-global-page .crm-topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
 
-/* Icon-only controls */
-.crm-global-page :is(.marketing-bell,.agenda-notification-button,[aria-label="Alertas"],[aria-label="Notificações"]){
-  width:40px!important;
-  min-width:40px!important;
-  height:40px!important;
-  min-height:40px!important;
-  padding:0!important;
-  display:inline-grid!important;
-  place-items:center!important;
-  line-height:1!important;
-  text-align:center!important;
-  border-radius:10px!important;
-}
-.crm-global-page :is(.marketing-bell,.agenda-notification-button,[aria-label="Alertas"],[aria-label="Notificações"])>*{
-  margin:auto;
-}
+.crm-global-page button{line-height:1.2}
+.crm-global-page :is(.crm-btn-primary,.crm-btn-secondary,.crm-topbar-primary,.marketing-new,.finance-header-link,.finance-import-button,.reports-action-button,.tasks-new-button,.crm-relationship-card__heading>button,.crm-relationship-tabs button,.marketing-edit-btn,.agenda-period-nav button,.agenda-view-switch button,.marketing-calendar-toolbar>button,.marketing-view-switch button){min-height:var(--crm-control-h);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border-radius:var(--crm-control-radius);font-size:13px;font-weight:800;line-height:1;text-align:center;white-space:nowrap}
+.crm-global-page :is(.marketing-bell,.agenda-notification-button,[aria-label="Alertas"],[aria-label="Notificações"]){width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important;display:inline-grid!important;place-items:center!important;line-height:1!important;text-align:center!important;border-radius:10px!important}
+.crm-global-page :is(.marketing-bell,.agenda-notification-button,[aria-label="Alertas"],[aria-label="Notificações"])>*{margin:auto}
 
-/* User menu: same height and alignment everywhere */
-.crm-global-page .crm-user{
-  min-height:40px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:9px;
-  padding:3px 10px 3px 4px;
-}
-.crm-global-page .crm-user>span:first-child{
-  width:32px;
-  height:32px;
-  display:grid;
-  place-items:center;
-}
-.crm-global-page .crm-user strong{font-size:13px;line-height:1.2}
-.crm-global-page .crm-user small{font-size:11px;line-height:1.2}
+.crm-global-page .crm-user{min-height:40px;display:flex;align-items:center;justify-content:center;gap:9px;padding:3px 10px 3px 4px}
+.crm-global-page .crm-user>span:first-child{width:32px;height:32px;display:grid;place-items:center}
+.crm-global-page .crm-user strong{font-size:13px;line-height:1.2}.crm-global-page .crm-user small{font-size:11px;line-height:1.2}
 
-/* Forms */
-.crm-global-page label>span,
-.crm-global-page .marketing-field-label{
-  font-size:11px;
-  line-height:1.25;
-}
-.crm-global-page :is(input,select,textarea){
-  border-radius:var(--crm-control-radius);
-  font-size:13px;
-}
-.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]){
-  padding-left:11px;
-  padding-right:11px;
-}
+.crm-global-page label>span,.crm-global-page .marketing-field-label{font-size:11px;line-height:1.25}
+.crm-global-page :is(input,select,textarea){border-radius:var(--crm-control-radius);font-size:13px}
+.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]){padding-left:11px;padding-right:11px}
 
-/* Shared cards/panels */
-.crm-global-page :is(.crm-panel,.crm-kpi-card,.crm-relationship-card,
-  .agenda-ref-calendar,.agenda-form-modal,.agenda-view-modal,
-  .attendance-panel,.attendance-conversations,.attendance-chat,.attendance-details,
-  .tasks-card,.tasks-panel,.finance-card,.finance-table-card,.finance-kpi-card,
-  .marketing-panel,.marketing-table-card,.marketing-day-view,.marketing-week-view,.marketing-month-view,
-  .marketing-year-month-card,.reports-card,.reports-dataset-card){
-  border-radius:var(--crm-card-radius);
-}
+.crm-global-page :is(.crm-panel,.crm-kpi-card,.crm-relationship-card,.agenda-ref-calendar,.agenda-form-modal,.agenda-view-modal,.attendance-panel,.attendance-conversations,.attendance-chat,.attendance-details,.tasks-card,.tasks-panel,.finance-card,.finance-table-card,.finance-kpi-card,.marketing-panel,.marketing-table-card,.marketing-day-view,.marketing-week-view,.marketing-month-view,.marketing-year-month-card,.reports-card,.reports-dataset-card){border-radius:var(--crm-card-radius)}
+.crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){gap:12px;width:100%;max-width:none}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article){min-height:104px;padding:16px}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) small,.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) span{font-size:12px}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) strong{font-size:26px;line-height:1.1}
 
-/* KPI rhythm */
-.crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){
-  gap:12px;
-}
-.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article){
-  min-height:104px;
-  padding:16px;
-}
-.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) small,
-.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) span{
-  font-size:12px;
-}
-.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.tasks-kpis article) strong{
-  font-size:26px;
-  line-height:1.1;
-}
+.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar,.finance-toolbar,.tasks-toolbar,.reports-toolbar,.crm-relationship-filters){gap:8px;width:100%;max-width:none}
+.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar){padding:12px;border-radius:13px}
+.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar) :is(input,select){height:38px;min-height:38px;font-size:12px}
+.crm-global-page :is(.agenda-view-switch,.marketing-view-switch){display:flex;align-items:center;justify-content:center;gap:3px;padding:3px;border:1px solid var(--crm-border);border-radius:9px;background:#f5f7fa}
+.crm-global-page :is(.agenda-view-switch,.marketing-view-switch) button{height:30px;min-height:30px;padding:0 10px;border:0;border-radius:7px;font-size:12px;font-weight:800}
 
-/* Toolbar/filter consistency */
-.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar,.finance-toolbar,.tasks-toolbar,.reports-toolbar,.crm-relationship-filters){
-  gap:8px;
-}
-.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar){
-  padding:12px;
-  border-radius:13px;
-}
-.crm-global-page :is(.agenda-toolbar,.marketing-calendar-toolbar) :is(input,select){
-  height:38px;
-  min-height:38px;
-  font-size:12px;
-}
+.crm-global-page [class*="table-head"]{font-size:11px;line-height:1.2}.crm-global-page [class*="table-row"]{font-size:13px;line-height:1.35}
+.crm-global-page :is(.crm-relationship-table__head,.marketing-table-head,.marketing-table-row){padding-left:18px;padding-right:18px}
 
-/* Segmented controls */
-.crm-global-page :is(.agenda-view-switch,.marketing-view-switch){
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  padding:3px;
-  border:1px solid var(--crm-border);
-  border-radius:9px;
-  background:#f5f7fa;
-}
-.crm-global-page :is(.agenda-view-switch,.marketing-view-switch) button{
-  height:30px;
-  min-height:30px;
-  padding:0 10px;
-  border:0;
-  border-radius:7px;
-  font-size:12px;
-  font-weight:800;
-}
+.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-modal,.marketing-campaign-builder,.crm-record-modal,.finance-modal,.reports-modal){border-radius:18px}
+.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header,.crm-global-page .crm-record-modal>header{padding:18px 20px}
+.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header h2,.crm-global-page .crm-record-modal>header h2{font-size:20px;line-height:1.2}
+.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header p,.crm-global-page .crm-record-modal>header p{font-size:12px;line-height:1.4}
 
-/* Tables */
-.crm-global-page [class*="table-head"]{
-  font-size:11px;
-  line-height:1.2;
-}
-.crm-global-page [class*="table-row"]{
-  font-size:13px;
-  line-height:1.35;
-}
-.crm-global-page :is(.crm-relationship-table__head,.marketing-table-head,.marketing-table-row){
-  padding-left:18px;
-  padding-right:18px;
-}
+.crm-global-page :is(.marketing-dropdown,.agenda-dropdown,.crm-user-dropdown,.finance-dropdown){border-radius:12px;font-size:13px}
+.crm-global-page :is(.marketing-dropdown,.agenda-dropdown,.crm-user-dropdown,.finance-dropdown) :is(button,a){min-height:38px;display:flex;align-items:center;padding:0 10px;border-radius:8px;font-size:13px}
+.crm-global-page button,.crm-global-page [role="button"]{overflow:hidden;text-overflow:ellipsis}
+.crm-global-page :is(button,a,strong,span,p,small,td,th){overflow-wrap:anywhere}
+.crm-global-page .crm-topbar-actions button,.crm-global-page :is(.agenda-view-switch,.marketing-view-switch) button{overflow-wrap:normal}
 
-/* Modal rhythm */
-.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-modal,.marketing-campaign-builder,
-  .crm-record-modal,.finance-modal,.reports-modal){
-  border-radius:18px;
-}
-.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header,
-.crm-global-page .crm-record-modal>header{
-  padding:18px 20px;
-}
-.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header h2,
-.crm-global-page .crm-record-modal>header h2{
-  font-size:20px;
-  line-height:1.2;
-}
-.crm-global-page :is(.agenda-form-modal,.agenda-view-modal,.marketing-content-form,.marketing-campaign-builder)>header p,
-.crm-global-page .crm-record-modal>header p{
-  font-size:12px;
-  line-height:1.4;
-}
-
-/* Dropdowns */
-.crm-global-page :is(.marketing-dropdown,.agenda-dropdown,.crm-user-dropdown,.finance-dropdown){
-  border-radius:12px;
-  font-size:13px;
-}
-.crm-global-page :is(.marketing-dropdown,.agenda-dropdown,.crm-user-dropdown,.finance-dropdown) :is(button,a){
-  min-height:38px;
-  display:flex;
-  align-items:center;
-  padding:0 10px;
-  border-radius:8px;
-  font-size:13px;
-}
-
-/* Prevent text from colliding or overflowing controls */
-.crm-global-page button,
-.crm-global-page [role="button"]{
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.crm-global-page :is(button,a,strong,span,p,small,td,th){
-  overflow-wrap:anywhere;
-}
-.crm-global-page .crm-topbar-actions button,
-.crm-global-page :is(.agenda-view-switch,.marketing-view-switch) button{
-  overflow-wrap:normal;
-}
-
-/* Responsive standard */
 @media(max-width:1100px){
-  .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){
-    padding-left:20px;
-    padding-right:20px;
-  }
-  .crm-global-page .crm-topbar{
-    padding-left:20px;
-    padding-right:20px;
-  }
-  .crm-global-page .crm-topbar-actions{
-    max-width:55%;
-    overflow-x:auto;
-    padding-bottom:2px;
-  }
+  .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){padding-left:20px;padding-right:20px}
+  .crm-global-page .crm-topbar{padding-left:20px;padding-right:20px}
+  .crm-global-page .crm-topbar-actions{max-width:55%;overflow-x:auto;padding-bottom:2px}
 }
-
 @media(max-width:680px){
-  .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){
-    padding:16px 14px 32px;
-  }
-  .crm-global-page .crm-topbar{
-    min-height:78px;
-    padding:12px 14px;
-  }
-  .crm-global-page .crm-topbar h1{font-size:21px}
-  .crm-global-page .crm-topbar>div:first-child>small{font-size:10px}
-  .crm-global-page .crm-topbar p{display:none}
-  .crm-global-page .crm-topbar-actions{max-width:58%;gap:7px}
-  .crm-global-page .crm-user div{display:none}
-  .crm-global-page .crm-user{width:40px;padding:3px}
-  .crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){
-    grid-template-columns:1fr 1fr;
-  }
+  .crm-global-page :is(.crm-content,.agenda-content,.attendance-content,.tasks-content,.finance-content,.marketing-content,.reports-content){padding:16px 14px 32px}
+  .crm-global-page .crm-topbar{min-height:78px;padding:12px 14px}
+  .crm-global-page .crm-topbar h1{font-size:21px}.crm-global-page .crm-topbar>div:first-child>small{font-size:10px}.crm-global-page .crm-topbar p{display:none}
+  .crm-global-page .crm-topbar-actions{max-width:58%;gap:7px}.crm-global-page .crm-user div{display:none}.crm-global-page .crm-user{width:40px;padding:3px}
+  .crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){grid-template-columns:1fr 1fr}
 }
-
-@media(max-width:440px){
-  .crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){
-    grid-template-columns:1fr;
-  }
-}
+@media(max-width:440px){.crm-global-page :is(.crm-kpi-grid,.crm-relationship-summary,.marketing-kpis,.finance-kpis,.tasks-kpis){grid-template-columns:1fr}}
