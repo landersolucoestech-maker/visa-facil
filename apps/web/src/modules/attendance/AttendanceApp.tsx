@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import './attendance.css';
+import './attendanceSidebarKpis.css';
 import { getAttendanceInitialConversations, type AttendanceConversation } from './mocks/attendanceMockProvider';
 
 const NAV_ITEMS = [
