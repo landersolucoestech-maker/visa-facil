@@ -1,0 +1,62 @@
+[
+  {
+    "id": "task-001",
+    "title": "Solicitar cópia do passaporte",
+    "description": "Pedir ao cliente a página de identificação do passaporte em boa qualidade.",
+    "relatedType": "Contato",
+    "relatedName": "Mariana Alves Costa",
+    "owner": "Administrador",
+    "priority": "Alta",
+    "status": "Pendente",
+    "dueDate": "2026-08-24",
+    "dueTime": "17:30",
+    "reminder": "30 minutos antes",
+    "createdAt": "2026-08-24T11:00:00-03:00",
+    "updatedAt": "2026-08-24T11:00:00-03:00"
+  },
+  {
+    "id": "task-002",
+    "title": "Retornar lead pelo WhatsApp",
+    "description": "Confirmar interesse em assessoria para visto B1/B2 e próximos documentos necessários.",
+    "relatedType": "Lead",
+    "relatedName": "Juliana Ferreira Santos",
+    "owner": "Administrador",
+    "priority": "Média",
+    "status": "Em andamento",
+    "dueDate": "2026-08-24",
+    "dueTime": "16:45",
+    "reminder": "15 minutos antes",
+    "createdAt": "2026-08-24T10:15:00-03:00",
+    "updatedAt": "2026-08-24T14:10:00-03:00"
+  },
+  {
+    "id": "task-003",
+    "title": "Revisar formulário DS-160",
+    "description": "Conferir dados pessoais, histórico de viagens e informações profissionais antes do envio.",
+    "relatedType": "Contato",
+    "relatedName": "Camila Oliveira Reis",
+    "owner": "Administrador",
+    "priority": "Alta",
+    "status": "Pendente",
+    "dueDate": "2026-08-25",
+    "dueTime": "10:00",
+    "reminder": "1 hora antes",
+    "createdAt": "2026-08-23T18:20:00-03:00",
+    "updatedAt": "2026-08-23T18:20:00-03:00"
+  },
+  {
+    "id": "task-004",
+    "title": "Enviar orientações para entrevista",
+    "description": "Enviar checklist final e instruções de comparecimento ao consulado.",
+    "relatedType": "Contato",
+    "relatedName": "Rafael Mendes Souza",
+    "owner": "Administrador",
+    "priority": "Baixa",
+    "status": "Concluída",
+    "dueDate": "2026-08-23",
+    "dueTime": "14:00",
+    "reminder": "Sem lembrete",
+    "createdAt": "2026-08-22T09:00:00-03:00",
+    "updatedAt": "2026-08-23T13:35:00-03:00"
+  }
+]
