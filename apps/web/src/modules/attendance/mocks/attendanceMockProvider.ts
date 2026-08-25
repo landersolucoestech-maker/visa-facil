@@ -30,7 +30,45 @@ export type AttendanceConversation = {
   messages: AttendanceMessage[];
 };
 
+const SENDERS = new Set<AttendanceMessage['sender']>(['customer', 'agent', 'system']);
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+function isText(value: unknown): value is string { return typeof value === 'string'; }
+function isMessage(value: unknown): value is AttendanceMessage {
+  if (!isObject(value)) return false;
+  return typeof value.id === 'string' && value.id.trim().length > 0
+    && typeof value.sender === 'string' && SENDERS.has(value.sender as AttendanceMessage['sender'])
+    && isText(value.author)
+    && isText(value.body)
+    && isText(value.time);
+}
+function isConversation(value: unknown): value is AttendanceConversation {
+  if (!isObject(value)) return false;
+  return typeof value.id === 'string' && value.id.trim().length > 0
+    && typeof value.customer === 'string' && value.customer.trim().length > 0
+    && isText(value.handle)
+    && isText(value.email)
+    && typeof value.channel === 'string' && value.channel.trim().length > 0
+    && typeof value.status === 'string' && value.status.trim().length > 0
+    && isText(value.assignee)
+    && isText(value.queue)
+    && typeof value.protocol === 'string' && value.protocol.trim().length > 0
+    && Array.isArray(value.tags) && value.tags.every(isText)
+    && isText(value.lastMessage)
+    && isText(value.lastMessageAt)
+    && typeof value.unread === 'number' && Number.isInteger(value.unread) && value.unread >= 0
+    && isText(value.crmType)
+    && isText(value.service)
+    && isText(value.destination)
+    && isText(value.visaType)
+    && Array.isArray(value.messages) && value.messages.every(isMessage)
+    && new Set(value.messages.map((message) => message.id)).size === value.messages.length;
+}
+
 export function getAttendanceInitialConversations(): AttendanceConversation[] {
   if (!isMockDataEnabled()) return [];
-  return structuredClone(raw.conversations) as AttendanceConversation[];
+  const clone: unknown = structuredClone(raw);
+  if (!isObject(clone) || !Array.isArray(clone.conversations)) return [];
+  return clone.conversations.filter(isConversation);
 }
