@@ -63,17 +63,6 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
     root.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
     cleanup.push(() => observer.disconnect());
 
-    const form = root.querySelector<HTMLFormElement>('[data-form]');
-    if (form) {
-      const onSubmit = (event: SubmitEvent) => {
-        event.preventDefault();
-        const feedback = root.querySelector<HTMLElement>('[data-form-feedback]');
-        if (feedback) feedback.textContent = 'Formulário demonstrativo. Integração com CRM e WhatsApp será configurada na implementação final.';
-      };
-      form.addEventListener('submit', onSubmit);
-      cleanup.push(() => form.removeEventListener('submit', onSubmit));
-    }
-
     const slider = root.querySelector<HTMLElement>('[data-hero-slider]');
     let timer: number | undefined;
     if (slider) {
