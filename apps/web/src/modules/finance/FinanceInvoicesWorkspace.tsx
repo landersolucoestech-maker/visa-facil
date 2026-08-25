@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react';
-import invoiceMocks from './mocks/invoices.dev.json';
+import { getInvoiceMockSeeds, type InvoiceSeed } from './mocks/invoiceMockProvider';
 
 type NoteDirection = 'Entrada' | 'Saída';
 type InvoiceStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';
@@ -43,7 +43,17 @@ const date = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDa
 const subtotal = (invoice: Draft | Invoice) => Math.max(0, invoice.serviceFee + invoice.consularFee + invoice.translationFee + invoice.courierFee + invoice.thirdPartyFee + invoice.otherCharges - invoice.discounts);
 const total = (invoice: Draft | Invoice) => Math.max(0, subtotal(invoice) + invoice.tax + invoice.icms + invoice.ipi + invoice.pis + invoice.cofins + invoice.iss + invoice.freight + invoice.insurance + invoice.otherFiscalExpenses - invoice.withheldTaxes);
 const balance = (invoice: Invoice) => Math.max(0, total(invoice) - invoice.paid);
-const normalize = (record: any): Invoice => ({ ...EMPTY, ...record, id: record.id, payments: record.payments || [], recipientName: record.recipientName || record.customer || '', unitValue: record.unitValue || record.serviceFee || 0, noteDirection: record.noteDirection || 'Saída' });
+const normalize = (record: InvoiceSeed): Invoice => ({
+  ...EMPTY,
+  ...record,
+  id: record.id,
+  payments: (record.payments ?? []).map((payment) => ({ ...payment })),
+  recipientName: record.recipientName ?? record.customer ?? '',
+  unitValue: record.unitValue ?? record.serviceFee ?? 0,
+  noteDirection: record.noteDirection ?? 'Saída',
+  status: record.status ?? EMPTY.status,
+  paid: record.paid ?? 0,
+});
 const isOutstanding = (invoice: Invoice) => invoice.status !== 'Pago' && invoice.status !== 'Cancelada' && balance(invoice) > 0;
 const isOverdue = (invoice: Invoice) => isOutstanding(invoice) && Boolean(invoice.dueDate) && invoice.dueDate < today();
 const visibleStatus = (invoice: Invoice): InvoiceStatus => isOverdue(invoice) ? 'Vencida' : invoice.status;
@@ -125,7 +135,7 @@ function PaymentPicker({ records, close, pick }: { records: Invoice[]; close: ()
 }
 
 export function FinanceInvoicesWorkspace() {
-  const [items, setItems] = useState<Invoice[]>(() => (invoiceMocks as any[]).map(normalize));
+  const [items, setItems] = useState<Invoice[]>(() => getInvoiceMockSeeds().map(normalize));
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('Todos');
   const [modal, setModal] = useState<{ mode: Mode; record?: Invoice }>();
