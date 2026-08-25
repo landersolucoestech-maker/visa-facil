@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { signOut } from '../modules/auth/auth';
+import { AUTHENTICATION_ENABLED, signOut } from '../modules/auth/auth';
 import { AppSidebarIcon, type AppSidebarIconName } from './AppSidebarIcon';
+import '../modules/crm/crm.css';
+import '../styles/ui-system.css';
 import './crm-sidebar.css';
 import './crm-workspace-switch.css';
+import '../styles/product-refinement.css';
+import '../styles/sidebar-v2.css';
+import '../styles/sidebar-color-fix.css';
+import '../styles/crm-header-actions-unified.css';
 
 type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
 type FinanceSection = 'transactions' | 'invoices' | 'pl';
@@ -76,7 +82,7 @@ export function CrmSidebar(){
   </div>
   <div className="crm-sidebar-footer">
    <a className="crm-sidebar-footer-link" href={href('/')}><AppSidebarIcon name="external"/><span>Site público</span></a>
-   <button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}><AppSidebarIcon name="logout"/><span>Sair</span></button>
+   {AUTHENTICATION_ENABLED&&<button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}><AppSidebarIcon name="logout"/><span>Sair</span></button>}
   </div>
  </aside>
 }
