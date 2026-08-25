@@ -165,11 +165,6 @@ export function FinanceTransactionsApp() {
       </header>
 
       <main className="finance-content finance-transactions-content">
-        <nav className="finance-section-nav" aria-label="Configurações financeiras">
-          <div><strong>Movimentações</strong><span>Gerencie registros financeiros e conciliação.</span></div>
-          <div><a href={href('/crm/categorias-financeiras')}>Categorias financeiras</a><a href={href('/crm/regras-financeiras')}>Regras financeiras</a></div>
-        </nav>
-
         <section className="finance-stats finance-transaction-stats">
           <article><span>Receitas recebidas</span><strong>{money(received)}</strong><small>Entradas confirmadas</small></article>
           <article><span>Despesas pagas</span><strong>{money(paid)}</strong><small>Saídas confirmadas</small></article>
