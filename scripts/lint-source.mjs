@@ -41,11 +41,12 @@ for(const removed of [
 ])if(existsSync(resolve(root,removed)))fail(`Obsolete duplicate file must stay removed: ${removed}`);
 
 const main=read('apps/web/src/main.tsx');
-const canonical="./styles/crm-header-actions-unified.css";
-if(!main.includes(canonical))fail('Canonical CRM header stylesheet is missing.');
+const crmSidebar=read('apps/web/src/components/CrmSidebar.tsx');
+const canonical='crm-header-actions-unified.css';
+if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be owned by the lazy shared CRM shell.');
+if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
 if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings-header-actions-fix'))fail('Module-specific bell overrides must not return.');
-const imports=[...main.matchAll(/^import\s+['"](.+?)['"];?$/gm)].map((match)=>match[1]);
-if(imports.at(-1)!==canonical)fail('Canonical CRM header stylesheet must remain the final stylesheet import.');
+if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
 if(failures.length){
   console.error('Source quality lint failed:');
