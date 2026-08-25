@@ -15,8 +15,6 @@ const EMPTY_DRAFT: TaskDraft = {
   title: '', description: '', relatedType: 'Contato', relatedName: '', owner: 'Administrador', priority: 'Média', status: 'Pendente', dueDate: '', dueTime: '', reminder: 'Sem lembrete',
 };
 
-function getBasePath() { const base = import.meta.env.BASE_URL.replace(/\/$/, ''); return base || ''; }
-function browserHref(path: string) { return `${getBasePath()}${path}` || path; }
 function BellIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>; }
 function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>; }
 function PlusIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>; }
@@ -66,7 +64,6 @@ export function TasksApp() {
   const [modal, setModal] = useState<{ mode: ModalMode; task?: TaskRecord }>();
   const [openActionId, setOpenActionId] = useState<string>();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [userOpen, setUserOpen] = useState(false);
   useEffect(() => { saveTaskSessionRecords(tasks); }, [tasks]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -90,12 +87,11 @@ export function TasksApp() {
   };
   const notificationCount = stats.overdue + stats.today;
 
-  return <div className="tasks-shell" onClick={() => { setOpenActionId(undefined); setNotificationsOpen(false); setUserOpen(false); }}>
+  return <div className="tasks-shell" onClick={() => { setOpenActionId(undefined); setNotificationsOpen(false); }}>
     <div className="crm-workspace tasks-workspace">
       <header className="crm-topbar tasks-topbar"><div><small>VISA FÁCIL · CRM</small><h1>Tarefas</h1><p>Atividades, prazos e acompanhamentos operacionais.</p></div><div className="crm-topbar-actions tasks-topbar-actions" onClick={(event) => event.stopPropagation()}>
         <button className="crm-topbar-primary tasks-new-button" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon /><span>Nova tarefa</span></button>
-        <div className="tasks-topbar-menu"><button className="tasks-notification-button" type="button" aria-label="Notificações" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen((value) => !value); setUserOpen(false); }}><BellIcon />{notificationCount > 0 && <span className="tasks-notification-count">{notificationCount}</span>}</button>{notificationsOpen && <div className="tasks-dropdown tasks-notifications"><strong>Notificações</strong>{notificationCount === 0 ? <p>Nenhuma tarefa requer atenção imediata.</p> : <div className="tasks-notification-list">{stats.overdue > 0 && <p><b>{stats.overdue}</b> tarefa{stats.overdue === 1 ? '' : 's'} vencida{stats.overdue === 1 ? '' : 's'}.</p>}{stats.today > 0 && <p><b>{stats.today}</b> tarefa{stats.today === 1 ? '' : 's'} com prazo hoje.</p>}</div>}</div>}</div>
-        <div className="tasks-topbar-menu"><button className="crm-user" type="button" aria-expanded={userOpen} onClick={() => { setUserOpen((value) => !value); setNotificationsOpen(false); }}><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret" aria-hidden="true">⌄</span></button>{userOpen && <div className="tasks-dropdown tasks-user-dropdown"><a href={browserHref('/crm/configuracoes')}>Configurações</a></div>}</div>
+        <div className="tasks-topbar-menu"><button className="tasks-notification-button" type="button" aria-label="Notificações" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((value) => !value)}><BellIcon />{notificationCount > 0 && <span className="tasks-notification-count">{notificationCount}</span>}</button>{notificationsOpen && <div className="tasks-dropdown tasks-notifications"><strong>Notificações</strong>{notificationCount === 0 ? <p>Nenhuma tarefa requer atenção imediata.</p> : <div className="tasks-notification-list">{stats.overdue > 0 && <p><b>{stats.overdue}</b> tarefa{stats.overdue === 1 ? '' : 's'} vencida{stats.overdue === 1 ? '' : 's'}.</p>}{stats.today > 0 && <p><b>{stats.today}</b> tarefa{stats.today === 1 ? '' : 's'} com prazo hoje.</p>}</div>}</div>}</div>
       </div></header>
 
       <main className="tasks-content"><section className="tasks-stats" aria-label="Indicadores de tarefas"><article><span>Total de tarefas</span><strong>{stats.total}</strong><small>Cadastradas</small></article><article><span>Pendentes</span><strong>{stats.pending}</strong><small>Abertas ou em andamento</small></article><article><span>Para hoje</span><strong>{stats.today}</strong><small>Com prazo hoje</small></article><article className={stats.overdue ? 'is-alert' : ''}><span>Vencidas</span><strong>{stats.overdue}</strong><small>Precisam de atenção</small></article></section>
