@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import './settings.css';
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
@@ -31,14 +31,18 @@ export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>={
  email:true,push:true,newLead:true,leadFollowup:true,financeMovement:true,weeklyFinance:false,weeklyReport:true,criticalAlerts:true,operational:true,backup:true,
 };
 
+/**
+ * Integration cards describe planned connectors only. No API/backend connector
+ * exists in this repository, so none may be represented as connected.
+ */
 export const INITIAL_INTEGRATIONS:Integration[]=[
- {id:'whatsapp',category:'Comunicação',name:'WhatsApp Business',description:'Atendimento, notificações e conversas com clientes.',icon:'◉',status:'Não conectado'},
- {id:'resend',category:'Comunicação',name:'E-mail transacional',description:'Envio de e-mails operacionais, avisos e confirmações.',icon:'✉',status:'Conectado'},
- {id:'autentique',category:'Assinatura Digital',name:'Autentique',description:'Assinatura eletrônica de contratos e documentos.',icon:'✎',status:'Não conectado'},
- {id:'nfe',category:'Fiscal',name:'NFe',description:'Emissão e gestão de documentos fiscais.',icon:'▧',status:'Não conectado'},
- {id:'meta',category:'Marketing Digital',name:'Meta Ads',description:'Campanhas, públicos e dados de desempenho.',icon:'M',status:'Não conectado'},
- {id:'google',category:'Marketing Digital',name:'Google Ads',description:'Campanhas e dados de aquisição do Google.',icon:'G',status:'Reconexão necessária'},
- {id:'calendar',category:'Produtividade',name:'Google Calendar',description:'Sincronização de compromissos, entrevistas e lembretes.',icon:'□',status:'Não conectado'},
+ {id:'whatsapp',category:'Comunicação',name:'WhatsApp Business',description:'Atendimento, notificações e conversas com clientes.',icon:'◉',status:'Indisponível'},
+ {id:'resend',category:'Comunicação',name:'E-mail transacional',description:'Envio de e-mails operacionais, avisos e confirmações.',icon:'✉',status:'Indisponível'},
+ {id:'autentique',category:'Assinatura Digital',name:'Autentique',description:'Assinatura eletrônica de contratos e documentos.',icon:'✎',status:'Indisponível'},
+ {id:'nfe',category:'Fiscal',name:'NFe',description:'Emissão e gestão de documentos fiscais.',icon:'▧',status:'Indisponível'},
+ {id:'meta',category:'Marketing Digital',name:'Meta Ads',description:'Campanhas, públicos e dados de desempenho.',icon:'M',status:'Indisponível'},
+ {id:'google',category:'Marketing Digital',name:'Google Ads',description:'Campanhas e dados de aquisição do Google.',icon:'G',status:'Indisponível'},
+ {id:'calendar',category:'Produtividade',name:'Google Calendar',description:'Sincronização de compromissos, entrevistas e lembretes.',icon:'□',status:'Indisponível'},
 ];
 
 export const INITIAL_USERS:UserRecord[]=[
