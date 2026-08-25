@@ -250,9 +250,7 @@
   white-space:nowrap!important;
 }
 
-/* Visual QA correction: the generic Marketing refinement changed the bell to
-   a white surface while the shared CRM bell glyph is also white. Keep this
-   overview control aligned with the canonical dark CRM notification button. */
+/* Notification bell — same visual language and exact bell path used by Tarefas. */
 .crm-global-page .marketing-shell .crm-topbar .marketing-bell{
   position:relative!important;
   width:36px!important;
@@ -262,42 +260,28 @@
   display:grid!important;
   place-items:center!important;
   padding:0!important;
-  border:1px solid var(--product-navy,#0d1b3d)!important;
+  border:1px solid #d8dde5!important;
   border-radius:5px!important;
-  background:var(--product-navy,#0d1b3d)!important;
+  background-color:#fff!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b365f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:18px 18px!important;
   color:transparent!important;
   font-size:0!important;
   line-height:0!important;
   box-shadow:none!important;
   cursor:pointer!important;
 }
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell::before{
-  content:""!important;
-  position:absolute!important;
-  left:50%!important;
-  top:50%!important;
-  width:14px!important;
-  height:14px!important;
-  display:block!important;
-  border:2px solid #fff!important;
-  border-bottom-width:3px!important;
-  border-radius:8px 8px 5px 5px!important;
-  background:transparent!important;
-  box-sizing:border-box!important;
-  transform:translate(-50%,-56%)!important;
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell:hover,
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell[aria-expanded="true"]{
+  border-color:#aeb8c7!important;
+  background-color:#f7f8fa!important;
 }
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell::before,
 .crm-global-page .marketing-shell .crm-topbar .marketing-bell::after{
-  content:""!important;
-  position:absolute!important;
-  left:50%!important;
-  top:calc(50% + 8px)!important;
-  width:4px!important;
-  height:2px!important;
-  display:block!important;
-  border:0!important;
-  border-radius:0 0 4px 4px!important;
-  background:#fff!important;
-  transform:translateX(-50%)!important;
+  content:none!important;
+  display:none!important;
 }
 
 /* Keep both Overview panels exactly the same outer height on desktop even
