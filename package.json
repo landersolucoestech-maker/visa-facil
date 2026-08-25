@@ -10,6 +10,8 @@
     "build": "npm --workspace @visa-facil/web run build",
     "typecheck": "npm --workspace @visa-facil/web run typecheck",
     "validate": "node scripts/validate-public-site.mjs",
-    "check": "npm run validate && npm run typecheck && npm run build"
+    "lint": "node scripts/lint-source.mjs",
+    "test": "node --test scripts/tests/*.test.mjs",
+    "check": "npm run validate && npm run lint && npm run test && npm run typecheck && npm run build"
   }
 }
