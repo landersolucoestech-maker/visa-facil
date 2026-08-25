@@ -18,6 +18,7 @@ function walk(path){
 const sourceFiles=walk('apps/web/src').filter((path)=>/\.(ts|tsx)$/.test(path));
 for(const path of sourceFiles){
   const source=read(path);
+  if(path!=='apps/web/src/components/AccountMenu.tsx'&&source.includes('crm-user'))fail(`${path}: module-local account chrome is forbidden; RootApplication/AccountMenu is the single owner.`);
   if(/\bas\s+any\b/.test(source)||/:\s*any\b/.test(source))fail(`${path}: explicit any is forbidden; model the contract instead.`);
   if(source.includes('dangerouslySetInnerHTML'))fail(`${path}: dangerouslySetInnerHTML is forbidden.`);
   if(source.includes('<iframe'))fail(`${path}: iframe embedding is forbidden.`);
