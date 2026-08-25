@@ -73,6 +73,19 @@ const dashboard=read('apps/web/src/modules/crm/CrmDashboardApp.tsx');
 for(const getter of ['getCrmSessionRecords','getTaskSessionRecords','getAgendaSessionEvents','getFinanceSessionRecords','getAttendanceSessionConversations'])if(!dashboard.includes(getter))fail(`Dashboard must derive operational data from ${getter}.`);
 for(const legacyGetter of ['getCrmInitialRecords','getTaskInitialRecords','getAgendaInitialEvents','getFinanceInitialRecords','getAttendanceInitialConversations'])if(dashboard.includes(legacyGetter))fail(`Dashboard must not bypass canonical session state through ${legacyGetter}.`);
 
+const invoiceWorkspace=read('apps/web/src/modules/finance/FinanceInvoicesWorkspace.tsx');
+const invoiceSessionStore=read('apps/web/src/modules/finance/invoiceSessionStore.ts');
+if(!invoiceWorkspace.includes('getInvoiceSessionSeeds')||!invoiceWorkspace.includes('saveInvoiceSessionSeeds')||!invoiceWorkspace.includes('useEffect'))fail('Invoices must persist mutations through the validated invoice session source.');
+if(invoiceWorkspace.includes('getInvoiceMockSeeds'))fail('Invoices UI must not initialize directly from mock seeds.');
+if(!invoiceWorkspace.includes('DERIVED_STATUS')||!invoiceWorkspace.includes('invalidPaidBalance')||!invoiceWorkspace.includes('reconcileStatus'))fail('Invoices must derive settlement statuses and prevent paid values from exceeding the document total.');
+if(!invoiceSessionStore.includes('readSessionRecords')||!invoiceSessionStore.includes('writeSessionRecords')||!invoiceSessionStore.includes('isInvoiceSessionSeed')||!invoiceSessionStore.includes('invoiceSeedTotal'))fail('Invoice session storage must validate ledger and total consistency.');
+
+const marketing=read('apps/web/src/modules/marketing/MarketingApp.tsx');
+const marketingSessionStore=read('apps/web/src/modules/marketing/marketingSessionStore.ts');
+for(const token of ['getMarketingSessionCampaigns','saveMarketingSessionCampaigns','getMarketingSessionContents','saveMarketingSessionContents'])if(!marketing.includes(token))fail(`Marketing must use the shared session contract: missing ${token}.`);
+if(marketing.includes('getMarketingMockFixture')||marketing.includes('RawContent')||marketing.includes('RawCampaign')||marketing.includes('MarketingFixture'))fail('Marketing UI must not bypass the validated session source with permissive raw fixture contracts.');
+if(!marketingSessionStore.includes('readSessionRecords')||!marketingSessionStore.includes('writeSessionRecords')||!marketingSessionStore.includes('isMarketingContent')||!marketingSessionStore.includes('isMarketingCampaign'))fail('Marketing session storage must runtime-validate rich campaign/content records.');
+
 const packageJson=read('package.json');
 if(!packageJson.includes('npm run audit'))fail('Root quality gate must include dependency audit.');
 const ci=read('.github/workflows/frontend-ci.yml');
