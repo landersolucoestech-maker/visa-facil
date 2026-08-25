@@ -61,7 +61,8 @@ assert(containsAll(crm, ['Total de contatos', 'Clientes', 'Leads', 'Qualificados
 assert(containsAll(crm, ['value={query}', 'value={filter}', 'normalizedQuery']), 'Relationship search/filter controls must remain connected to data');
 assert(containsAll(crmTypes, ['cpf: string', 'rg: string', 'passportNumber: string']), 'Canonical CRM person model must include CPF, RG and passport number');
 assert(containsAll(crm, ['label="CPF"', 'label="RG"', 'label="Número do passaporte"', 'value={record.cpf}', 'value={record.rg}', 'value={record.passportNumber}']), 'CRM create/edit/view flows must include CPF, RG and passport number');
-assert(containsAll(crmMockProvider, ['cpf: raw.cpf', 'rg: raw.rg', 'passportNumber: raw.passportNumber', 'isMockDataEnabled']), 'CRM mock provider must support documents and centralized mock policy');
+assert(containsAll(crmMockProvider, ['isCrmRecord', 'isMockDataEnabled', 'isText(value.cpf)', 'isText(value.rg)', 'isText(value.passportNumber)', 'clone.filter(isCrmRecord)']), 'CRM mock provider must runtime-validate document fields under the centralized mock policy');
+assert(!crmMockProvider.includes('crypto.randomUUID()') && !crmMockProvider.includes('new Date().toISOString()'), 'CRM mock provider must reject malformed fixture identity/timestamps instead of fabricating replacements');
 
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
