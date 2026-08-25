@@ -52,7 +52,6 @@ export function MarketingApp(){
    {section==='campaigns'&&<button className="crm-topbar-primary marketing-new" type="button" onClick={()=>setCampaignModal({mode:'create'})}>+ Nova Campanha</button>}
    {section==='calendar'&&<button className="crm-topbar-primary marketing-new" type="button" onClick={()=>setContentModal({mode:'create'})}>+ Novo Conteúdo</button>}
    <div className="marketing-menu"><button className="marketing-bell" type="button" aria-label="Alertas" aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(value=>!value)}><BellIcon/></button>{notificationsOpen&&<div className="marketing-dropdown"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div>
-   <a className="crm-user" href={href('/crm/configuracoes')} aria-label="Abrir configurações"><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div></a>
   </div></header>
   <main className="marketing-content">
    {section==='overview'&&<Overview campaigns={campaigns} contents={contents} totals={totals}/>} 
