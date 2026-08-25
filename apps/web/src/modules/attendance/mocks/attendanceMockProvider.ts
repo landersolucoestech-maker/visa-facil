@@ -31,11 +31,12 @@ export type AttendanceConversation = {
 };
 
 const SENDERS = new Set<AttendanceMessage['sender']>(['customer', 'agent', 'system']);
+const STATUSES = new Set(['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Resolvida', 'Arquivada']);
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
-function isMessage(value: unknown): value is AttendanceMessage {
+export function isAttendanceMessage(value: unknown): value is AttendanceMessage {
   if (!isObject(value)) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.sender === 'string' && SENDERS.has(value.sender as AttendanceMessage['sender'])
@@ -43,14 +44,14 @@ function isMessage(value: unknown): value is AttendanceMessage {
     && isText(value.body)
     && isText(value.time);
 }
-function isConversation(value: unknown): value is AttendanceConversation {
+export function isAttendanceConversation(value: unknown): value is AttendanceConversation {
   if (!isObject(value)) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.customer === 'string' && value.customer.trim().length > 0
     && isText(value.handle)
     && isText(value.email)
     && typeof value.channel === 'string' && value.channel.trim().length > 0
-    && typeof value.status === 'string' && value.status.trim().length > 0
+    && typeof value.status === 'string' && STATUSES.has(value.status)
     && isText(value.assignee)
     && isText(value.queue)
     && typeof value.protocol === 'string' && value.protocol.trim().length > 0
@@ -62,7 +63,7 @@ function isConversation(value: unknown): value is AttendanceConversation {
     && isText(value.service)
     && isText(value.destination)
     && isText(value.visaType)
-    && Array.isArray(value.messages) && value.messages.every(isMessage)
+    && Array.isArray(value.messages) && value.messages.every(isAttendanceMessage)
     && new Set(value.messages.map((message) => message.id)).size === value.messages.length;
 }
 
@@ -70,5 +71,5 @@ export function getAttendanceInitialConversations(): AttendanceConversation[] {
   if (!isMockDataEnabled()) return [];
   const clone: unknown = structuredClone(raw);
   if (!isObject(clone) || !Array.isArray(clone.conversations)) return [];
-  return clone.conversations.filter(isConversation);
+  return clone.conversations.filter(isAttendanceConversation);
 }
