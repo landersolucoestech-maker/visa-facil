@@ -7,208 +7,26 @@ import { getAttendanceInitialConversations } from '../attendance/mocks/attendanc
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const isoToday = () => new Date().toISOString().slice(0, 10);
+function basePath(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
+function href(path:string){return `${basePath()}${path}`||path}
+function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
+function formatActivityTime(value:string){const parsed=new Date(value);return Number.isNaN(parsed.getTime())?'—':parsed.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function KpiCard({label,value,detail,tone}:{label:string;value:string;detail:string;tone:'blue'|'red'|'navy'}){return <article className={`crm-kpi-card crm-dashboard-kpi crm-dashboard-kpi--${tone}`} data-dashboard-kpi={label}><div><small>{label}</small><strong>{value}</strong><p>{detail}</p></div></article>}
 
-function basePath() {
-  return import.meta.env.BASE_URL.replace(/\/$/, '');
-}
-
-function href(path: string) {
-  return `${basePath()}${path}` || path;
-}
-
-function formatActivityTime(value: string) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '—';
-  return parsed.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-}
-
-function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
-  return (
-    <article className={`crm-kpi-card crm-dashboard-kpi crm-dashboard-kpi--${tone}`} data-dashboard-kpi={label}>
-      <div>
-        <small>{label}</small>
-        <strong>{value}</strong>
-        <p>{detail}</p>
-      </div>
-    </article>
-  );
-}
-
-export function CrmDashboardApp() {
-  const crmRecords = useMemo(() => getCrmInitialRecords(), []);
-  const financeRecords = useMemo(() => getFinanceInitialRecords(), []);
-  const agendaEvents = useMemo(() => getAgendaInitialEvents(), []);
-  const tasks = useMemo(() => getTaskInitialRecords(), []);
-  const conversations = useMemo(() => getAttendanceInitialConversations(), []);
-  const today = isoToday();
-
-  const contacts = crmRecords.filter((record) => record.kind === 'contact').length;
-  const leads = crmRecords.filter((record) => record.kind === 'lead').length;
-  const clients = crmRecords.filter((record) => record.kind === 'contact' && record.relationship === 'Cliente').length;
-
-  const revenue = financeRecords
-    .filter((record) => record.type === 'Receita' && record.status === 'Recebido')
-    .reduce((total, record) => total + record.amount, 0);
-  const expenses = financeRecords
-    .filter((record) => record.type === 'Despesa' && record.status === 'Pago')
-    .reduce((total, record) => total + record.amount, 0);
-  const result = revenue - expenses;
-
-  const recentActivities = [...crmRecords]
-    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
-    .slice(0, 4)
-    .map((record) => ({
-      id: record.id,
-      name: record.fullName,
-      activity: record.kind === 'lead'
-        ? `Lead · ${record.leadStatus || 'atualizado'}`
-        : `Contato · ${record.relationship || record.contactStatus || 'atualizado'}`,
-      time: formatActivityTime(record.updatedAt),
-    }));
-
-  const todayAgenda = agendaEvents
-    .filter((event) => event.date === today && event.status !== 'Cancelado')
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-  const leadOrigins = Array.from(
-    crmRecords
-      .filter((record) => record.kind === 'lead')
-      .reduce((groups, record) => {
-        const source = record.source?.trim() || 'Não informado';
-        groups.set(source, (groups.get(source) || 0) + 1);
-        return groups;
-      }, new Map<string, number>()),
-    ([source, count]) => ({ source, count }),
-  ).sort((a, b) => b.count - a.count);
-  const maxOrigin = Math.max(...leadOrigins.map((item) => item.count), 1);
-  const originTotal = leadOrigins.reduce((total, item) => total + item.count, 0);
-
-  const dueLeadActions = crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus !== 'Convertido' && Boolean(record.nextActionDate) && record.nextActionDate! <= today).length;
-  const openTasks = tasks.filter((task) => task.status !== 'Concluída').length;
-  const pendingAgenda = agendaEvents.filter((event) => event.status === 'Pendente' && event.date >= today).length;
-  const unreadMessages = conversations.reduce((total, conversation) => total + Math.max(0, conversation.unread), 0);
-  const pendingItems = [
-    dueLeadActions > 0 ? { count: dueLeadActions, label: 'Próximas ações de leads', detail: 'vencidas ou para hoje', priority: 'Alta' } : null,
-    openTasks > 0 ? { count: openTasks, label: 'Tarefas', detail: 'em aberto', priority: 'Normal' } : null,
-    pendingAgenda > 0 ? { count: pendingAgenda, label: 'Compromissos pendentes', detail: 'aguardando confirmação', priority: 'Média' } : null,
-    unreadMessages > 0 ? { count: unreadMessages, label: 'Mensagens não lidas', detail: 'no VisaChat', priority: 'Alta' } : null,
-  ].filter((item): item is NonNullable<typeof item> => item !== null);
-  const pendingTotal = pendingItems.reduce((total, item) => total + item.count, 0);
-
-  return (
-    <div className="crm-shell">
-      <div className="crm-workspace">
-        <header className="crm-topbar crm-dashboard-topbar">
-          <div>
-            <h1>DASHBOARD</h1>
-            <p>Visão geral da operação</p>
-          </div>
-          <div className="crm-topbar-actions">
-            <button type="button" aria-label="Alertas">⌁</button>
-            <div className="crm-user-menu">
-              <button className="crm-user" type="button" aria-haspopup="menu">
-                <span>VF</span>
-                <div><strong>Administrador</strong><small>Ambiente interno</small></div>
-                <span className="crm-user-caret" aria-hidden="true">⌄</span>
-              </button>
-              <div className="crm-user-dropdown" role="menu">
-                <a role="menuitem" href={href('/crm/configuracoes')}>Configurações</a>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="crm-content crm-dashboard-content">
-          <section className="crm-kpi-grid" aria-label="Indicadores do Dashboard" data-dashboard-kpi-count="6">
-            <KpiCard label="Contatos" value={String(contacts)} detail="cadastrados" tone="blue" />
-            <KpiCard label="Leads" value={String(leads)} detail="em acompanhamento" tone="red" />
-            <KpiCard label="Clientes" value={String(clients)} detail="cadastrados" tone="navy" />
-            <KpiCard label="Receitas" value={money(revenue)} detail="recebidas" tone="blue" />
-            <KpiCard label="Despesas" value={money(expenses)} detail="pagas" tone="red" />
-            <KpiCard label="Resultado" value={money(result)} detail="receitas − despesas" tone="navy" />
-          </section>
-
-          <section className="crm-dashboard-grid crm-dashboard-overview-grid">
-            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-activity-card">
-              <div className="crm-dashboard-card-heading">
-                <div><h2>ATIVIDADES RECENTES</h2><p>Atualizações mais recentes do relacionamento</p></div>
-                <a href={href('/crm/relacionamento')}>Ver todas</a>
-              </div>
-              {recentActivities.length ? <ul className="crm-dashboard-activity-list">
-                {recentActivities.map((item) => (
-                  <li key={item.id}>
-                    <span className="crm-dashboard-activity-marker" aria-hidden="true" />
-                    <div className="crm-dashboard-activity-copy">
-                      <strong>{item.name}</strong>
-                      <span>{item.activity}</span>
-                    </div>
-                    <time>{item.time}</time>
-                  </li>
-                ))}
-              </ul> : <p className="crm-dashboard-empty">Nenhuma atividade disponível.</p>}
-            </article>
-
-            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-agenda-card">
-              <div className="crm-dashboard-card-heading">
-                <div><h2>AGENDA</h2><p>Compromissos de hoje</p></div>
-                <a href={href('/crm/agenda')}>Abrir agenda</a>
-              </div>
-              <div className="crm-dashboard-section-meta">
-                <span>Hoje</span>
-                <strong>{todayAgenda.length} {todayAgenda.length === 1 ? 'compromisso' : 'compromissos'}</strong>
-              </div>
-              {todayAgenda.length ? <div className="crm-dashboard-agenda-list">
-                {todayAgenda.map((item) => (
-                  <div className="crm-dashboard-agenda-row" key={item.id}>
-                    <time>{item.startTime || '—'}</time>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <small>{item.relatedType} · {item.status}</small>
-                    </div>
-                  </div>
-                ))}
-              </div> : <p className="crm-dashboard-empty">Nenhum compromisso para hoje.</p>}
-            </article>
-          </section>
-
-          <section className="crm-dashboard-grid crm-dashboard-overview-grid">
-            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-origin-card">
-              <div className="crm-dashboard-card-heading">
-                <div><h2>ORIGEM DOS LEADS</h2><p>Distribuição por canal de aquisição</p></div>
-                <span className="crm-dashboard-card-total">{originTotal} leads</span>
-              </div>
-              {leadOrigins.length ? <div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">
-                {leadOrigins.map((item) => (
-                  <div className="crm-dashboard-origin-row" key={item.source}>
-                    <div className="crm-dashboard-origin-label"><span>{item.source}</span><strong>{item.count}</strong></div>
-                    <div className="crm-dashboard-origin-track">
-                      <span style={{ width: `${(item.count / maxOrigin) * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div> : <p className="crm-dashboard-empty">Nenhum lead disponível para distribuição por origem.</p>}
-            </article>
-
-            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-pending-card">
-              <div className="crm-dashboard-card-heading">
-                <div><h2>PENDÊNCIAS</h2><p>Itens que precisam de atenção</p></div>
-                <span className="crm-dashboard-card-total">{pendingTotal} abertas</span>
-              </div>
-              {pendingItems.length ? <div className="crm-dashboard-pending-list">
-                {pendingItems.map((item) => (
-                  <div className="crm-dashboard-pending-item" key={item.label}>
-                    <strong className="crm-dashboard-pending-number">{item.count}</strong>
-                    <div><strong>{item.label}</strong><small>{item.detail}</small></div>
-                    <span className={`crm-dashboard-priority is-${item.priority.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`}>{item.priority}</span>
-                  </div>
-                ))}
-              </div> : <p className="crm-dashboard-empty">Nenhuma pendência operacional disponível.</p>}
-            </article>
-          </section>
-        </main>
-      </div>
-    </div>
-  );
+export function CrmDashboardApp(){
+ const crmRecords=useMemo(()=>getCrmInitialRecords(),[]);const financeRecords=useMemo(()=>getFinanceInitialRecords(),[]);const agendaEvents=useMemo(()=>getAgendaInitialEvents(),[]);const tasks=useMemo(()=>getTaskInitialRecords(),[]);const conversations=useMemo(()=>getAttendanceInitialConversations(),[]);const today=isoToday();
+ const contacts=crmRecords.filter(record=>record.kind==='contact').length;const leads=crmRecords.filter(record=>record.kind==='lead').length;const clients=crmRecords.filter(record=>record.kind==='contact'&&record.relationship==='Cliente').length;
+ const revenue=financeRecords.filter(record=>record.type==='Receita'&&record.status==='Recebido').reduce((sum,record)=>sum+record.amount,0);const expenses=financeRecords.filter(record=>record.type==='Despesa'&&record.status==='Pago').reduce((sum,record)=>sum+record.amount,0);const result=revenue-expenses;
+ const recentActivities=[...crmRecords].sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt)).slice(0,4).map(record=>({id:record.id,name:record.fullName,activity:record.kind==='lead'?`Lead · ${record.leadStatus||'atualizado'}`:`Contato · ${record.relationship||record.contactStatus||'atualizado'}`,time:formatActivityTime(record.updatedAt)}));
+ const todayAgenda=agendaEvents.filter(event=>event.date===today&&event.status!=='Cancelado').sort((a,b)=>a.startTime.localeCompare(b.startTime));
+ const leadOrigins=Array.from(crmRecords.filter(record=>record.kind==='lead').reduce((groups,record)=>{const source=record.source?.trim()||'Não informado';groups.set(source,(groups.get(source)||0)+1);return groups},new Map<string,number>()),([source,count])=>({source,count})).sort((a,b)=>b.count-a.count);const maxOrigin=Math.max(...leadOrigins.map(item=>item.count),1);const originTotal=leadOrigins.reduce((sum,item)=>sum+item.count,0);
+ const dueLeadActions=crmRecords.filter(record=>record.kind==='lead'&&record.leadStatus!=='Convertido'&&Boolean(record.nextActionDate)&&record.nextActionDate!<=today).length;const openTasks=tasks.filter(task=>task.status!=='Concluída').length;const pendingAgenda=agendaEvents.filter(event=>event.status==='Pendente'&&event.date>=today).length;const unreadMessages=conversations.reduce((sum,conversation)=>sum+Math.max(0,conversation.unread),0);
+ const pendingItems=[dueLeadActions>0?{count:dueLeadActions,label:'Próximas ações de leads',detail:'vencidas ou para hoje',priority:'Alta'}:null,openTasks>0?{count:openTasks,label:'Tarefas',detail:'em aberto',priority:'Normal'}:null,pendingAgenda>0?{count:pendingAgenda,label:'Compromissos pendentes',detail:'aguardando confirmação',priority:'Média'}:null,unreadMessages>0?{count:unreadMessages,label:'Mensagens não lidas',detail:'no VisaChat',priority:'Alta'}:null].filter((item):item is NonNullable<typeof item>=>item!==null);const pendingTotal=pendingItems.reduce((sum,item)=>sum+item.count,0);
+ return <div className="crm-shell"><div className="crm-workspace"><header className="crm-topbar crm-dashboard-topbar"><div><h1>DASHBOARD</h1><p>Visão geral da operação</p></div><div className="crm-topbar-actions"><button type="button" aria-label="Alertas"><BellIcon/></button><div className="crm-user-menu"><button className="crm-user" type="button" aria-haspopup="menu"><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret" aria-hidden="true">⌄</span></button><div className="crm-user-dropdown" role="menu"><a role="menuitem" href={href('/crm/configuracoes')}>Configurações</a></div></div></div></header>
+ <main className="crm-content crm-dashboard-content"><section className="crm-kpi-grid" aria-label="Indicadores do Dashboard" data-dashboard-kpi-count="6"><KpiCard label="Contatos" value={String(contacts)} detail="cadastrados" tone="blue"/><KpiCard label="Leads" value={String(leads)} detail="em acompanhamento" tone="red"/><KpiCard label="Clientes" value={String(clients)} detail="cadastrados" tone="navy"/><KpiCard label="Receitas" value={money(revenue)} detail="recebidas" tone="blue"/><KpiCard label="Despesas" value={money(expenses)} detail="pagas" tone="red"/><KpiCard label="Resultado" value={money(result)} detail="receitas − despesas" tone="navy"/></section>
+ <section className="crm-dashboard-grid crm-dashboard-overview-grid"><article className="crm-panel crm-dashboard-summary-card crm-dashboard-activity-card"><div className="crm-dashboard-card-heading"><div><h2>ATIVIDADES RECENTES</h2><p>Atualizações mais recentes do relacionamento</p></div><a href={href('/crm/relacionamento')}>Ver todas</a></div>{recentActivities.length?<ul className="crm-dashboard-activity-list">{recentActivities.map(item=><li key={item.id}><span className="crm-dashboard-activity-marker" aria-hidden="true"/><div className="crm-dashboard-activity-copy"><strong>{item.name}</strong><span>{item.activity}</span></div><time>{item.time}</time></li>)}</ul>:<p className="crm-dashboard-empty">Nenhuma atividade disponível.</p>}</article><article className="crm-panel crm-dashboard-summary-card crm-dashboard-agenda-card"><div className="crm-dashboard-card-heading"><div><h2>AGENDA</h2><p>Compromissos de hoje</p></div><a href={href('/crm/agenda')}>Abrir agenda</a></div><div className="crm-dashboard-section-meta"><span>Hoje</span><strong>{todayAgenda.length} {todayAgenda.length===1?'compromisso':'compromissos'}</strong></div>{todayAgenda.length?<div className="crm-dashboard-agenda-list">{todayAgenda.map(item=><div className="crm-dashboard-agenda-row" key={item.id}><time>{item.startTime||'—'}</time><div><strong>{item.title}</strong><small>{item.relatedType} · {item.status}</small></div></div>)}</div>:<p className="crm-dashboard-empty">Nenhum compromisso para hoje.</p>}</article></section>
+ <section className="crm-dashboard-grid crm-dashboard-overview-grid"><article className="crm-panel crm-dashboard-summary-card crm-dashboard-origin-card"><div className="crm-dashboard-card-heading"><div><h2>ORIGEM DOS LEADS</h2><p>Distribuição por canal de aquisição</p></div><span className="crm-dashboard-card-total">{originTotal} leads</span></div>{leadOrigins.length?<div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">{leadOrigins.map(item=><div className="crm-dashboard-origin-row" key={item.source}><div className="crm-dashboard-origin-label"><span>{item.source}</span><strong>{item.count}</strong></div><div className="crm-dashboard-origin-track"><span style={{width:`${(item.count/maxOrigin)*100}%`}}/></div></div>)}</div>:<p className="crm-dashboard-empty">Nenhum lead disponível para distribuição por origem.</p>}</article><article className="crm-panel crm-dashboard-summary-card crm-dashboard-pending-card"><div className="crm-dashboard-card-heading"><div><h2>PENDÊNCIAS</h2><p>Itens que precisam de atenção</p></div><span className="crm-dashboard-card-total">{pendingTotal} abertas</span></div>{pendingItems.length?<div className="crm-dashboard-pending-list">{pendingItems.map(item=><div className="crm-dashboard-pending-item" key={item.label}><strong className="crm-dashboard-pending-number">{item.count}</strong><div><strong>{item.label}</strong><small>{item.detail}</small></div><span className={`crm-dashboard-priority is-${item.priority.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`}>{item.priority}</span></div>)}</div>:<p className="crm-dashboard-empty">Nenhuma pendência operacional disponível.</p>}</article></section></main>
+ </div></div>;
 }
 
 export default CrmDashboardApp;
