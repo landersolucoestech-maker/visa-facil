@@ -42,7 +42,7 @@
 }
 
 /* Direct secondary actions only. Notification controls are excluded and styled below. */
-.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]){
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]){
   width:auto!important;
   min-width:0!important;
   height:36px!important;
@@ -64,19 +64,10 @@
   text-decoration:none!important;
   white-space:nowrap!important;
 }
-.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]):hover{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]):hover{
   border-color:#aeb8c7!important;
   background:#f7f8fa!important;
   color:#102a59!important;
-}
-
-.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-user.crm-user{
-  min-height:36px!important;
-  height:36px!important;
-  border:1px solid #d8dde5!important;
-  border-radius:5px!important;
-  background:#fff!important;
-  box-shadow:none!important;
 }
 
 /* Exact canonical notification bell used by every CRM module. */
