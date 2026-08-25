@@ -40,8 +40,16 @@
 }
 
 .crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class])::after{
-  content:none!important;
-  display:none!important;
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:calc(50% + 8px)!important;
+  width:4px!important;
+  height:2px!important;
+  transform:translateX(-50%)!important;
+  border-radius:0 0 4px 4px!important;
+  background:#1b365f!important;
 }
 
 .crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class]):hover{
