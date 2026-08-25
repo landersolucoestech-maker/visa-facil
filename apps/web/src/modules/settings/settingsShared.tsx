@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import './settings.css';
 
-export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'billing'|'usuarios';
+export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
 type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
 export type AutomationKey='email'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
 export type IntegrationStatus='Conectado'|'Não conectado'|'Reconexão necessária'|'Indisponível';
@@ -14,7 +14,6 @@ export const TABS:Array<{id:Tab;label:string;icon:string}>=[
  {id:'automacoes',label:'Automações',icon:'⚡'},
  {id:'seguranca',label:'Segurança',icon:'◈'},
  {id:'integracoes',label:'Integrações',icon:'↗'},
- {id:'billing',label:'Billing',icon:'▤'},
  {id:'usuarios',label:'Usuários',icon:'♙'},
 ];
 
