@@ -28,6 +28,16 @@ Principais domínios:
 
 ## Modelos e fontes de verdade
 
+### Estado operacional da sessão
+
+`shared/operationalSessionStore.ts` é a fonte de sessão compartilhada entre rotas para os domínios operacionais que alimentam o Dashboard: Relacionamento, Tarefas, Agenda, Transações e VisaChat. Cada domínio é persistido em `sessionStorage` somente durante a sessão atual do navegador.
+
+`shared/sessionRecords.ts` implementa o contrato genérico dessa camada. Toda leitura valida os registros em runtime e exige IDs únicos. JSON corrompido, registros incompatíveis ou IDs duplicados são rejeitados como conjunto e substituídos pelo fallback validado do domínio. Toda gravação também passa pela mesma validação antes de atingir `sessionStorage`.
+
+Os providers `*.dev.json` continuam sendo apenas fontes de seed para desenvolvimento. Componentes operacionais e Dashboard não devem lê-los diretamente: eles consomem a fonte canônica da sessão. Isso evita que alterações desapareçam ao trocar de rota ou que o Dashboard exiba um snapshot independente dos módulos operacionais.
+
+Essa camada **não é persistência remota**. Recarregar em uma nova sessão do navegador ou usar outro dispositivo não compartilha dados.
+
 ### Relacionamento
 
 `modules/crm/types.ts` define o modelo canônico de registros de relacionamento. Providers de fixtures dependem desse modelo; componentes não devem criar uma definição concorrente para a mesma entidade.
@@ -38,11 +48,13 @@ Principais domínios:
 
 `modules/finance/financeConfigStore.ts` é a fonte canônica, limitada à sessão do navegador, para categorias e regras financeiras. Renomeações e exclusões de categorias mantêm integridade das referências das regras; regras incompatíveis ou órfãs não são aceitas.
 
+Transações são mantidas na fonte operacional compartilhada da sessão. A tela consulta categorias ativas no momento do uso, em vez de congelar uma lista no carregamento do módulo.
+
 Invoices representam documentos de faturamento/fiscais. Elas podem referenciar valores e pagamentos, mas não constituem uma segunda fonte de receita para Contabilidade; isso evita dupla contagem. Somente pagamentos com liquidação `Liquidado` alteram o valor recebido e o status financeiro da invoice.
 
 ### Fixtures de desenvolvimento
 
-Arquivos `*.dev.json` são dados de demonstração, não persistência. Eles devem ser acessados somente por providers governados por `shared/runtimeFlags.ts` e validados em runtime antes de serem entregues aos componentes.
+Arquivos `*.dev.json` são dados de demonstração, não persistência. Eles devem ser acessados somente por providers governados por `shared/runtimeFlags.ts` e validados em runtime antes de serem entregues à fonte de sessão.
 
 Regra obrigatória:
 
@@ -99,7 +111,7 @@ Não implementar fallbacks que simulem sucesso de integração.
 
 Templates CSV e validação estrutural de CSV são funcionalidades reais do frontend. A validação verifica formato, tamanho, cabeçalho e campos esperados.
 
-Importação persistente e exportação dos dados operacionais permanecem desabilitadas enquanto os domínios não possuírem uma fonte compartilhada persistente adequada. A interface deve explicitar essa limitação em vez de simular uma importação/exportação inexistente.
+Importação persistente e exportação dos dados operacionais permanecem desabilitadas enquanto os domínios não possuírem uma fonte compartilhada persistente adequada para integração de arquivos. A fonte operacional em `sessionStorage` resolve continuidade entre rotas, mas não é banco de dados nem contrato de importação/exportação durável.
 
 Uma ação chamada XLSX não pode gerar TXT/CSV. Importações devem validar e realmente processar os dados ou permanecer indisponíveis com explicação clara.
 
@@ -124,11 +136,11 @@ O workflow CI acrescenta smoke runtime após o build. O deploy do Pages repete o
 
 ### Lint estrutural
 
-`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes e padrões de renderização inseguros.
+`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes, estilos corretivos obsoletos e bypass da fonte operacional compartilhada da sessão.
 
 ### Testes
 
-`scripts/tests` valida contratos dos fixtures, integridade financeira, configuração de categorias/regras, armazenamento CMS e comportamentos que possuem lógica isolável, como o parser OFX. Testes não devem cristalizar implementações legadas apenas porque elas existiam anteriormente; devem proteger o contrato canônico atual.
+`scripts/tests` valida contratos dos fixtures, integridade financeira, configuração de categorias/regras, armazenamento CMS, armazenamento operacional de sessão e comportamentos que possuem lógica isolável, como o parser OFX. Testes não devem cristalizar implementações legadas apenas porque elas existiam anteriormente; devem proteger o contrato canônico atual.
 
 ## Critérios para novas features
 
