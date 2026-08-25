@@ -117,6 +117,18 @@ if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correc
 if(rootApplication.includes('invoices-header-actions-fix.css')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
+const mainNavBlock=crmSidebar.match(/const MAIN_ITEMS:[\s\S]*?\];/)?.[0]??'';
+const expectedMainNav=['Dashboard','CRM','Agenda','Tarefas','VisaChat'];
+let previousMainIndex=-1;
+for(const label of expectedMainNav){const index=mainNavBlock.indexOf(`label: '${label}'`);if(index<0||index<=previousMainIndex)fail(`CRM sidebar primary order must be Dashboard → CRM → Agenda → Tarefas → VisaChat; invalid position for ${label}.`);previousMainIndex=index;}
+const mainRenderIndex=crmSidebar.indexOf('{MAIN_ITEMS.map');
+const financeRenderIndex=crmSidebar.indexOf('<span>Financeiro</span>');
+const marketingRenderIndex=crmSidebar.indexOf('<span>Marketing</span>');
+const afterRenderIndex=crmSidebar.indexOf('{AFTER_ITEMS.map');
+if(!(mainRenderIndex>=0&&mainRenderIndex<financeRenderIndex&&financeRenderIndex<marketingRenderIndex&&marketingRenderIndex<afterRenderIndex))fail('CRM sidebar group order must be primary navigation → Financeiro → Marketing → Relatórios/Configurações.');
+const afterNavBlock=crmSidebar.match(/const AFTER_ITEMS:[\s\S]*?\];/)?.[0]??'';
+if(!(afterNavBlock.indexOf("label: 'Relatórios'")>=0&&afterNavBlock.indexOf("label: 'Relatórios'")<afterNavBlock.indexOf("label: 'Configurações'")))fail('CRM sidebar must end with Relatórios → Configurações.');
+
 if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
 if(!rootApplication.includes('fallback={<GlobalRouteLoader/>}')||rootApplication.includes('crm-route-loading')||rootApplication.includes('InternalFallback'))fail('Internal lazy routes must use the canonical full-viewport GlobalRouteLoader only.');
