@@ -8,7 +8,6 @@ import './modules/public-site/content/cms-preview.css';
 import './modules/crm/crm.css';
 import './modules/marketing/marketing-overrides.css';
 import './modules/marketing/marketing-year-reference.css';
-import './modules/agenda/agenda-calendar-reference.css';
 import './modules/finance/finance-transactions-label.css';
 import './modules/finance/invoice-document.css';
 import './modules/finance/finance-fiscal-invoice.css';
@@ -21,6 +20,7 @@ import './styles/sidebar-color-fix.css';
 import './styles/crm-relationship-refinement.css';
 import './styles/visachat-refinement.css';
 import './styles/tasks-refinement.css';
+import './styles/agenda-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
