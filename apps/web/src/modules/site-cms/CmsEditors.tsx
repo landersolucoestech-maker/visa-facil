@@ -1,4 +1,3 @@
-import { getAuthSession, signOut } from '../auth/auth';
 import { AppSidebarIcon, type AppSidebarIconName } from '../../components/AppSidebarIcon';
 import { sectionDefinition } from './siteSchema';
 import type { CmsDocument, CmsFieldDefinition, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionInstance, CmsStatus, CmsValue } from './types';
@@ -7,7 +6,6 @@ import { go, href, now, statusLabel, type View } from './siteCmsUtils';
 function CmsBrandMark(){return <span className="site-cms-brand-mark" aria-hidden="true"><i/><b/></span>}
 
 export function CmsSidebar({view}:{view:View}){
- const session=getAuthSession();
  const nav:Array<{id:View;label:string;icon:AppSidebarIconName;path:string}>=[
   {id:'overview',label:'Visão Geral',icon:'overview',path:'/site-admin'},
   {id:'pages',label:'Páginas',icon:'pages',path:'/site-admin/pages'},
@@ -26,8 +24,6 @@ export function CmsSidebar({view}:{view:View}){
   </div>
   <div className="site-cms-sidebar-footer">
    <a className="site-cms-public-link" href={href('/')} target="_blank" rel="noreferrer"><AppSidebarIcon name="external"/><span>Site público</span></a>
-   <div className="site-cms-user"><span>{(session?.name||'A').slice(0,2).toUpperCase()}</span><div><strong>{session?.name||'Administrador'}</strong><small>{session?.email||'Conta interna'}</small></div></div>
-   <button onClick={()=>{signOut();go('/login')}}><AppSidebarIcon name="logout"/><span>Sair</span></button>
   </div>
  </aside>
 }
@@ -51,10 +47,10 @@ export function FieldEditor({field,value,onChange,media}:{field:CmsFieldDefiniti
 export function SectionEditor({section,document,onChange,onRemove}:{section:CmsSectionInstance;document:CmsDocument;onChange:(section:CmsSectionInstance)=>void;onRemove?:()=>void}){
  const definition=sectionDefinition(section.type);
  if(!definition)return <div className="site-cms-empty">Tipo de seção não reconhecido: {section.type}</div>;
- return <div className="site-cms-editor"><div className="site-cms-editor-heading"><div><span>SEÇÃO</span><h2>{section.label}</h2><p>{definition.description}</p></div><div className="site-cms-editor-tools"><label className="site-cms-visibility"><input type="checkbox" checked={section.visible} onChange={e=>onChange({...section,visible:e.target.checked})}/><span>{section.visible?'Visível':'Oculta'}</span></label>{onRemove&&<button className="site-cms-remove-section" onClick={onRemove}>Remover seção</button>}</div></div><div className="site-cms-fields">{definition.fields.map(field=><FieldEditor key={field.id} field={field} value={section.values[field.id]} media={document.media} onChange={value=>onChange({...section,values:{...section.values,[field.id]:value}})}/>)}</div></div>
+ return <div className="site-cms-editor"><div className="site-cms-editor-heading"><div><span>SEÇÃO</span><h2>{section.label}</h2><p>{definition.description}</p></div><div className="site-cms-editor-tools"><label className="site-cms-visibility"><input type="checkbox" checked={section.visible} onChange={e=>onChange({...section,visible:e.target.checked})}/><span>{section.visible?'Visível':'Oculta'}</span></label>{onRemove&&<button className="site-cms-remove-section" onClick={onRemove}>Remover seção</button>}</div></div><div className="site-cms-fields">{definition.fields.map(field=><FieldEditor key={field.id} field={field} value={section.values[field.id]} media={document.media} onChange={value=>onChange({...section,values:{...section.values,[field.id]:value}})}/>)}</div></div>;
 }
 
 export function SeoEditor({page,onChange,media}:{page:CmsPage;onChange:(page:CmsPage)=>void;media:CmsMediaItem[]}){
  const seo=page.seo;const set=<K extends keyof typeof seo>(key:K,value:(typeof seo)[K])=>onChange({...page,seo:{...seo,[key]:value},updatedAt:now()});
- return <div className="site-cms-editor"><div className="site-cms-editor-heading"><div><span>SEO DA PÁGINA</span><h2>Metadados</h2><p>Configurações utilizadas por buscadores e compartilhamentos.</p></div></div><div className="site-cms-form-grid"><label><span>Title</span><input value={seo.title} onChange={e=>set('title',e.target.value)}/><small>{seo.title.length}/60 caracteres</small></label><label className="is-wide"><span>Meta description</span><textarea rows={4} value={seo.description} onChange={e=>set('description',e.target.value)}/><small>{seo.description.length}/160 caracteres</small></label><label><span>OG Image</span><div className="site-cms-image-input"><input value={seo.ogImage} onChange={e=>set('ogImage',e.target.value)} placeholder="URL da imagem"/><select value="" onChange={e=>e.target.value&&set('ogImage',e.target.value)}><option value="">Escolher da mídia…</option>{media.filter(asset=>asset.kind==='image').map(asset=><option value={asset.url} key={asset.id}>{asset.name}</option>)}</select></div></label><label><span>Canonical URL</span><input value={seo.canonicalUrl} onChange={e=>set('canonicalUrl',e.target.value)}/></label><label className="site-cms-checkbox"><input type="checkbox" checked={seo.noIndex} onChange={e=>set('noIndex',e.target.checked)}/><span>Impedir indexação desta página</span></label></div></div>
+ return <div className="site-cms-editor"><div className="site-cms-editor-heading"><div><span>SEO DA PÁGINA</span><h2>Metadados</h2><p>Configurações utilizadas por buscadores e compartilhamentos.</p></div></div><div className="site-cms-form-grid"><label><span>Title</span><input value={seo.title} onChange={e=>set('title',e.target.value)}/><small>{seo.title.length}/60 caracteres</small></label><label className="is-wide"><span>Meta description</span><textarea rows={4} value={seo.description} onChange={e=>set('description',e.target.value)}/><small>{seo.description.length}/160 caracteres</small></label><label><span>OG Image</span><div className="site-cms-image-input"><input value={seo.ogImage} onChange={e=>set('ogImage',e.target.value)} placeholder="URL da imagem"/><select value="" onChange={e=>e.target.value&&set('ogImage',e.target.value)}><option value="">Escolher da mídia…</option>{media.filter(asset=>asset.kind==='image').map(asset=><option value={asset.url} key={asset.id}>{asset.name}</option>)}</select></div></label><label><span>Canonical URL</span><input value={seo.canonicalUrl} onChange={e=>set('canonicalUrl',e.target.value)}/></label><label className="site-cms-checkbox"><input type="checkbox" checked={seo.noIndex} onChange={e=>set('noIndex',e.target.checked)}/><span>Impedir indexação desta página</span></label></div></div>;
 }
