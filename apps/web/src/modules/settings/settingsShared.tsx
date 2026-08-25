@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import './settings.css';
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
-type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
+export type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
 export type AutomationKey='email'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
 export type IntegrationStatus='Conectado'|'Não conectado'|'Reconexão necessária'|'Indisponível';
 export type Integration={id:string;category:string;name:string;description:string;icon:string;status:IntegrationStatus};
@@ -28,7 +28,7 @@ export const INITIAL_COMPANY:Company={
 };
 
 export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>={
- email:true,push:true,newLead:true,leadFollowup:true,financeMovement:true,weeklyFinance:false,weeklyReport:true,criticalAlerts:true,operational:true,backup:true,
+ email:true,push:true,newLead:true,leadFollowup:true,financeMovement:true,weeklyFinance:false,weeklyReport:true,criticalAlerts:true,operational:true,backup:false,
 };
 
 /**
