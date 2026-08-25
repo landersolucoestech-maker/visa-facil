@@ -84,16 +84,10 @@
 .account-menu__panel svg{width:15px;height:15px;color:#607089}
 .account-menu__separator{height:1px;margin:5px 4px;background:#e7ebf1}
 
-/* RootApplication owns the visible account chrome. Legacy module implementations are not rendered to users. */
-.crm-global-shell .crm-global-page .crm-user,
-.workspace-account,
-.site-cms-sidebar-footer .site-cms-user,
-.site-cms-sidebar-footer>button{display:none!important}
-
-/* Reserve the canonical account slot without allowing module-specific action layouts to overlap it. */
+/* Reserve the canonical account slot without allowing page actions to overlap it. */
 .crm-global-shell .crm-global-page .crm-topbar{padding-right:calc(clamp(24px,3vw,52px) + 196px)!important}
 .site-cms-topbar{padding-right:216px!important}
-.workspace-header{position:sticky;top:0;z-index:30}
+.workspace-header{position:sticky;top:0;z-index:30;padding-right:calc(clamp(24px,5vw,72px) + 196px)}
 
 @media(max-width:1180px){
   .account-menu{width:42px}
@@ -102,6 +96,7 @@
   .account-menu__panel{width:188px}
   .crm-global-shell .crm-global-page .crm-topbar{padding-right:calc(clamp(20px,3vw,32px) + 54px)!important}
   .site-cms-topbar{padding-right:70px!important}
+  .workspace-header{padding-right:calc(clamp(20px,3vw,32px) + 54px)}
 }
 
 @media(max-width:680px){
@@ -110,4 +105,5 @@
   .account-menu--cms{top:18px;right:14px}
   .crm-global-shell .crm-global-page .crm-topbar{padding-right:68px!important}
   .site-cms-topbar{padding-right:68px!important}
+  .workspace-header{padding-right:68px}
 }
