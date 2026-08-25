@@ -5,16 +5,35 @@ export type AuthSession = {
   authenticatedAt: string;
 };
 
-export const AUTHENTICATION_ENABLED = true;
-export const AUTH_PROVIDER = 'prototype-adapter';
+/**
+ * Authentication remains intentionally disabled until a real server-side
+ * provider is connected. A frontend-only credential adapter is not an
+ * authentication boundary and must never be presented as one.
+ */
+export const AUTHENTICATION_ENABLED = false;
+export const AUTH_PROVIDER = 'disabled';
 
 const SESSION_KEY = 'visa-facil.auth.session.v1';
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isAuthSession(value: unknown): value is AuthSession {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return isString(candidate.userId)
+    && isString(candidate.email)
+    && isString(candidate.name)
+    && isString(candidate.authenticatedAt)
+    && Number.isFinite(Date.parse(candidate.authenticatedAt));
+}
 
 function parse(raw: string | null): AuthSession | null {
   if (!raw) return null;
   try {
-    const value = JSON.parse(raw) as AuthSession;
-    return value?.email ? value : null;
+    const value: unknown = JSON.parse(raw);
+    return isAuthSession(value) ? value : null;
   } catch {
     return null;
   }
@@ -33,26 +52,17 @@ export function getAuthSession(): AuthSession | null {
 }
 
 export async function signIn(email: string, password: string, remember = false): Promise<AuthSession> {
+  if (!AUTHENTICATION_ENABLED) {
+    throw new Error('A autenticação está desativada neste ambiente.');
+  }
+
   const cleanEmail = email.trim().toLowerCase();
   if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) throw new Error('Informe um e-mail válido.');
   if (password.length < 6) throw new Error('A senha precisa ter pelo menos 6 caracteres.');
 
-  // Provider adapter: the current repository does not yet contain an authentication API.
-  // Keeping the boundary here lets the prototype be replaced by Supabase/Auth0/backend auth
-  // without changing routing, workspace selection or the protected application shell.
-  await Promise.resolve();
-
-  const session: AuthSession = {
-    userId: `user:${cleanEmail}`,
-    email: cleanEmail,
-    name: cleanEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-    authenticatedAt: new Date().toISOString(),
-  };
-
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  if (remember) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  else localStorage.removeItem(SESSION_KEY);
-  return session;
+  // This branch is intentionally unreachable while authentication is disabled.
+  // Replace it with a real server/provider exchange before enabling auth.
+  throw new Error('Nenhum provedor de autenticação real está configurado.');
 }
 
 export function signOut() {
