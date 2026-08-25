@@ -1,0 +1,92 @@
+import records from './invoices.dev.json';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
+
+export type InvoiceSeedStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';
+export type InvoiceSeedDirection = 'Entrada' | 'Saída';
+
+export type InvoiceSeedPayment = {
+  id: string;
+  date: string;
+  method: string;
+  amount: number;
+  processingFee: number;
+  settlementStatus: string;
+  notes: string;
+};
+
+export type InvoiceSeed = {
+  id: string;
+  invoiceNumber?: string;
+  customer?: string;
+  billingContact?: string;
+  service?: string;
+  processRef?: string;
+  referenceNumbers?: string;
+  destination?: string;
+  visaType?: string;
+  processStage?: string;
+  appointmentDate?: string;
+  travelDate?: string;
+  noteDirection?: InvoiceSeedDirection;
+  serviceFee?: number;
+  consularFee?: number;
+  translationFee?: number;
+  courierFee?: number;
+  thirdPartyFee?: number;
+  otherCharges?: number;
+  discounts?: number;
+  tax?: number;
+  paymentTerms?: string;
+  issueDate?: string;
+  dueDate?: string;
+  relatedDocuments?: string;
+  notes?: string;
+  instructions?: string;
+  status?: InvoiceSeedStatus;
+  paid?: number;
+  payments?: InvoiceSeedPayment[];
+  recipientName?: string;
+  unitValue?: number;
+};
+
+const VALID_STATUSES = new Set<InvoiceSeedStatus>(['Rascunho', 'Pronta', 'Enviada', 'Em aberto', 'Parcialmente pago', 'Pago', 'Vencida', 'Cancelada']);
+const VALID_DIRECTIONS = new Set<InvoiceSeedDirection>(['Entrada', 'Saída']);
+const FINANCIAL_FIELDS = ['serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'paid', 'unitValue'] as const;
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isPayment(value: unknown): value is InvoiceSeedPayment {
+  if (!isObject(value)) return false;
+  return typeof value.id === 'string'
+    && typeof value.date === 'string'
+    && typeof value.method === 'string'
+    && isFiniteNumber(value.amount)
+    && isFiniteNumber(value.processingFee)
+    && typeof value.settlementStatus === 'string'
+    && typeof value.notes === 'string';
+}
+
+function isInvoiceSeed(value: unknown): value is InvoiceSeed {
+  if (!isObject(value) || typeof value.id !== 'string' || !value.id.trim()) return false;
+  if (value.status !== undefined && (typeof value.status !== 'string' || !VALID_STATUSES.has(value.status as InvoiceSeedStatus))) return false;
+  if (value.noteDirection !== undefined && (typeof value.noteDirection !== 'string' || !VALID_DIRECTIONS.has(value.noteDirection as InvoiceSeedDirection))) return false;
+  for (const field of FINANCIAL_FIELDS) {
+    const candidate = value[field];
+    if (candidate !== undefined && !isFiniteNumber(candidate)) return false;
+  }
+  if (value.payments !== undefined && (!Array.isArray(value.payments) || !value.payments.every(isPayment))) return false;
+  return true;
+}
+
+export function getInvoiceMockSeeds(): InvoiceSeed[] {
+  if (!isMockDataEnabled()) return [];
+  const clone: unknown = structuredClone(records);
+  if (!Array.isArray(clone)) return [];
+  return clone.filter(isInvoiceSeed);
+}
