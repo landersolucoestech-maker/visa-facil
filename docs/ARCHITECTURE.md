@@ -12,6 +12,12 @@ Essa ausência é um limite arquitetural explícito: nenhuma tela deve represent
 
 O CRM possui uma única navegação global em `components/CrmSidebar.tsx`. Módulos internos não devem implementar sidebars concorrentes.
 
+### Chrome interno e carregamento global
+
+`components/AccountMenu.tsx` é o único menu de conta visível dos ambientes internos. `RootApplication.tsx` o compõe sobre CRM, seletor de workspaces e CMS usando a mesma estrutura, dimensões, tipografia, ícones, opções e comportamento. Implementações locais antigas de identidade/conta não podem competir visualmente com esse contrato. A ação **Sair** somente é exposta quando `AUTHENTICATION_ENABLED` estiver realmente habilitado; com autenticação desativada, o menu informa esse estado sem simular logout.
+
+`components/GlobalRouteLoader.tsx` é o único fallback de `Suspense` para rotas e módulos internos lazy. O loader ocupa o viewport inteiro, centraliza a marca oficial do Visa Fácil e uma barra de progresso indeterminada, mantém responsividade e respeita `prefers-reduced-motion`. Loaders posicionados dentro de conteúdo, sidebars ou módulos não devem substituir esse contrato global.
+
 Principais domínios:
 
 - `modules/public-site` — website institucional;
@@ -142,7 +148,7 @@ O workflow CI acrescenta smoke runtime após o build. O deploy do Pages repete o
 
 ### Lint estrutural
 
-`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes, estilos corretivos obsoletos e bypass das fontes canônicas de sessão de Relacionamento, Tarefas, Agenda, Transações, VisaChat, Invoices e Marketing.
+`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes, estilos corretivos obsoletos, bypass das fontes canônicas de sessão de Relacionamento, Tarefas, Agenda, Transações, VisaChat, Invoices e Marketing, além da propriedade global do Account Menu e do loader de lazy routes.
 
 ### Testes
 

@@ -1,0 +1,80 @@
+import { useEffect, useRef, useState } from 'react';
+import { AUTHENTICATION_ENABLED, getAuthSession, signOut } from '../modules/auth/auth';
+import './account-menu.css';
+
+export type AccountMenuSurface = 'crm' | 'workspace' | 'cms';
+
+function basePath() {
+  return import.meta.env.BASE_URL.replace(/\/$/, '');
+}
+
+function href(path: string) {
+  return `${basePath()}${path}` || path;
+}
+
+function go(path: string) {
+  window.location.href = href(path);
+}
+
+function ChevronIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m8 10 4 4 4-4" /></svg>;
+}
+
+function SettingsIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.36a1.7 1.7 0 0 0-1 .64 1.7 1.7 0 0 0-.36 1.06V21h-4v-.08A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.24 15a1.7 1.7 0 0 0-.64-1 1.7 1.7 0 0 0-1.06-.36H2.5v-4h.08A1.7 1.7 0 0 0 4.1 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.5 4.24a1.7 1.7 0 0 0 1-.64 1.7 1.7 0 0 0 .36-1.06V2.5h4v.08A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.36 8.5a1.7 1.7 0 0 0 .64 1 1.7 1.7 0 0 0 1.06.36h.04v4h-.08A1.7 1.7 0 0 0 19.4 15Z" /></svg>;
+}
+
+function WorkspacesIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.4" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.4" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.4" /></svg>;
+}
+
+function LogoutIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M10 5H5v14h5" /><path d="M13 8l4 4-4 4M17 12H9" /></svg>;
+}
+
+export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
+  const name = session?.name || 'Administrador';
+  const detail = AUTHENTICATION_ENABLED ? (session?.email || 'Conta interna') : 'Autenticação desativada';
+
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && rootRef.current && !rootRef.current.contains(target)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, []);
+
+  return <div className={`account-menu account-menu--${surface}`} ref={rootRef}>
+    <button
+      className="account-menu__trigger"
+      type="button"
+      aria-label="Abrir menu da conta"
+      aria-haspopup="menu"
+      aria-expanded={open}
+      aria-controls="global-account-menu"
+      onClick={() => setOpen((current) => !current)}
+    >
+      <span className="account-menu__avatar" aria-hidden="true">VF</span>
+      <span className="account-menu__identity"><strong>{name}</strong><small>{detail}</small></span>
+      <span className="account-menu__caret" aria-hidden="true"><ChevronIcon /></span>
+    </button>
+    {open && <div className="account-menu__panel" id="global-account-menu" role="menu" aria-label="Menu da conta">
+      <a role="menuitem" href={href('/crm/configuracoes')} onClick={() => setOpen(false)}><SettingsIcon /><span>Configurações</span></a>
+      <a role="menuitem" href={href('/workspaces')} onClick={() => setOpen(false)}><WorkspacesIcon /><span>Workspaces</span></a>
+      {AUTHENTICATION_ENABLED && <><div className="account-menu__separator" /><button role="menuitem" type="button" onClick={() => { signOut(); setOpen(false); go('/login'); }}><LogoutIcon /><span>Sair</span></button></>}
+    </div>}
+  </div>;
+}
+
+export default AccountMenu;

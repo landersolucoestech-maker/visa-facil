@@ -105,6 +105,10 @@ for(const removed of [
 const main=read('apps/web/src/main.tsx');
 const crmSidebar=read('apps/web/src/components/CrmSidebar.tsx');
 const rootApplication=read('apps/web/src/RootApplication.tsx');
+const accountMenu=read('apps/web/src/components/AccountMenu.tsx');
+const accountMenuCss=read('apps/web/src/components/account-menu.css');
+const routeLoader=read('apps/web/src/components/GlobalRouteLoader.tsx');
+const routeLoaderCss=read('apps/web/src/components/global-route-loader.css');
 const canonical='crm-header-actions-unified.css';
 if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be owned by the lazy shared CRM shell.');
 if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
@@ -112,6 +116,14 @@ if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings
 if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correction layer must not return; the base contract owns the six-card grid.');
 if(rootApplication.includes('invoices-header-actions-fix.css')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
+
+if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
+if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
+if(!rootApplication.includes('fallback={<GlobalRouteLoader/>}')||rootApplication.includes('crm-route-loading')||rootApplication.includes('InternalFallback'))fail('Internal lazy routes must use the canonical full-viewport GlobalRouteLoader only.');
+for(const token of ['Configurações','Workspaces','AUTHENTICATION_ENABLED','signOut','aria-haspopup="menu"'])if(!accountMenu.includes(token))fail(`Canonical AccountMenu contract is incomplete: missing ${token}.`);
+for(const token of ['.crm-global-shell .crm-global-page .crm-user','.workspace-account','.site-cms-sidebar-footer .site-cms-user','.site-cms-topbar'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must neutralize legacy account chrome and reserve header space: missing ${token}.`);
+if(!routeLoader.includes('global-route-loader__progress')||!routeLoader.includes('role="progressbar"')||!routeLoader.includes('M7 8h17l8 39L20 56 7 8Z'))fail('GlobalRouteLoader must render the canonical Visa Fácil mark and an accessible progress indicator.');
+if(!routeLoaderCss.includes('position:fixed')||!routeLoaderCss.includes('place-items:center')||!routeLoaderCss.includes('100dvh')||!routeLoaderCss.includes('prefers-reduced-motion'))fail('GlobalRouteLoader must remain viewport-centered, responsive and reduced-motion aware.');
 
 if(failures.length){
   console.error('Source quality lint failed:');

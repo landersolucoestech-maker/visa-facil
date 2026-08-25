@@ -1,4 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react';
+import { AccountMenu, type AccountMenuSurface } from './components/AccountMenu';
+import { GlobalRouteLoader } from './components/GlobalRouteLoader';
 import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 
@@ -89,10 +91,11 @@ function normalizePath(pathname: string) {
 
 function replacePath(path:string){window.history.replaceState(null,'',`${basePath()}${path}`||path)}
 
-function InternalFallback(){return <div className="crm-route-loading" role="status">Carregando workspace…</div>}
-function internal(page:ReactNode){return <Suspense fallback={<InternalFallback/>}>{page}</Suspense>}
+function internal(page:ReactNode, accountSurface?:AccountMenuSurface){
+  return <><Suspense fallback={<GlobalRouteLoader/>}>{page}</Suspense>{accountSurface&&<AccountMenu surface={accountSurface}/>}</>;
+}
 function withSharedSidebar(page: ReactNode) {
-  return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>);
+  return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>,'crm');
 }
 
 export function RootApplication() {
@@ -100,14 +103,14 @@ export function RootApplication() {
   const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
 
   if(path==='/login'){
-    if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>)}
-    if(session){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>)}
+    if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}
+    if(session){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}
     return internal(<LoginApp/>);
   }
 
   if(AUTHENTICATION_ENABLED&&isInternalPath(path)&&!session){replacePath('/login');return internal(<LoginApp/>)}
-  if(path==='/workspaces')return internal(<WorkspaceSelectorApp/>);
-  if(path==='/site-admin'||path.startsWith('/site-admin/'))return internal(<SiteCmsApp/>);
+  if(path==='/workspaces')return internal(<WorkspaceSelectorApp/>,'workspace');
+  if(path==='/site-admin'||path.startsWith('/site-admin/'))return internal(<SiteCmsApp/>,'cms');
   if(path==='/preview')return <PublicSitePage preview/>;
 
   if(path==='/crm/contatos'||path==='/crm/leads'){
