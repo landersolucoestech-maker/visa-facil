@@ -1,5 +1,15 @@
-import { Card, INITIAL_INTEGRATIONS, StatusBadge } from './settingsShared';
+import { useEffect, useMemo, useState } from 'react';
+import { ApiClientError, isBackendConfigured } from '../../shared/apiClient';
+import { INTEGRATION_REGISTRY, type IntegrationConnectionState, type IntegrationId, type IntegrationRuntimeStatus } from '../integrations/integrationContract';
+import { connectIntegration, disconnectIntegration, getIntegrationStatuses, syncIntegration } from '../integrations/integrationApi';
+import { Card } from './settingsShared';
 import { AUTHENTICATION_ENABLED } from '../auth/auth';
+
+const STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não configurado',disconnected:'Desconectado',connecting:'Conectando',connected:'Conectado',degraded:'Degradado',error:'Erro'};
+const ICONS:Record<IntegrationId,string>={whatsapp:'WA',resend:'R',autentique:'A',nfse:'NF',instagram:'IG',facebook:'FB',youtube:'YT',tiktok:'TT','google-ads':'GA','google-calendar':'GC'};
+
+function statusClass(state:IntegrationConnectionState){return `settings-status is-${state.replace(/\s+/g,'-')}`}
+function safeAuthorizationRedirect(value:string){try{const url=new URL(value,window.location.origin);if(url.protocol==='https:'||(import.meta.env.DEV&&url.protocol==='http:'))window.location.assign(url.toString())}catch{ /* invalid authorization URL returned by backend */ }}
 
 export function SecurityTab(){
  return <Card title="Segurança da Conta" description="Estado das proteções de acesso deste ambiente" icon="◈">
@@ -17,9 +27,26 @@ export function SecurityTab(){
 }
 
 export function IntegrationsTab(){
- const categories=Array.from(new Set(INITIAL_INTEGRATIONS.map(item=>item.category)));
- return <Card title="Integrações" description="Conectores previstos para este workspace" icon="↗">
-  <div className="settings-info-box">Este repositório não contém backend, armazenamento seguro de credenciais nem adapters de API externos. Por segurança, nenhuma integração pode ser marcada como conectada a partir desta interface.</div>
-  {categories.map(category=><div className="settings-integration-category" key={category}><div className="settings-integration-category-title"><span>◈</span><strong>{category}</strong></div>{INITIAL_INTEGRATIONS.filter(item=>item.category===category).map(item=><div className="settings-integration-row" key={item.id}><div className="settings-integration-logo">{item.icon}</div><div className="settings-integration-copy"><strong>{item.name}</strong><p>{item.description}</p></div><div className="settings-integration-actions"><StatusBadge status={item.status}/><button className="settings-btn settings-btn-outline" type="button" disabled>Configurar</button></div></div>)}</div>)}
+ const backendConfigured=isBackendConfigured();
+ const [statuses,setStatuses]=useState<IntegrationRuntimeStatus[]>(()=>INTEGRATION_REGISTRY.map(item=>({id:item.id,state:'unconfigured'})));
+ const [busy,setBusy]=useState<IntegrationId>();
+ const [error,setError]=useState('');
+ const categories=useMemo(()=>Array.from(new Set(INTEGRATION_REGISTRY.map(item=>item.category))),[]);
+ const refresh=async(signal?:AbortSignal)=>{if(!backendConfigured)return;try{setStatuses(await getIntegrationStatuses(signal));setError('')}catch(value){if(signal?.aborted)return;setError(value instanceof ApiClientError?value.message:'Não foi possível consultar o estado das integrações.')}};
+ useEffect(()=>{const controller=new AbortController();void refresh(controller.signal);return()=>controller.abort()},[]);
+ const statusFor=(id:IntegrationId)=>statuses.find(item=>item.id===id)??{id,state:'unconfigured' as const};
+ const run=async(id:IntegrationId,action:'connect'|'disconnect'|'sync')=>{
+  if(!backendConfigured||busy)return;
+  setBusy(id);setError('');
+  try{
+   const response=action==='connect'?await connectIntegration(id):action==='disconnect'?await disconnectIntegration(id):await syncIntegration(id);
+   setStatuses(current=>current.map(item=>item.id===id?response.integration:item));
+   if(response.authorizationUrl)safeAuthorizationRedirect(response.authorizationUrl);
+  }catch(value){setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.')}finally{setBusy(undefined)}
+ };
+ return <Card title="Integrações" description="Estado real dos conectores externos" icon="↗">
+  <div className="settings-info-box">{backendConfigured?'Os estados abaixo são consultados na API backend. Credenciais e tokens permanecem fora do bundle do navegador.':'A API backend ainda não está configurada. Nenhuma integração é considerada conectada e nenhuma credencial deve ser inserida no frontend.'}</div>
+  {error&&<p className="settings-security-notice" role="alert">{error}</p>}
+  {categories.map(category=><div className="settings-integration-category" key={category}><div className="settings-integration-category-title"><span>◈</span><strong>{category}</strong></div>{INTEGRATION_REGISTRY.filter(item=>item.category===category).map(item=>{const status=statusFor(item.id);const working=busy===item.id;return <div className="settings-integration-row" key={item.id}><div className="settings-integration-logo">{ICONS[item.id]}</div><div className="settings-integration-copy"><strong>{item.name}</strong><p>{item.description}</p>{status.accountLabel&&<small>{status.accountLabel}</small>}{status.errorMessage&&<small role="alert">{status.errorMessage}</small>}</div><div className="settings-integration-actions"><span className={statusClass(status.state)}>{STATUS_LABEL[status.state]}</span>{status.state==='connected'?<><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'sync')}>{working?'Processando…':'Sincronizar'}</button><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'disconnect')}>Desconectar</button></>:<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'connect')}>{working?'Processando…':backendConfigured?'Conectar':'Backend necessário'}</button>}</div></div>})}</div>)}
  </Card>;
 }
