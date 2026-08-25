@@ -9,6 +9,11 @@ type Draft = Omit<FinanceRecord, 'id'>;
 const TYPES: Array<'Todos' | FinanceType> = ['Todos', 'Receita', 'Despesa'];
 const STATUSES: Array<'Todos' | FinanceStatus> = ['Todos', 'Recebido', 'A receber', 'Pago', 'A pagar'];
 const CATEGORIES = ['Todas', 'Assessoria', 'Renovação', 'Taxas consulares', 'Serviços terceiros', 'Marketing', 'Outros'];
+const STATUS_BY_TYPE: Record<FinanceType, FinanceStatus[]> = {
+  Receita: ['Recebido', 'A receber'],
+  Despesa: ['Pago', 'A pagar'],
+};
+const DEFAULT_STATUS: Record<FinanceType, FinanceStatus> = { Receita: 'A receber', Despesa: 'A pagar' };
 const EMPTY: Draft = { description: '', type: 'Receita', category: 'Assessoria', amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' };
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -18,76 +23,67 @@ function basePath() { return import.meta.env.BASE_URL.replace(/\/$/, ''); }
 function href(path: string) { return `${basePath()}${path}` || path; }
 
 function BellIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 21h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
 }
-function PlusIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
-}
-function UploadIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-}
-function SearchIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
-}
-function SlidersIcon() {
-  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
+function PlusIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>; }
+function UploadIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+function SearchIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
+function SlidersIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
+
+function isValidStatus(type: FinanceType, status: FinanceStatus) {
+  return STATUS_BY_TYPE[type].includes(status);
 }
 
 function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: FinanceRecord; close: () => void; save: (draft: Draft) => void }) {
   const [draft, setDraft] = useState<Draft>(() => record ? {
-    description: record.description, type: record.type, category: record.category, amount: record.amount,
-    date: record.date, dueDate: record.dueDate, status: record.status, paymentMethod: record.paymentMethod,
-    relatedName: record.relatedName, notes: record.notes,
+    description: record.description,
+    type: record.type,
+    category: record.category,
+    amount: record.amount,
+    date: record.date,
+    dueDate: record.dueDate,
+    status: isValidStatus(record.type, record.status) ? record.status : DEFAULT_STATUS[record.type],
+    paymentMethod: record.paymentMethod,
+    relatedName: record.relatedName,
+    notes: record.notes,
   } : EMPTY);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
+  const changeType = (next: FinanceType) => setDraft((current) => ({ ...current, type: next, status: isValidStatus(next, current.status) ? current.status : DEFAULT_STATUS[next] }));
 
   if (mode === 'view' && record) {
     return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-      <div className="finance-view-modal finance-transaction-view-modal">
-        <header>
-          <div><span>TRANSAÇÃO</span><h2>{record.description}</h2><p>{record.category} · {record.type}</p></div>
-          <button type="button" onClick={close} aria-label="Fechar">×</button>
-        </header>
+      <div className="finance-view-modal finance-transaction-view-modal" role="dialog" aria-modal="true">
+        <header><div><span>TRANSAÇÃO</span><h2>{record.description}</h2><p>{record.category} · {record.type}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
         <section className="finance-view-summary">
           <div><span>Valor</span><strong className={record.type === 'Receita' ? 'is-income' : 'is-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong></div>
           <div><span>Status</span><strong>{record.status}</strong></div>
           <div><span>Data</span><strong>{formatDate(record.date)}</strong></div>
           <div><span>Vencimento</span><strong>{formatDate(record.dueDate)}</strong></div>
         </section>
-        <section className="finance-view-body">
-          <dl className="finance-transaction-details">
-            <div><dt>Forma de pagamento</dt><dd>{record.paymentMethod}</dd></div>
-            <div><dt>Cliente / contato</dt><dd>{record.relatedName || '—'}</dd></div>
-            <div><dt>Categoria</dt><dd>{record.category}</dd></div>
-            <div><dt>Tipo</dt><dd>{record.type}</dd></div>
-          </dl>
-          <div className="finance-view-notes"><span>Observações</span><p>{record.notes || 'Nenhuma observação cadastrada.'}</p></div>
-        </section>
+        <section className="finance-view-body"><dl className="finance-transaction-details"><div><dt>Forma de pagamento</dt><dd>{record.paymentMethod}</dd></div><div><dt>Cliente / contato</dt><dd>{record.relatedName || '—'}</dd></div><div><dt>Categoria</dt><dd>{record.category}</dd></div><div><dt>Tipo</dt><dd>{record.type}</dd></div></dl><div className="finance-view-notes"><span>Observações</span><p>{record.notes || 'Nenhuma observação cadastrada.'}</p></div></section>
         <footer><button className="crm-btn-secondary" type="button" onClick={close}>Fechar</button></footer>
       </div>
     </div>;
   }
 
+  const invalid = !draft.description.trim() || draft.amount <= 0 || !draft.date || !isValidStatus(draft.type, draft.status);
   return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="finance-form-modal finance-transaction-form-modal">
-      <header>
-        <div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2>{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div>
-        <button type="button" onClick={close} aria-label="Fechar">×</button>
-      </header>
-      <form onSubmit={(event) => { event.preventDefault(); if (!draft.description.trim() || draft.amount <= 0) return; save(draft); }}>
+    <div className="finance-form-modal finance-transaction-form-modal" role="dialog" aria-modal="true">
+      <header><div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2>{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+      <form onSubmit={(event) => { event.preventDefault(); if (!invalid) save(draft); }}>
         <div className="finance-form-grid finance-transaction-form-grid">
           <label className="finance-field-wide"><span>Descrição</span><input required value={draft.description} onChange={(event) => set('description', event.target.value)} /></label>
-          <label><span>Tipo</span><select value={draft.type} onChange={(event) => set('type', event.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label>
+          <label><span>Tipo</span><select value={draft.type} onChange={(event) => changeType(event.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label>
           <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)}>{CATEGORIES.filter((item) => item !== 'Todas').map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Valor</span><input type="number" min="0" step="0.01" value={draft.amount || ''} onChange={(event) => set('amount', Number(event.target.value))} /></label>
-          <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as FinanceStatus)}>{STATUSES.filter((item) => item !== 'Todos').map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label><span>Data</span><input type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
-          <label><span>Vencimento</span><input type="date" value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></label>
-          <label><span>Forma de pagamento</span><select value={draft.paymentMethod} onChange={(event) => set('paymentMethod', event.target.value)}><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option></select></label>
+          <label><span>Valor</span><input required type="number" min="0.01" step="0.01" value={draft.amount || ''} onChange={(event) => set('amount', Number(event.target.value))} /></label>
+          <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as FinanceStatus)}>{STATUS_BY_TYPE[draft.type].map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Data</span><input required type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
+          <label><span>Vencimento</span><input type="date" min={draft.date || undefined} value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></label>
+          <label><span>Forma de pagamento</span><select value={draft.paymentMethod} onChange={(event) => set('paymentMethod', event.target.value)}><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option><option>OFX</option></select></label>
           <label className="finance-field-wide"><span>Cliente / contato relacionado</span><input value={draft.relatedName} onChange={(event) => set('relatedName', event.target.value)} /></label>
           <label className="finance-field-wide"><span>Observações</span><textarea rows={4} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label>
         </div>
-        <footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary">Salvar transação</button></footer>
+        <footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary" disabled={invalid}>Salvar transação</button></footer>
       </form>
     </div>
   </div>;
@@ -149,19 +145,8 @@ export function FinanceTransactionsApp() {
           <a className="finance-ofx-button finance-header-nav-button" href={href('/crm/regras-financeiras')}>Regras</a>
           <button className="finance-ofx-button" type="button" onClick={() => setOfx(true)}><UploadIcon />Importar OFX</button>
           <button className="crm-topbar-primary finance-new-transaction" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon />Nova transação</button>
-          <div className="finance-topbar-menu">
-            <button className="finance-notification-button" type="button" aria-label="Alertas" aria-expanded={notifications} onClick={() => { setNotifications((value) => !value); setUser(false); }}>
-              <BellIcon />{alertRecords.length > 0 && <span className="finance-notification-count">{alertRecords.length}</span>}
-            </button>
-            {notifications && <div className="finance-dropdown finance-notifications">
-              <header><strong>Notificações</strong><span>{alertRecords.length}</span></header>
-              {alertRecords.length ? <div>{alertRecords.map((record) => <button key={record.id} type="button" onClick={() => { setNotifications(false); setModal({ mode: 'view', record }); }}><strong>{record.description}</strong><small>{record.dueDate < today ? 'Vencida' : 'Vence hoje'} · {record.status} · {money(record.amount)}</small></button>)}</div> : <p>Nenhuma pendência financeira para hoje.</p>}
-            </div>}
-          </div>
-          <div className="finance-topbar-menu">
-            <button className="crm-user" type="button" aria-expanded={user} onClick={() => { setUser((value) => !value); setNotifications(false); }}><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div><span className="crm-user-caret">⌄</span></button>
-            {user && <div className="finance-dropdown finance-user-dropdown"><button type="button">Perfil</button><a href={href('/crm/configuracoes')}>Configurações</a><button type="button" className="is-danger">Logout</button></div>}
-          </div>
+          <div className="finance-topbar-menu"><button className="finance-notification-button" type="button" aria-label="Alertas" aria-expanded={notifications} onClick={() => { setNotifications((value) => !value); setUser(false); }}><BellIcon />{alertRecords.length > 0 && <span className="finance-notification-count">{alertRecords.length}</span>}</button>{notifications && <div className="finance-dropdown finance-notifications"><header><strong>Notificações</strong><span>{alertRecords.length}</span></header>{alertRecords.length ? <div>{alertRecords.map((record) => <button key={record.id} type="button" onClick={() => { setNotifications(false); setModal({ mode: 'view', record }); }}><strong>{record.description}</strong><small>{record.dueDate < today ? 'Vencida' : 'Vence hoje'} · {record.status} · {money(record.amount)}</small></button>)}</div> : <p>Nenhuma pendência financeira para hoje.</p>}</div>}</div>
+          <div className="finance-topbar-menu"><button className="crm-user" type="button" aria-expanded={user} onClick={() => { setUser((value) => !value); setNotifications(false); }}><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret">⌄</span></button>{user && <div className="finance-dropdown finance-user-dropdown"><a href={href('/crm/configuracoes')}>Configurações</a></div>}</div>
         </div>
       </header>
 
@@ -177,7 +162,7 @@ export function FinanceTransactionsApp() {
         <section className="finance-card finance-transactions-card">
           <div className="finance-filters finance-transaction-filters">
             <label className="finance-search"><SearchIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar descrição, categoria, cliente ou pagamento" /></label>
-            <div className="finance-filter-dates"><label><span>De</span><input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label><span>Até</span><input type="date" value={end} onChange={(event) => setEnd(event.target.value)} /></label></div>
+            <div className="finance-filter-dates"><label><span>De</span><input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label><span>Até</span><input type="date" min={start || undefined} value={end} onChange={(event) => setEnd(event.target.value)} /></label></div>
             <select aria-label="Tipo" value={type} onChange={(event) => setType(event.target.value)}>{TYPES.map((item) => <option key={item}>{item}</option>)}</select>
             <select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select>
             <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select>
@@ -188,16 +173,11 @@ export function FinanceTransactionsApp() {
             <div className="finance-table-head"><span>Descrição</span><span>Categoria</span><span>Tipo</span><span>Valor</span><span>Data</span><span>Vencimento</span><span>Status</span><span>Ações</span></div>
             {filtered.length ? filtered.map((record) => <div className="finance-row" key={record.id}>
               <div data-label="Descrição"><strong>{record.description}</strong><small>{record.relatedName || 'Sem vínculo'}</small></div>
-              <span data-label="Categoria">{record.category}</span>
-              <span data-label="Tipo"><b className={`finance-type is-${classNamePart(record.type)}`}>{record.type}</b></span>
+              <span data-label="Categoria">{record.category}</span><span data-label="Tipo"><b className={`finance-type is-${classNamePart(record.type)}`}>{record.type}</b></span>
               <strong data-label="Valor" className={record.type === 'Receita' ? 'finance-income' : 'finance-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong>
-              <span data-label="Data">{formatDate(record.date)}</span>
-              <span data-label="Vencimento" className={record.dueDate && record.dueDate < today && (record.status === 'A receber' || record.status === 'A pagar') ? 'is-overdue' : ''}>{formatDate(record.dueDate)}</span>
+              <span data-label="Data">{formatDate(record.date)}</span><span data-label="Vencimento" className={record.dueDate && record.dueDate < today && (record.status === 'A receber' || record.status === 'A pagar') ? 'is-overdue' : ''}>{formatDate(record.dueDate)}</span>
               <span data-label="Status"><b className={`finance-status is-${classNamePart(record.status)}`}>{record.status}</b></span>
-              <div className="finance-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}>
-                <button className="finance-actions-trigger" type="button" aria-label={`Ações de ${record.description}`} aria-expanded={menu === record.id} onClick={() => setMenu((current) => current === record.id ? undefined : record.id)}>⋯</button>
-                {menu === record.id && <div className="finance-actions-menu"><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'view', record }); }}>Ver</button><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'edit', record }); }}>Editar</button><button type="button" className="is-danger" onClick={() => remove(record)}>Excluir</button></div>}
-              </div>
+              <div className="finance-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}><button className="finance-actions-trigger" type="button" aria-label={`Ações de ${record.description}`} aria-expanded={menu === record.id} onClick={() => setMenu((current) => current === record.id ? undefined : record.id)}>⋯</button>{menu === record.id && <div className="finance-actions-menu"><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'view', record }); }}>Ver</button><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'edit', record }); }}>Editar</button><button type="button" className="is-danger" onClick={() => remove(record)}>Excluir</button></div>}</div>
             </div>) : <div className="finance-empty"><strong>Nenhuma transação encontrada</strong><span>Ajuste os filtros ou adicione uma nova transação.</span></div>}
           </div>
         </section>
@@ -205,14 +185,7 @@ export function FinanceTransactionsApp() {
     </div>
 
     {modal && <TransactionModal mode={modal.mode} record={modal.record} close={() => setModal(undefined)} save={save} />}
-    {ofx && <OfxImportModal
-      existingIds={records.map((record) => record.id)}
-      close={() => setOfx(false)}
-      imported={(incoming) => {
-        setRecords((current) => [...incoming, ...current]);
-        setOfx(false);
-      }}
-    />}
+    {ofx && <OfxImportModal existingIds={records.map((record) => record.id)} close={() => setOfx(false)} imported={(incoming) => { setRecords((current) => [...incoming, ...current]); setOfx(false); }} />}
   </div>;
 }
 
