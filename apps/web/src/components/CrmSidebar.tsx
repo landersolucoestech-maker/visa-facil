@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { signOut } from '../modules/auth/auth';
+import { AppSidebarIcon, type AppSidebarIconName } from './AppSidebarIcon';
 import './crm-sidebar.css';
 import './crm-workspace-switch.css';
 
 type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
 type FinanceSection = 'transactions' | 'invoices' | 'pl';
+type NavItem = {label:string;href:string;icon:AppSidebarIconName};
 
-const MAIN_ITEMS = [
-  { label: 'Dashboard', href: '/crm', icon: '⌂' },
-  { label: 'CRM', href: '/crm/relacionamento', icon: '◎' },
-  { label: 'Atendimentos', href: '/crm/atendimentos', icon: '◌' },
-  { label: 'Tarefas', href: '/crm/tarefas', icon: '✓' },
-  { label: 'Agenda', href: '/crm/agenda', icon: '□' },
+const MAIN_ITEMS:NavItem[] = [
+  { label: 'Dashboard', href: '/crm', icon: 'dashboard' },
+  { label: 'CRM', href: '/crm/relacionamento', icon: 'contacts' },
+  { label: 'Atendimentos', href: '/crm/atendimentos', icon: 'support' },
+  { label: 'Tarefas', href: '/crm/tarefas', icon: 'tasks' },
+  { label: 'Agenda', href: '/crm/agenda', icon: 'calendar' },
 ];
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
@@ -27,9 +29,9 @@ const MARKETING_ITEMS: Array<{ label: string; href: string; section: MarketingSe
   { label: 'Métricas', href: '/crm/marketing/metricas', section: 'metrics' },
 ];
 
-const AFTER_ITEMS = [
-  { label: 'Relatórios', href: '/crm/relatorios', icon: '▥' },
-  { label: 'Configurações', href: '/crm/configuracoes', icon: '⚙' },
+const AFTER_ITEMS:NavItem[] = [
+  { label: 'Relatórios', href: '/crm/relatorios', icon: 'reports' },
+  { label: 'Configurações', href: '/crm/configuracoes', icon: 'settings' },
 ];
 
 function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
@@ -41,6 +43,10 @@ function financeSection(path:string):FinanceSection{if(path.endsWith('/invoices'
 function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path==='/crm';return path===itemHref||path.startsWith(`${itemHref}/`)}
 function BrandMark(){return <span className="crm-brand-mark" aria-hidden="true"><i/><b/></span>}
 
+function NavLink({item,active}:{item:NavItem;active:boolean}){
+ return <a className={active?'is-active':''} href={href(item.href)}><AppSidebarIcon name={item.icon}/><span>{item.label}</span></a>
+}
+
 export function CrmSidebar(){
  const path=currentPath();
  const isFinance=path==='/crm/financeiro'||path.startsWith('/crm/financeiro/')||path==='/crm/categorias-financeiras'||path==='/crm/regras-financeiras';
@@ -48,11 +54,30 @@ export function CrmSidebar(){
  const [financeOpen,setFinanceOpen]=useState(isFinance);
  const [marketingOpen,setMarketingOpen]=useState(isMarketing);
  const fSection=financeSection(path);const mSection=marketingSection(path);
- return <aside className="crm-sidebar crm-sidebar--shared"><a className="crm-brand" href={href('/crm')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>CRM · Relacionamento</small></span></a><div className="crm-sidebar-accent"><i/><i/><i/></div><div className="crm-workspace-switch"><span>WORKSPACE</span><select value="crm" onChange={e=>{if(e.target.value==='website')go('/site-admin');if(e.target.value==='selector')go('/workspaces')}}><option value="crm">CRM</option><option value="website">Site / Website</option><option value="selector">Selecionar workspace…</option></select></div><span className="crm-sidebar-label">OPERAÇÃO</span><nav>
-  {MAIN_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
-  <div className={`crm-sidebar-marketing ${isFinance?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isFinance?'is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><span>$</span><b>Financeiro</b><i>{financeOpen?'⌃':'⌄'}</i></button>{financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
-  <div className={`crm-sidebar-marketing ${isMarketing?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isMarketing?'is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><span>◈</span><b>Marketing</b><i>{marketingOpen?'⌃':'⌄'}</i></button>{marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
-  {AFTER_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
- </nav><div className="crm-sidebar-footer"><a href={href('/')}>← Voltar ao site</a><button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}>Sair da conta</button><small>Protótipo · branch dev</small></div></aside>
+ return <aside className="crm-sidebar crm-sidebar--shared">
+  <div className="crm-sidebar-head">
+   <a className="crm-brand" href={href('/crm')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>CRM</small></span></a>
+   <div className="crm-workspace-switch"><span>Ambiente</span><select value="crm" aria-label="Selecionar ambiente" onChange={e=>{if(e.target.value==='website')go('/site-admin');if(e.target.value==='selector')go('/workspaces')}}><option value="crm">CRM</option><option value="website">Gerenciador do site</option><option value="selector">Trocar workspace…</option></select></div>
+  </div>
+  <div className="crm-sidebar-body">
+   <span className="crm-sidebar-label">Navegação</span>
+   <nav>
+    {MAIN_ITEMS.map(item=><NavLink key={item.href} item={item} active={isActive(path,item.href)}/>)}
+    <div className={`crm-sidebar-group${isFinance?' is-active':''}`}>
+     <button type="button" className={`crm-sidebar-group__trigger${isFinance?' is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><AppSidebarIcon name="finance"/><span>Financeiro</span><AppSidebarIcon name="chevron" className={financeOpen?'is-open':''}/></button>
+     {financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}><span>{item.label}</span></a>)}</div>}
+    </div>
+    <div className={`crm-sidebar-group${isMarketing?' is-active':''}`}>
+     <button type="button" className={`crm-sidebar-group__trigger${isMarketing?' is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><AppSidebarIcon name="marketing"/><span>Marketing</span><AppSidebarIcon name="chevron" className={marketingOpen?'is-open':''}/></button>
+     {marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}><span>{item.label}</span></a>)}</div>}
+    </div>
+    {AFTER_ITEMS.map(item=><NavLink key={item.href} item={item} active={isActive(path,item.href)}/>)}
+   </nav>
+  </div>
+  <div className="crm-sidebar-footer">
+   <a className="crm-sidebar-footer-link" href={href('/')}><AppSidebarIcon name="external"/><span>Site público</span></a>
+   <button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}><AppSidebarIcon name="logout"/><span>Sair</span></button>
+  </div>
+ </aside>
 }
 export default CrmSidebar;
