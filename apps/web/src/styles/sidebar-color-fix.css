@@ -1,0 +1,29 @@
+/* Restore the original VISA FÁCIL navy tone without changing sidebar v2 structure. */
+:root{
+  --vf-sidebar-bg:#102a59;
+  --vf-sidebar-surface:#17366b;
+  --vf-sidebar-active:#1b3f73;
+  --vf-sidebar-border:rgba(255,255,255,.10);
+  --vf-sidebar-text:#e0e8f5;
+  --vf-sidebar-muted:#9aacca;
+}
+
+.crm-sidebar--shared,
+.site-cms-sidebar{
+  background:#102a59!important;
+}
+
+.crm-sidebar-footer,
+.site-cms-sidebar-footer{
+  background:#0d254f!important;
+}
+
+.site-cms-user>span{
+  background:#1b3f73!important;
+}
+
+@media(max-width:680px){
+  .crm-sidebar-subnav{
+    background:#17366b!important;
+  }
+}
