@@ -1,0 +1,30 @@
+import { isCrmRecord, getCrmInitialRecords } from '../modules/crm/mocks/mockDataProvider';
+import type { CrmRecord } from '../modules/crm/types';
+import { isTaskRecord, getTaskInitialRecords, type TaskRecord } from '../modules/tasks/mocks/tasksMockProvider';
+import { isAgendaEvent, getAgendaInitialEvents, type AgendaEvent } from '../modules/agenda/mocks/agendaMockProvider';
+import { isFinanceRecord, getFinanceInitialRecords, type FinanceRecord } from '../modules/finance/mocks/financeMockProvider';
+import { isAttendanceConversation, getAttendanceInitialConversations, type AttendanceConversation } from '../modules/attendance/mocks/attendanceMockProvider';
+import { readSessionRecords, writeSessionRecords } from './sessionRecords';
+
+const KEYS={
+ crm:'visa-facil.session.crm.v1',
+ tasks:'visa-facil.session.tasks.v1',
+ agenda:'visa-facil.session.agenda.v1',
+ finance:'visa-facil.session.finance.v1',
+ attendance:'visa-facil.session.attendance.v1',
+} as const;
+
+export function getCrmSessionRecords(){return readSessionRecords<CrmRecord>(KEYS.crm,getCrmInitialRecords,isCrmRecord)}
+export function saveCrmSessionRecords(records:CrmRecord[]){return writeSessionRecords(KEYS.crm,records,isCrmRecord)}
+
+export function getTaskSessionRecords(){return readSessionRecords<TaskRecord>(KEYS.tasks,getTaskInitialRecords,isTaskRecord)}
+export function saveTaskSessionRecords(records:TaskRecord[]){return writeSessionRecords(KEYS.tasks,records,isTaskRecord)}
+
+export function getAgendaSessionEvents(){return readSessionRecords<AgendaEvent>(KEYS.agenda,getAgendaInitialEvents,isAgendaEvent)}
+export function saveAgendaSessionEvents(records:AgendaEvent[]){return writeSessionRecords(KEYS.agenda,records,isAgendaEvent)}
+
+export function getFinanceSessionRecords(){return readSessionRecords<FinanceRecord>(KEYS.finance,getFinanceInitialRecords,isFinanceRecord)}
+export function saveFinanceSessionRecords(records:FinanceRecord[]){return writeSessionRecords(KEYS.finance,records,isFinanceRecord)}
+
+export function getAttendanceSessionConversations(){return readSessionRecords<AttendanceConversation>(KEYS.attendance,getAttendanceInitialConversations,isAttendanceConversation)}
+export function saveAttendanceSessionConversations(records:AttendanceConversation[]){return writeSessionRecords(KEYS.attendance,records,isAttendanceConversation)}
