@@ -47,13 +47,6 @@ const auth=read('apps/web/src/modules/auth/auth.ts');
 const authenticationDisabled=auth.includes('export const AUTHENTICATION_ENABLED = false');
 if(!authenticationDisabled)fail('Authentication must remain explicitly disabled until a real provider is introduced and approved.');
 if(auth.includes("AUTH_PROVIDER = 'local'"))fail('Frontend-local authentication provider must not return.');
-if(authenticationDisabled){
-  for(const path of sourceFiles){
-    const source=read(path);
-    if(/>\s*Logout\s*</i.test(source))fail(`${path}: fake Logout action is forbidden while authentication is disabled.`);
-    if(/>\s*Perfil\s*</i.test(source))fail(`${path}: fake profile action is forbidden while authentication is disabled.`);
-  }
-}
 
 const operationalStore=read('apps/web/src/shared/operationalSessionStore.ts');
 const sessionStore=read('apps/web/src/shared/sessionRecords.ts');
@@ -99,7 +92,7 @@ if(!ci.includes('npm run audit'))fail('Website CI must keep dependency audit as 
 if(!pages.includes('npm run audit'))fail('Pages deployment must keep dependency audit as a required gate.');
 if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not enable CRM mocks.');
 
-for(const removed of [
+for(const removed of[
   'apps/web/src/modules/finance/FinanceApp.tsx',
   'apps/web/src/styles/crm-dashboard-kpis.css',
   'apps/web/src/styles/crm-dashboard-relationship-bell-fix.css',
@@ -112,6 +105,7 @@ const crmSidebar=read('apps/web/src/components/CrmSidebar.tsx');
 const rootApplication=read('apps/web/src/RootApplication.tsx');
 const accountMenu=read('apps/web/src/components/AccountMenu.tsx');
 const accountMenuCss=read('apps/web/src/components/account-menu.css');
+const profileApp=read('apps/web/src/modules/settings/ProfileApp.tsx');
 const routeLoader=read('apps/web/src/components/GlobalRouteLoader.tsx');
 const routeLoaderCss=read('apps/web/src/components/global-route-loader.css');
 const canonical='crm-header-actions-unified.css';
@@ -119,7 +113,7 @@ if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be
 if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
 if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings-header-actions-fix'))fail('Module-specific bell overrides must not return.');
 if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correction layer must not return; the base contract owns the six-card grid.');
-if(rootApplication.includes('invoices-header-actions-fix.css')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
+if(rootApplication.includes('invoices-header-actions-fix')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
 const mainNavBlock=crmSidebar.match(/const MAIN_ITEMS:[\s\S]*?\];/)?.[0]??'';
@@ -136,8 +130,12 @@ if(!(afterNavBlock.indexOf("label: 'Relatórios'")>=0&&afterNavBlock.indexOf("la
 
 if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
+if(!rootApplication.includes("path==='/crm/perfil'")||!rootApplication.includes('withSharedSidebar(<ProfileApp/>)'))fail('Canonical Perfil route must be owned by RootApplication and use the shared CRM shell.');
 if(!rootApplication.includes('fallback={<GlobalRouteLoader/>}')||rootApplication.includes('crm-route-loading')||rootApplication.includes('InternalFallback'))fail('Internal lazy routes must use the canonical full-viewport GlobalRouteLoader only.');
-for(const token of ['Configurações','Workspaces','AUTHENTICATION_ENABLED','signOut','aria-haspopup="menu"'])if(!accountMenu.includes(token))fail(`Canonical AccountMenu contract is incomplete: missing ${token}.`);
+for(const token of ['<span>Perfil</span>','<span>Configurações</span>','<span>Logout</span>',"href('/crm/perfil')",'AUTHENTICATION_ENABLED','signOut','aria-haspopup="menu"'])if(!accountMenu.includes(token))fail(`Canonical AccountMenu contract is incomplete: missing ${token}.`);
+if(accountMenu.includes('<span>Workspaces</span>'))fail('Canonical AccountMenu must contain only Perfil, Configurações and Logout actions.');
+if(!accountMenu.includes("go(AUTHENTICATION_ENABLED ? '/login' : '/workspaces')"))fail('Logout must clear the auth session and route consistently whether authentication is enabled or disabled.');
+for(const token of ['Perfil da conta','AUTHENTICATION_ENABLED','getAuthSession','readOnly'])if(!profileApp.includes(token))fail(`Canonical profile destination is incomplete: missing ${token}.`);
 for(const token of ['.crm-global-shell .crm-global-page .crm-topbar','.site-cms-topbar','.workspace-header'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must reserve the global account slot consistently: missing ${token}.`);
 for(const legacyToken of ['.crm-global-shell .crm-global-page .crm-user','.workspace-account','.site-cms-user'])if(accountMenuCss.includes(legacyToken))fail(`Canonical account-menu CSS must not retain legacy neutralization selector: ${legacyToken}.`);
 if(!routeLoader.includes('global-route-loader__progress')||!routeLoader.includes('role="progressbar"')||!routeLoader.includes('M7 8h17l8 39L20 56 7 8Z'))fail('GlobalRouteLoader must render the canonical Visa Fácil mark and an accessible progress indicator.');
