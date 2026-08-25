@@ -144,6 +144,8 @@ export function FinanceTransactionsApp() {
       <header className="crm-topbar finance-transactions-topbar">
         <div><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Transações</h1><p>Receitas, despesas, contas a pagar e contas a receber.</p></div>
         <div className="crm-topbar-actions finance-header-actions" onClick={(event) => event.stopPropagation()}>
+          <a className="finance-ofx-button finance-header-nav-button" href={href('/crm/categorias-financeiras')}>Categorias</a>
+          <a className="finance-ofx-button finance-header-nav-button" href={href('/crm/regras-financeiras')}>Regras</a>
           <button className="finance-ofx-button" type="button" onClick={() => setOfx(true)}><UploadIcon />Importar OFX</button>
           <button className="crm-topbar-primary finance-new-transaction" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon />Nova transação</button>
           <div className="finance-topbar-menu">
