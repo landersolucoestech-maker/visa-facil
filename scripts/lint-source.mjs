@@ -21,15 +21,25 @@ for(const path of sourceFiles){
   if(/\bas\s+any\b/.test(source)||/:\s*any\b/.test(source))fail(`${path}: explicit any is forbidden; model the contract instead.`);
   if(source.includes('dangerouslySetInnerHTML'))fail(`${path}: dangerouslySetInnerHTML is forbidden.`);
   if(source.includes('<iframe'))fail(`${path}: iframe embedding is forbidden.`);
-  if(source.includes('.dev.json')&&!source.includes('isMockDataEnabled')&&!path.includes('/mocks/'))fail(`${path}: development fixture import is not guarded by centralized mock policy.`);
+  if(source.includes('.dev.json')){
+    if(!path.includes('/mocks/'))fail(`${path}: development fixtures may only be imported by canonical mock providers under /mocks/.`);
+    else if(!source.includes('isMockDataEnabled'))fail(`${path}: mock provider imports a development fixture without centralized runtime mock policy.`);
+  }
 }
 
 const sidebarOwners=sourceFiles.filter((path)=>read(path).includes('<aside className="crm-sidebar'));
 if(sidebarOwners.length!==1||sidebarOwners[0]!=='apps/web/src/components/CrmSidebar.tsx')fail(`CRM sidebar must have one canonical owner; found: ${sidebarOwners.join(', ')||'none'}.`);
 
 const auth=read('apps/web/src/modules/auth/auth.ts');
-if(!auth.includes('export const AUTHENTICATION_ENABLED = false'))fail('Authentication must remain explicitly disabled until a real provider is introduced and approved.');
+const authenticationDisabled=auth.includes('export const AUTHENTICATION_ENABLED = false');
+if(!authenticationDisabled)fail('Authentication must remain explicitly disabled until a real provider is introduced and approved.');
 if(auth.includes("AUTH_PROVIDER = 'local'"))fail('Frontend-local authentication provider must not return.');
+if(authenticationDisabled){
+  for(const path of sourceFiles){
+    const source=read(path);
+    if(/>\s*Logout\s*</i.test(source))fail(`${path}: fake Logout action is forbidden while authentication is disabled.`);
+  }
+}
 
 const pages=read('.github/workflows/pages.yml');
 if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not enable CRM mocks.');
