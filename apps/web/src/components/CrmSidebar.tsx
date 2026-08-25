@@ -20,6 +20,7 @@ const MAIN_ITEMS:NavItem[] = [
   { label: 'Agenda', href: '/crm/agenda', icon: 'calendar' },
   { label: 'Tarefas', href: '/crm/tarefas', icon: 'tasks' },
   { label: 'VisaChat', href: '/crm/atendimentos', icon: 'support' },
+  { label: 'Contratos', href: '/crm/contratos', icon: 'contracts' },
 ];
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
