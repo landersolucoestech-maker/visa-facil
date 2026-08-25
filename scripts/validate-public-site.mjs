@@ -37,8 +37,9 @@ assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Obsol
 assert(!allSource.includes('dangerouslySetInnerHTML'), 'dangerouslySetInnerHTML is forbidden');
 assert(!allSource.includes('<iframe'), 'iframe embedding is forbidden');
 assert(main.includes("01-base.css") && main.includes("02-sections-responsive.css") && main.includes("03-hero-v3.css"), 'Official public style cascade must remain loaded');
-assert(main.includes("./modules/crm/crm.css"), 'CRM stylesheet must remain loaded');
-assert(main.includes("./styles/crm-header-actions-unified.css"), 'Canonical CRM topbar contract must remain loaded');
+assert(!main.includes('/crm/') && !main.includes('styles/finance') && !main.includes('styles/marketing') && !main.includes('styles/settings'), 'Public entrypoint must not eagerly load internal workspace styles');
+assert(containsAll(crmSidebar, ["../modules/crm/crm.css", "../styles/ui-system.css", "../styles/product-refinement.css", "../styles/sidebar-v2.css", "../styles/crm-header-actions-unified.css"]), 'Shared CRM styles must remain owned by the lazy CRM shell');
+assert(containsAll(rootApp, ['agenda-refinement.css', 'visachat-refinement.css', 'tasks-refinement.css', 'finance-transactions-refinement.css', 'invoices-refinement.css', 'accounting-refinement.css', 'marketing-refinement.css', 'reports-refinement.css', 'settings-refinement.css']), 'Module refinement styles must remain route-lazy instead of returning to the public entrypoint');
 
 assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D"']), 'Official metadata changed unexpectedly');
 assert(containsAll(schemaGlobal, ['EUA', 'Canadá', 'Vistos', 'Como Funciona', 'Dúvidas', 'Analisar meu perfil']), 'CMS default navigation changed unexpectedly');
