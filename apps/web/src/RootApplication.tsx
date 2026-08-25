@@ -1,23 +1,24 @@
-import type { ReactNode } from 'react';
-import { CrmSidebar } from './components/CrmSidebar';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { getAuthSession, isInternalPath } from './modules/auth/auth';
-import { LoginApp } from './modules/auth/LoginApp';
-import { AgendaApp } from './modules/agenda/AgendaApp';
-import { AttendanceApp } from './modules/attendance/AttendanceApp';
-import { CrmApp } from './modules/crm/CrmApp';
-import { CrmDashboardApp } from './modules/crm/CrmDashboardApp';
-import { FinanceTransactionsApp } from './modules/finance/FinanceTransactionsApp';
-import { FinanceInvoicesApp } from './modules/finance/FinanceInvoicesApp';
-import { FinancePLApp } from './modules/finance/FinancePLApp';
-import { FinancialCategoriesApp } from './modules/finance/FinancialCategoriesApp';
-import { FinancialRulesApp } from './modules/finance/FinancialRulesApp';
-import { MarketingApp } from './modules/marketing/MarketingApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
-import { ReportsApp } from './modules/reports/ReportsApp';
-import { SettingsApp } from './modules/settings/SettingsApp';
-import { SiteCmsApp } from './modules/site-cms/SiteCmsApp';
-import { TasksApp } from './modules/tasks/TasksApp';
-import { WorkspaceSelectorApp } from './modules/workspaces/WorkspaceSelectorApp';
+
+const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
+const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
+const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp'));
+const AttendanceApp = lazy(() => import('./modules/attendance/AttendanceApp'));
+const CrmApp = lazy(() => import('./modules/crm/CrmApp'));
+const CrmDashboardApp = lazy(() => import('./modules/crm/CrmDashboardApp'));
+const FinanceTransactionsApp = lazy(() => import('./modules/finance/FinanceTransactionsApp'));
+const FinanceInvoicesApp = lazy(() => import('./modules/finance/FinanceInvoicesApp'));
+const FinancePLApp = lazy(() => import('./modules/finance/FinancePLApp'));
+const FinancialCategoriesApp = lazy(() => import('./modules/finance/FinancialCategoriesApp'));
+const FinancialRulesApp = lazy(() => import('./modules/finance/FinancialRulesApp'));
+const MarketingApp = lazy(() => import('./modules/marketing/MarketingApp'));
+const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
+const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
+const SiteCmsApp = lazy(() => import('./modules/site-cms/SiteCmsApp'));
+const TasksApp = lazy(() => import('./modules/tasks/TasksApp'));
+const WorkspaceSelectorApp = lazy(() => import('./modules/workspaces/WorkspaceSelectorApp'));
 
 function basePath() {
   return import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -31,8 +32,10 @@ function normalizePath(pathname: string) {
 
 function replacePath(path:string){window.history.replaceState(null,'',`${basePath()}${path}`||path)}
 
+function InternalFallback(){return <div className="crm-route-loading" role="status">Carregando workspace…</div>}
+function internal(page:ReactNode){return <Suspense fallback={<InternalFallback/>}>{page}</Suspense>}
 function withSharedSidebar(page: ReactNode) {
-  return <div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>;
+  return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>);
 }
 
 export function RootApplication() {
@@ -40,33 +43,42 @@ export function RootApplication() {
   const session=getAuthSession();
 
   if(path==='/login'){
-    if(session){replacePath('/workspaces');return <WorkspaceSelectorApp/>}
-    return <LoginApp/>;
+    if(session){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>)}
+    return internal(<LoginApp/>);
   }
 
-  if(isInternalPath(path)&&!session){replacePath('/login');return <LoginApp/>}
-  if(path==='/workspaces')return <WorkspaceSelectorApp/>;
-  if(path==='/site-admin'||path.startsWith('/site-admin/'))return <SiteCmsApp/>;
+  if(isInternalPath(path)&&!session){replacePath('/login');return internal(<LoginApp/>)}
+  if(path==='/workspaces')return internal(<WorkspaceSelectorApp/>);
+  if(path==='/site-admin'||path.startsWith('/site-admin/'))return internal(<SiteCmsApp/>);
   if(path==='/preview')return <PublicSitePage preview/>;
 
-  if (path === '/crm/marketing/ia-criativa') {
-    window.history.replaceState(null, '', `${basePath()}/crm/marketing` || '/crm/marketing');
-    path = '/crm/marketing';
+  if(path==='/crm/contatos'||path==='/crm/leads'){
+    replacePath('/crm/relacionamento');
+    path='/crm/relacionamento';
+  }
+  if(path==='/crm/marketing/ia-criativa'){
+    replacePath('/crm/marketing');
+    path='/crm/marketing';
   }
 
-  if (path === '/crm/atendimentos') return withSharedSidebar(<AttendanceApp />);
-  if (path === '/crm/tarefas') return withSharedSidebar(<TasksApp />);
-  if (path === '/crm/agenda') return withSharedSidebar(<AgendaApp />);
-  if (path === '/crm/categorias-financeiras') return withSharedSidebar(<FinancialCategoriesApp />);
-  if (path === '/crm/regras-financeiras') return withSharedSidebar(<FinancialRulesApp />);
-  if (path === '/crm/financeiro/invoices') return withSharedSidebar(<FinanceInvoicesApp />);
-  if (path === '/crm/financeiro/pl') return withSharedSidebar(<FinancePLApp />);
-  if (path === '/crm/financeiro' || path === '/crm/financeiro/transacoes') return withSharedSidebar(<FinanceTransactionsApp />);
-  if (path === '/crm/marketing' || path.startsWith('/crm/marketing/')) return withSharedSidebar(<MarketingApp />);
-  if (path === '/crm/relatorios') return withSharedSidebar(<ReportsApp />);
-  if (path === '/crm/configuracoes') return withSharedSidebar(<SettingsApp />);
-  if (path === '/crm') return withSharedSidebar(<CrmDashboardApp />);
-  if (path.startsWith('/crm/')) return withSharedSidebar(<CrmApp />);
+  if(path==='/crm/atendimentos')return withSharedSidebar(<AttendanceApp/>);
+  if(path==='/crm/tarefas')return withSharedSidebar(<TasksApp/>);
+  if(path==='/crm/agenda')return withSharedSidebar(<AgendaApp/>);
+  if(path==='/crm/categorias-financeiras')return withSharedSidebar(<FinancialCategoriesApp/>);
+  if(path==='/crm/regras-financeiras')return withSharedSidebar(<FinancialRulesApp/>);
+  if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
+  if(path==='/crm/financeiro/pl')return withSharedSidebar(<FinancePLApp/>);
+  if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceTransactionsApp/>);
+  if(path==='/crm/marketing'||path==='/crm/marketing/campanhas'||path==='/crm/marketing/calendario'||path==='/crm/marketing/metricas')return withSharedSidebar(<MarketingApp/>);
+  if(path==='/crm/relatorios')return withSharedSidebar(<ReportsApp/>);
+  if(path==='/crm/configuracoes')return withSharedSidebar(<SettingsApp/>);
+  if(path==='/crm')return withSharedSidebar(<CrmDashboardApp/>);
+  if(path==='/crm/relacionamento')return withSharedSidebar(<CrmApp/>);
 
-  return <PublicSitePage />;
+  if(path.startsWith('/crm/')){
+    replacePath('/crm');
+    return withSharedSidebar(<CrmDashboardApp/>);
+  }
+
+  return <PublicSitePage/>;
 }
