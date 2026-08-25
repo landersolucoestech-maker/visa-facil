@@ -5,16 +5,16 @@ import { getFinanceInitialRecords } from '../finance/mocks/financeMockProvider';
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const RECENT_ACTIVITIES = [
-  { name: 'André', activity: 'Novo lead via WhatsApp' },
-  { name: 'Juliana', activity: 'Alterada para qualificado' },
-  { name: 'Camila', activity: 'Follow-up realizado' },
-  { name: 'Mariana', activity: 'Contato atualizado' },
+  { name: 'André', activity: 'Novo lead via WhatsApp', time: 'há 8 min', initials: 'AN', tone: 'red' },
+  { name: 'Juliana', activity: 'Alterada para qualificado', time: 'há 24 min', initials: 'JU', tone: 'blue' },
+  { name: 'Camila', activity: 'Follow-up realizado', time: 'há 1 h', initials: 'CA', tone: 'navy' },
+  { name: 'Mariana', activity: 'Contato atualizado', time: 'há 2 h', initials: 'MA', tone: 'blue' },
 ];
 
 const TODAY_AGENDA = [
-  { time: '09:30', label: 'Entrevista' },
-  { time: '14:00', label: 'Reunião' },
-  { time: '16:30', label: 'Follow-up' },
+  { time: '09:30', label: 'Entrevista', meta: 'Cliente · Confirmado', status: 'done' },
+  { time: '14:00', label: 'Reunião', meta: 'Lead · Pendente', status: 'next' },
+  { time: '16:30', label: 'Follow-up', meta: 'Cliente · Confirmado', status: 'later' },
 ];
 
 const LEAD_ORIGINS = [
@@ -25,10 +25,10 @@ const LEAD_ORIGINS = [
 ];
 
 const PENDING_ITEMS = [
-  { count: 2, label: 'follow-ups' },
-  { count: 1, label: 'lead aguardando resposta' },
-  { count: 3, label: 'tarefas' },
-  { count: 1, label: 'atendimento não lido' },
+  { count: 2, label: 'Follow-ups', detail: 'para concluir hoje', tone: 'red' },
+  { count: 1, label: 'Lead aguardando resposta', detail: 'sem retorno', tone: 'amber' },
+  { count: 3, label: 'Tarefas', detail: 'em aberto', tone: 'blue' },
+  { count: 1, label: 'Atendimento não lido', detail: 'requer atenção', tone: 'navy' },
 ];
 
 function basePath() {
@@ -68,6 +68,10 @@ export function CrmDashboardApp() {
     .reduce((total, record) => total + record.amount, 0);
   const result = revenue - expenses;
 
+  const maxOrigin = Math.max(...LEAD_ORIGINS.map((item) => item.count), 1);
+  const originTotal = LEAD_ORIGINS.reduce((total, item) => total + item.count, 0);
+  const pendingTotal = PENDING_ITEMS.reduce((total, item) => total + item.count, 0);
+
   return (
     <div className="crm-shell">
       <div className="crm-workspace">
@@ -104,57 +108,81 @@ export function CrmDashboardApp() {
           </section>
 
           <section className="crm-dashboard-grid crm-dashboard-overview-grid">
-            <article className="crm-panel crm-dashboard-summary-card">
-              <div className="crm-panel__heading"><h2>ATIVIDADES RECENTES</h2></div>
-              <ul className="crm-dashboard-simple-list crm-dashboard-activity-preview">
+            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-activity-card">
+              <div className="crm-dashboard-card-heading">
+                <div><h2>ATIVIDADES RECENTES</h2><p>Movimentações mais recentes do CRM</p></div>
+                <a href={href('/crm/relacionamento')}>Ver CRM</a>
+              </div>
+              <ul className="crm-dashboard-activity-list">
                 {RECENT_ACTIVITIES.map((item) => (
                   <li key={item.name}>
-                    <strong>{item.name}</strong>
-                    <span>· {item.activity}</span>
+                    <span className={`crm-dashboard-avatar crm-dashboard-avatar--${item.tone}`}>{item.initials}</span>
+                    <div className="crm-dashboard-activity-copy">
+                      <strong>{item.name}</strong>
+                      <span>{item.activity}</span>
+                    </div>
+                    <time>{item.time}</time>
                   </li>
                 ))}
               </ul>
             </article>
 
-            <article className="crm-panel crm-dashboard-summary-card">
-              <div className="crm-panel__heading"><h2>AGENDA</h2></div>
-              <div className="crm-dashboard-agenda-preview">
-                <strong className="crm-dashboard-agenda-day">Hoje</strong>
-                <ul className="crm-dashboard-simple-list crm-dashboard-time-list">
-                  {TODAY_AGENDA.map((item) => (
-                    <li key={`${item.time}-${item.label}`}>
-                      <strong>{item.time}</strong>
-                      <span>{item.label}</span>
-                    </li>
-                  ))}
-                </ul>
+            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-agenda-card">
+              <div className="crm-dashboard-card-heading">
+                <div><h2>AGENDA</h2><p>Compromissos de hoje</p></div>
+                <a href={href('/crm/agenda')}>Ver agenda</a>
+              </div>
+              <div className="crm-dashboard-agenda-header">
+                <span>HOJE</span>
+                <strong>{TODAY_AGENDA.length} compromissos</strong>
+              </div>
+              <div className="crm-dashboard-agenda-timeline">
+                {TODAY_AGENDA.map((item) => (
+                  <div className={`crm-dashboard-agenda-row is-${item.status}`} key={`${item.time}-${item.label}`}>
+                    <time>{item.time}</time>
+                    <span className="crm-dashboard-agenda-marker" aria-hidden="true" />
+                    <div>
+                      <strong>{item.label}</strong>
+                      <small>{item.meta}</small>
+                    </div>
+                  </div>
+                ))}
               </div>
             </article>
           </section>
 
           <section className="crm-dashboard-grid crm-dashboard-overview-grid">
-            <article className="crm-panel crm-dashboard-summary-card">
-              <div className="crm-panel__heading"><h2>ORIGEM DOS LEADS</h2></div>
-              <ul className="crm-dashboard-simple-list crm-dashboard-origin-list">
+            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-origin-card">
+              <div className="crm-dashboard-card-heading">
+                <div><h2>ORIGEM DOS LEADS</h2><p>Distribuição por canal de aquisição</p></div>
+                <span className="crm-dashboard-heading-metric"><strong>{originTotal}</strong> leads</span>
+              </div>
+              <div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">
                 {LEAD_ORIGINS.map((item) => (
-                  <li key={item.source}>
-                    <span>{item.source}</span>
-                    <strong>{item.count}</strong>
-                  </li>
+                  <div className="crm-dashboard-origin-row" key={item.source}>
+                    <div className="crm-dashboard-origin-label"><span>{item.source}</span><strong>{item.count}</strong></div>
+                    <div className="crm-dashboard-origin-track">
+                      <span style={{ width: `${(item.count / maxOrigin) * 100}%` }} />
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </article>
 
-            <article className="crm-panel crm-dashboard-summary-card">
-              <div className="crm-panel__heading"><h2>PENDÊNCIAS</h2></div>
-              <ul className="crm-dashboard-simple-list crm-dashboard-pending-list">
+            <article className="crm-panel crm-dashboard-summary-card crm-dashboard-pending-card">
+              <div className="crm-dashboard-card-heading">
+                <div><h2>PENDÊNCIAS</h2><p>Itens que precisam de atenção</p></div>
+                <span className="crm-dashboard-heading-metric crm-dashboard-heading-metric--danger"><strong>{pendingTotal}</strong> abertas</span>
+              </div>
+              <div className="crm-dashboard-pending-list">
                 {PENDING_ITEMS.map((item) => (
-                  <li key={item.label}>
-                    <strong>{item.count}</strong>
-                    <span>{item.label}</span>
-                  </li>
+                  <div className="crm-dashboard-pending-item" key={item.label}>
+                    <span className={`crm-dashboard-pending-count is-${item.tone}`}>{item.count}</span>
+                    <div><strong>{item.label}</strong><small>{item.detail}</small></div>
+                    <span className="crm-dashboard-pending-chevron" aria-hidden="true">›</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </article>
           </section>
         </main>
