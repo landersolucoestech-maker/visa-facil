@@ -19,6 +19,8 @@ const sourceFiles=walk('apps/web/src').filter((path)=>/\.(ts|tsx)$/.test(path));
 for(const path of sourceFiles){
   const source=read(path);
   if(path!=='apps/web/src/components/AccountMenu.tsx'&&source.includes('crm-user'))fail(`${path}: module-local account chrome is forbidden; RootApplication/AccountMenu is the single owner.`);
+  if(source.includes('workspace-account'))fail(`${path}: workspace-local account chrome is forbidden; RootApplication/AccountMenu is the single owner.`);
+  if(source.includes('site-cms-user'))fail(`${path}: CMS-local account chrome is forbidden; RootApplication/AccountMenu is the single owner.`);
   if(/\bas\s+any\b/.test(source)||/:\s*any\b/.test(source))fail(`${path}: explicit any is forbidden; model the contract instead.`);
   if(source.includes('dangerouslySetInnerHTML'))fail(`${path}: dangerouslySetInnerHTML is forbidden.`);
   if(source.includes('<iframe'))fail(`${path}: iframe embedding is forbidden.`);
@@ -33,7 +35,6 @@ for(const path of sourceFiles){
   if(path.endsWith('.tsx')){
     for(const match of source.matchAll(/<button\b[^>]*>/g)){
       const tag=match[0];
-      if(/className=["'][^"']*\bcrm-user\b/.test(tag)&&!tag.includes('onClick='))fail(`${path}: crm-user button has no action; render static identity or a real action instead.`);
       if(/aria-label=["'](?:Alertas|Notifica(?:ç|c)ões)/i.test(tag)&&!tag.includes('onClick=')&&!/\bdisabled\b/.test(tag))fail(`${path}: notification control has no behavior and is not explicitly disabled.`);
     }
   }
@@ -73,6 +74,9 @@ for(const [path,getter,saver,legacyGetter] of operationalConsumers){
 const dashboard=read('apps/web/src/modules/crm/CrmDashboardApp.tsx');
 for(const getter of ['getCrmSessionRecords','getTaskSessionRecords','getAgendaSessionEvents','getFinanceSessionRecords','getAttendanceSessionConversations'])if(!dashboard.includes(getter))fail(`Dashboard must derive operational data from ${getter}.`);
 for(const legacyGetter of ['getCrmInitialRecords','getTaskInitialRecords','getAgendaInitialEvents','getFinanceInitialRecords','getAttendanceInitialConversations'])if(dashboard.includes(legacyGetter))fail(`Dashboard must not bypass canonical session state through ${legacyGetter}.`);
+const accounting=read('apps/web/src/modules/finance/FinancePLApp.tsx');
+if(!accounting.includes('getFinanceSessionRecords'))fail('Contabilidade must derive from canonical finance session transactions.');
+if(accounting.includes('getFinanceInitialRecords'))fail('Contabilidade must not bypass canonical finance session state through the development seed provider.');
 
 const invoiceWorkspace=read('apps/web/src/modules/finance/FinanceInvoicesWorkspace.tsx');
 const invoiceSessionStore=read('apps/web/src/modules/finance/invoiceSessionStore.ts');
@@ -134,7 +138,8 @@ if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplicatio
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
 if(!rootApplication.includes('fallback={<GlobalRouteLoader/>}')||rootApplication.includes('crm-route-loading')||rootApplication.includes('InternalFallback'))fail('Internal lazy routes must use the canonical full-viewport GlobalRouteLoader only.');
 for(const token of ['Configurações','Workspaces','AUTHENTICATION_ENABLED','signOut','aria-haspopup="menu"'])if(!accountMenu.includes(token))fail(`Canonical AccountMenu contract is incomplete: missing ${token}.`);
-for(const token of ['.crm-global-shell .crm-global-page .crm-user','.workspace-account','.site-cms-sidebar-footer .site-cms-user','.site-cms-topbar'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must neutralize legacy account chrome and reserve header space: missing ${token}.`);
+for(const token of ['.crm-global-shell .crm-global-page .crm-topbar','.site-cms-topbar','.workspace-header'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must reserve the global account slot consistently: missing ${token}.`);
+for(const legacyToken of ['.crm-global-shell .crm-global-page .crm-user','.workspace-account','.site-cms-user'])if(accountMenuCss.includes(legacyToken))fail(`Canonical account-menu CSS must not retain legacy neutralization selector: ${legacyToken}.`);
 if(!routeLoader.includes('global-route-loader__progress')||!routeLoader.includes('role="progressbar"')||!routeLoader.includes('M7 8h17l8 39L20 56 7 8Z'))fail('GlobalRouteLoader must render the canonical Visa Fácil mark and an accessible progress indicator.');
 if(!routeLoaderCss.includes('position:fixed')||!routeLoaderCss.includes('place-items:center')||!routeLoaderCss.includes('100dvh')||!routeLoaderCss.includes('prefers-reduced-motion'))fail('GlobalRouteLoader must remain viewport-centered, responsive and reduced-motion aware.');
 
