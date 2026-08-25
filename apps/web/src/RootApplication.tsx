@@ -16,6 +16,7 @@ const AttendanceApp = lazy(async () => {
   await import('./styles/visachat-refinement.css');
   return { default: module.AttendanceApp };
 });
+const ContractsApp = lazy(() => import('./modules/contracts/ContractsApp'));
 const CrmApp = lazy(async () => {
   const module = await import('./modules/crm/CrmApp');
   await import('./styles/crm-relationship-refinement.css');
@@ -130,6 +131,7 @@ export function RootApplication() {
   if(path==='/crm/atendimentos')return withSharedSidebar(<AttendanceApp/>);
   if(path==='/crm/tarefas')return withSharedSidebar(<TasksApp/>);
   if(path==='/crm/agenda')return withSharedSidebar(<AgendaApp/>);
+  if(path==='/crm/contratos')return withSharedSidebar(<ContractsApp/>);
   if(path==='/crm/categorias-financeiras')return withSharedSidebar(<FinancialCategoriesApp/>);
   if(path==='/crm/regras-financeiras')return withSharedSidebar(<FinancialRulesApp/>);
   if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
