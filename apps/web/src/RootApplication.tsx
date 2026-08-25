@@ -4,8 +4,8 @@ import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
 const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
-const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp'));
-const AttendanceApp = lazy(() => import('./modules/attendance/AttendanceApp'));
+const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp').then(module => ({ default: module.AgendaApp })));
+const AttendanceApp = lazy(() => import('./modules/attendance/AttendanceApp').then(module => ({ default: module.AttendanceApp })));
 const CrmApp = lazy(() => import('./modules/crm/CrmApp'));
 const CrmDashboardApp = lazy(() => import('./modules/crm/CrmDashboardApp'));
 const FinanceTransactionsApp = lazy(() => import('./modules/finance/FinanceTransactionsApp'));
@@ -17,7 +17,7 @@ const MarketingApp = lazy(() => import('./modules/marketing/MarketingApp'));
 const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
 const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
 const SiteCmsApp = lazy(() => import('./modules/site-cms/SiteCmsApp'));
-const TasksApp = lazy(() => import('./modules/tasks/TasksApp'));
+const TasksApp = lazy(() => import('./modules/tasks/TasksApp').then(module => ({ default: module.TasksApp })));
 const WorkspaceSelectorApp = lazy(() => import('./modules/workspaces/WorkspaceSelectorApp'));
 
 function basePath() {
