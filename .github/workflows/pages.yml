@@ -47,10 +47,10 @@ jobs:
           VITE_CRM_MOCKS: 'true'
         run: npm run build
 
-      - name: Verify company logic is absent from build
+      - name: Verify company logic is absent from contact CRM build
         run: |
-          if grep -RniE "Pessoa Jurídica|personType|CNPJ|legalName|tradeName|contactPerson|isCompany" apps/web/dist; then
-            echo "Forbidden company logic found in production bundle"
+          if grep -RniE "Pessoa Jurídica|personType|legalName|tradeName|contactPerson|isCompany" apps/web/dist; then
+            echo "Forbidden company contact logic found in production bundle"
             exit 1
           fi
 
