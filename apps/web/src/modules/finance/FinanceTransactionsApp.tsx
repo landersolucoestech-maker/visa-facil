@@ -2,32 +2,222 @@ import { useMemo, useState } from 'react';
 import './finance.css';
 import { getFinanceInitialRecords, type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
 
-type Mode='create'|'view'|'edit';
-type Draft=Omit<FinanceRecord,'id'>;
-const TYPES:Array<'Todos'|FinanceType>=['Todos','Receita','Despesa'];
-const STATUSES:Array<'Todos'|FinanceStatus>=['Todos','Recebido','A receber','Pago','A pagar'];
-const CATEGORIES=['Todas','Assessoria','Renovação','Taxas consulares','Serviços terceiros','Marketing','Outros'];
-const EMPTY:Draft={description:'',type:'Receita',category:'Assessoria',amount:0,date:'',dueDate:'',status:'A receber',paymentMethod:'Pix',relatedName:'',notes:''};
-const money=(v:number)=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const date=(v:string)=>v?new Date(`${v}T12:00:00`).toLocaleDateString('pt-BR'):'—';
-function Bell(){return <span className="finance-bell" aria-hidden="true"/>}
+type Mode = 'create' | 'view' | 'edit';
+type Draft = Omit<FinanceRecord, 'id'>;
 
-function TransactionModal({mode,record,close,save}:{mode:Mode;record?:FinanceRecord;close:()=>void;save:(d:Draft)=>void}){
- const [draft,setDraft]=useState<Draft>(()=>record?{description:record.description,type:record.type,category:record.category,amount:record.amount,date:record.date,dueDate:record.dueDate,status:record.status,paymentMethod:record.paymentMethod,relatedName:record.relatedName,notes:record.notes}:EMPTY);
- const set=<K extends keyof Draft>(k:K,v:Draft[K])=>setDraft(c=>({...c,[k]:v}));
- if(mode==='view'&&record)return <div className="finance-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="finance-view-modal"><header><div><span>{record.type}</span><h2>{record.description}</h2><p>{record.category}</p></div><button onClick={close}>×</button></header><section className="finance-view-summary"><div><span>Valor</span><strong className={record.type==='Receita'?'is-income':'is-expense'}>{record.type==='Despesa'?'- ':''}{money(record.amount)}</strong></div><div><span>Status</span><strong>{record.status}</strong></div><div><span>Data</span><strong>{date(record.date)}</strong></div><div><span>Vencimento</span><strong>{date(record.dueDate)}</strong></div></section><section className="finance-view-body"><div className="finance-view-grid"><div><span>Forma de pagamento</span><strong>{record.paymentMethod}</strong></div><div><span>Cliente / contato</span><strong>{record.relatedName||'—'}</strong></div><div><span>Categoria</span><strong>{record.category}</strong></div><div><span>Tipo</span><strong>{record.type}</strong></div></div><div className="finance-view-notes"><span>Observações</span><p>{record.notes||'Nenhuma observação cadastrada.'}</p></div></section><footer><button className="crm-btn-secondary" onClick={close}>Fechar</button></footer></div></div>;
- return <div className="finance-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="finance-form-modal"><header><div><span>{mode==='create'?'NOVA TRANSAÇÃO':'EDITAR TRANSAÇÃO'}</span><h2>{mode==='create'?'Adicionar transação':'Editar transação'}</h2><p>Registre receitas, despesas, contas a pagar e contas a receber.</p></div><button onClick={close}>×</button></header><form onSubmit={e=>{e.preventDefault();if(!draft.description.trim()||draft.amount<=0)return;save(draft)}}><div className="finance-form-grid"><label><span>Descrição</span><input required value={draft.description} onChange={e=>set('description',e.target.value)}/></label><label><span>Tipo</span><select value={draft.type} onChange={e=>set('type',e.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label><label><span>Categoria</span><select value={draft.category} onChange={e=>set('category',e.target.value)}>{CATEGORIES.filter(x=>x!=='Todas').map(x=><option key={x}>{x}</option>)}</select></label><label><span>Valor</span><input type="number" min="0" step="0.01" value={draft.amount||''} onChange={e=>set('amount',Number(e.target.value))}/></label><label><span>Data</span><input type="date" value={draft.date} onChange={e=>set('date',e.target.value)}/></label><label><span>Vencimento</span><input type="date" value={draft.dueDate} onChange={e=>set('dueDate',e.target.value)}/></label><label><span>Status</span><select value={draft.status} onChange={e=>set('status',e.target.value as FinanceStatus)}>{STATUSES.filter(x=>x!=='Todos').map(x=><option key={x}>{x}</option>)}</select></label><label><span>Forma de pagamento</span><select value={draft.paymentMethod} onChange={e=>set('paymentMethod',e.target.value)}><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option></select></label><label><span>Cliente / contato relacionado</span><input value={draft.relatedName} onChange={e=>set('relatedName',e.target.value)}/></label><label><span>Observações</span><textarea rows={4} value={draft.notes} onChange={e=>set('notes',e.target.value)}/></label></div><footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary">Salvar transação</button></footer></form></div></div>;
+const TYPES: Array<'Todos' | FinanceType> = ['Todos', 'Receita', 'Despesa'];
+const STATUSES: Array<'Todos' | FinanceStatus> = ['Todos', 'Recebido', 'A receber', 'Pago', 'A pagar'];
+const CATEGORIES = ['Todas', 'Assessoria', 'Renovação', 'Taxas consulares', 'Serviços terceiros', 'Marketing', 'Outros'];
+const EMPTY: Draft = { description: '', type: 'Receita', category: 'Assessoria', amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' };
+
+const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const formatDate = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR') : '—';
+const classNamePart = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+function basePath() { return import.meta.env.BASE_URL.replace(/\/$/, ''); }
+function href(path: string) { return `${basePath()}${path}` || path; }
+
+function BellIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 21h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
+}
+function PlusIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+}
+function UploadIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+function SearchIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.8"/><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
+}
+function SlidersIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
 }
 
-export function FinanceTransactionsApp(){
- const [records,setRecords]=useState<FinanceRecord[]>(()=>getFinanceInitialRecords());
- const [query,setQuery]=useState('');const [type,setType]=useState('Todos');const [status,setStatus]=useState('Todos');const [category,setCategory]=useState('Todas');const [start,setStart]=useState('');const [end,setEnd]=useState('');
- const [modal,setModal]=useState<{mode:Mode;record?:FinanceRecord}>();const [menu,setMenu]=useState<string>();const [ofx,setOfx]=useState(false);const [notifications,setNotifications]=useState(false);const [user,setUser]=useState(false);
- const filtered=useMemo(()=>records.filter(r=>{const q=query.trim().toLowerCase();return(!q||`${r.description} ${r.category} ${r.relatedName} ${r.paymentMethod}`.toLowerCase().includes(q))&&(type==='Todos'||r.type===type)&&(status==='Todos'||r.status===status)&&(category==='Todas'||r.category===category)&&(!start||r.date>=start)&&(!end||r.date<=end)}),[records,query,type,status,category,start,end]);
- const received=records.filter(r=>r.type==='Receita'&&r.status==='Recebido').reduce((s,r)=>s+r.amount,0);const paid=records.filter(r=>r.type==='Despesa'&&r.status==='Pago').reduce((s,r)=>s+r.amount,0);const receivable=records.filter(r=>r.type==='Receita'&&r.status==='A receber').reduce((s,r)=>s+r.amount,0);const payable=records.filter(r=>r.type==='Despesa'&&r.status==='A pagar').reduce((s,r)=>s+r.amount,0);const balance=received-paid;
- const save=(d:Draft)=>{if(modal?.record)setRecords(c=>c.map(r=>r.id===modal.record!.id?{...r,...d}:r));else setRecords(c=>[{...d,id:crypto.randomUUID()},...c]);setModal(undefined)};
- const remove=(r:FinanceRecord)=>{if(window.confirm(`Excluir a transação “${r.description}”?`))setRecords(c=>c.filter(x=>x.id!==r.id));setMenu(undefined)};
- return <div className="crm-shell finance-shell" onClick={()=>{setMenu(undefined);setNotifications(false);setUser(false)}}><div className="crm-workspace"><header className="crm-topbar"><div><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Transações</h1><p>Receitas, despesas, contas a pagar, contas a receber e saldo operacional.</p></div><div className="crm-topbar-actions finance-header-actions" onClick={e=>e.stopPropagation()}><a className="finance-header-nav-button" href={`${import.meta.env.BASE_URL.replace(/\/$/,'')}/crm/categorias-financeiras`}>Categorias financeiras</a><a className="finance-header-nav-button" href={`${import.meta.env.BASE_URL.replace(/\/$/,'')}/crm/regras-financeiras`}>Regras financeiras</a><button className="finance-ofx-button" onClick={()=>setOfx(true)}>Importar OFX</button><button className="crm-topbar-primary" onClick={()=>setModal({mode:'create'})}>+ Nova transação</button><div className="finance-topbar-menu"><button className="finance-notification-button" aria-label="Alertas" onClick={()=>setNotifications(v=>!v)}><Bell/></button>{notifications&&<div className="finance-dropdown"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div><div className="finance-topbar-menu"><button className="crm-user" onClick={()=>setUser(v=>!v)}><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div><span className="crm-user-caret">⌄</span></button>{user&&<div className="finance-dropdown finance-user-dropdown"><button>Perfil</button><button>Configurações</button><button className="is-danger">Logout</button></div>}</div></div></header><main className="finance-content"><section className="finance-stats"><article><span>Receitas recebidas</span><strong>{money(received)}</strong><small>Entradas confirmadas</small></article><article><span>Despesas pagas</span><strong>{money(paid)}</strong><small>Saídas confirmadas</small></article><article><span>Contas a receber</span><strong>{money(receivable)}</strong><small>Valores pendentes</small></article><article><span>Contas a pagar</span><strong>{money(payable)}</strong><small>Obrigações pendentes</small></article><article className={balance<0?'is-alert':''}><span>Saldo total</span><strong>{money(balance)}</strong><small>Receitas − despesas</small></article></section><section className="finance-card"><div className="finance-filters"><label className="finance-search"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar transação, categoria ou cliente"/></label><input type="date" value={start} onChange={e=>setStart(e.target.value)}/><input type="date" value={end} onChange={e=>setEnd(e.target.value)}/><select value={type} onChange={e=>setType(e.target.value)}>{TYPES.map(x=><option key={x}>{x}</option>)}</select><select value={status} onChange={e=>setStatus(e.target.value)}>{STATUSES.map(x=><option key={x}>{x}</option>)}</select><select value={category} onChange={e=>setCategory(e.target.value)}>{CATEGORIES.map(x=><option key={x}>{x}</option>)}</select></div><div className="finance-table"><div className="finance-table-head"><span>Descrição</span><span>Tipo</span><span>Categoria</span><span>Valor</span><span>Data</span><span>Vencimento</span><span>Status</span><span>Ações</span></div>{filtered.length?filtered.map(r=><div className="finance-row" key={r.id}><div><strong>{r.description}</strong><small>{r.relatedName||'Sem vínculo'}</small></div><span><b className={`finance-type is-${r.type.toLowerCase()}`}>{r.type}</b></span><span>{r.category}</span><strong className={r.type==='Receita'?'finance-income':'finance-expense'}>{r.type==='Despesa'?'- ':''}{money(r.amount)}</strong><span>{date(r.date)}</span><span>{date(r.dueDate)}</span><span><b className="finance-status">{r.status}</b></span><div className="finance-row-actions" onClick={e=>e.stopPropagation()}><button className="finance-actions-trigger" onClick={()=>setMenu(m=>m===r.id?undefined:r.id)}>⋮</button>{menu===r.id&&<div className="finance-actions-menu"><button onClick={()=>setModal({mode:'view',record:r})}>Ver</button><button onClick={()=>setModal({mode:'edit',record:r})}>Editar</button><button className="is-danger" onClick={()=>remove(r)}>Excluir</button></div>}</div></div>):<div className="finance-empty">Nenhuma transação encontrada.</div>}</div></section></main></div>{modal&&<TransactionModal mode={modal.mode} record={modal.record} close={()=>setModal(undefined)} save={save}/>} {ofx&&<div className="finance-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&setOfx(false)}><div className="finance-ofx-modal"><header><div><span>IMPORTAR OFX</span><h2>Importar extrato bancário</h2><p>Selecione um arquivo .OFX para importar as transações.</p></div><button onClick={()=>setOfx(false)}>×</button></header><div className="finance-ofx-body"><label className="finance-ofx-drop"><input type="file" accept=".ofx,application/x-ofx"/><strong>Selecionar arquivo OFX</strong><span>ou arraste o arquivo para esta área</span></label><label><span>Aplicar regras financeiras</span><select defaultValue="Sim"><option>Sim</option><option>Não</option></select></label></div><footer><button className="crm-btn-secondary" onClick={()=>setOfx(false)}>Cancelar</button><button className="crm-btn-primary" onClick={()=>setOfx(false)}>Importar</button></footer></div></div>}</div>;
+function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: FinanceRecord; close: () => void; save: (draft: Draft) => void }) {
+  const [draft, setDraft] = useState<Draft>(() => record ? {
+    description: record.description, type: record.type, category: record.category, amount: record.amount,
+    date: record.date, dueDate: record.dueDate, status: record.status, paymentMethod: record.paymentMethod,
+    relatedName: record.relatedName, notes: record.notes,
+  } : EMPTY);
+  const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
+
+  if (mode === 'view' && record) {
+    return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
+      <div className="finance-view-modal finance-transaction-view-modal">
+        <header>
+          <div><span>TRANSAÇÃO</span><h2>{record.description}</h2><p>{record.category} · {record.type}</p></div>
+          <button type="button" onClick={close} aria-label="Fechar">×</button>
+        </header>
+        <section className="finance-view-summary">
+          <div><span>Valor</span><strong className={record.type === 'Receita' ? 'is-income' : 'is-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong></div>
+          <div><span>Status</span><strong>{record.status}</strong></div>
+          <div><span>Data</span><strong>{formatDate(record.date)}</strong></div>
+          <div><span>Vencimento</span><strong>{formatDate(record.dueDate)}</strong></div>
+        </section>
+        <section className="finance-view-body">
+          <dl className="finance-transaction-details">
+            <div><dt>Forma de pagamento</dt><dd>{record.paymentMethod}</dd></div>
+            <div><dt>Cliente / contato</dt><dd>{record.relatedName || '—'}</dd></div>
+            <div><dt>Categoria</dt><dd>{record.category}</dd></div>
+            <div><dt>Tipo</dt><dd>{record.type}</dd></div>
+          </dl>
+          <div className="finance-view-notes"><span>Observações</span><p>{record.notes || 'Nenhuma observação cadastrada.'}</p></div>
+        </section>
+        <footer><button className="crm-btn-secondary" type="button" onClick={close}>Fechar</button></footer>
+      </div>
+    </div>;
+  }
+
+  return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
+    <div className="finance-form-modal finance-transaction-form-modal">
+      <header>
+        <div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2>{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div>
+        <button type="button" onClick={close} aria-label="Fechar">×</button>
+      </header>
+      <form onSubmit={(event) => { event.preventDefault(); if (!draft.description.trim() || draft.amount <= 0) return; save(draft); }}>
+        <div className="finance-form-grid finance-transaction-form-grid">
+          <label className="finance-field-wide"><span>Descrição</span><input required value={draft.description} onChange={(event) => set('description', event.target.value)} /></label>
+          <label><span>Tipo</span><select value={draft.type} onChange={(event) => set('type', event.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label>
+          <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)}>{CATEGORIES.filter((item) => item !== 'Todas').map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Valor</span><input type="number" min="0" step="0.01" value={draft.amount || ''} onChange={(event) => set('amount', Number(event.target.value))} /></label>
+          <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as FinanceStatus)}>{STATUSES.filter((item) => item !== 'Todos').map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Data</span><input type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
+          <label><span>Vencimento</span><input type="date" value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></label>
+          <label><span>Forma de pagamento</span><select value={draft.paymentMethod} onChange={(event) => set('paymentMethod', event.target.value)}><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option></select></label>
+          <label className="finance-field-wide"><span>Cliente / contato relacionado</span><input value={draft.relatedName} onChange={(event) => set('relatedName', event.target.value)} /></label>
+          <label className="finance-field-wide"><span>Observações</span><textarea rows={4} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label>
+        </div>
+        <footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary">Salvar transação</button></footer>
+      </form>
+    </div>
+  </div>;
+}
+
+export function FinanceTransactionsApp() {
+  const [records, setRecords] = useState<FinanceRecord[]>(() => getFinanceInitialRecords());
+  const [query, setQuery] = useState('');
+  const [type, setType] = useState('Todos');
+  const [status, setStatus] = useState('Todos');
+  const [category, setCategory] = useState('Todas');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const [modal, setModal] = useState<{ mode: Mode; record?: FinanceRecord }>();
+  const [menu, setMenu] = useState<string>();
+  const [ofx, setOfx] = useState(false);
+  const [notifications, setNotifications] = useState(false);
+  const [user, setUser] = useState(false);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const filtered = useMemo(() => records.filter((record) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return (!normalizedQuery || `${record.description} ${record.category} ${record.relatedName} ${record.paymentMethod}`.toLowerCase().includes(normalizedQuery))
+      && (type === 'Todos' || record.type === type)
+      && (status === 'Todos' || record.status === status)
+      && (category === 'Todas' || record.category === category)
+      && (!start || record.date >= start)
+      && (!end || record.date <= end);
+  }), [records, query, type, status, category, start, end]);
+
+  const received = records.filter((record) => record.type === 'Receita' && record.status === 'Recebido').reduce((sum, record) => sum + record.amount, 0);
+  const paid = records.filter((record) => record.type === 'Despesa' && record.status === 'Pago').reduce((sum, record) => sum + record.amount, 0);
+  const receivable = records.filter((record) => record.type === 'Receita' && record.status === 'A receber').reduce((sum, record) => sum + record.amount, 0);
+  const payable = records.filter((record) => record.type === 'Despesa' && record.status === 'A pagar').reduce((sum, record) => sum + record.amount, 0);
+  const balance = received - paid;
+  const pendingRecords = records.filter((record) => record.status === 'A receber' || record.status === 'A pagar');
+  const overdueRecords = pendingRecords.filter((record) => record.dueDate && record.dueDate < today);
+  const dueTodayRecords = pendingRecords.filter((record) => record.dueDate === today);
+  const alertRecords = [...overdueRecords, ...dueTodayRecords].slice(0, 5);
+
+  const save = (draft: Draft) => {
+    if (modal?.record) setRecords((current) => current.map((record) => record.id === modal.record!.id ? { ...record, ...draft } : record));
+    else setRecords((current) => [{ ...draft, id: crypto.randomUUID() }, ...current]);
+    setModal(undefined);
+  };
+  const remove = (record: FinanceRecord) => {
+    if (window.confirm(`Excluir a transação “${record.description}”?`)) setRecords((current) => current.filter((item) => item.id !== record.id));
+    setMenu(undefined);
+  };
+  const clearFilters = () => { setQuery(''); setType('Todos'); setStatus('Todos'); setCategory('Todas'); setStart(''); setEnd(''); };
+  const hasFilters = Boolean(query || type !== 'Todos' || status !== 'Todos' || category !== 'Todas' || start || end);
+
+  return <div className="crm-shell finance-shell finance-transactions-shell" onClick={() => { setMenu(undefined); setNotifications(false); setUser(false); }}>
+    <div className="crm-workspace finance-transactions-workspace">
+      <header className="crm-topbar finance-transactions-topbar">
+        <div><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Transações</h1><p>Receitas, despesas, contas a pagar e contas a receber.</p></div>
+        <div className="crm-topbar-actions finance-header-actions" onClick={(event) => event.stopPropagation()}>
+          <button className="finance-ofx-button" type="button" onClick={() => setOfx(true)}><UploadIcon />Importar OFX</button>
+          <button className="crm-topbar-primary finance-new-transaction" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon />Nova transação</button>
+          <div className="finance-topbar-menu">
+            <button className="finance-notification-button" type="button" aria-label="Alertas" aria-expanded={notifications} onClick={() => { setNotifications((value) => !value); setUser(false); }}>
+              <BellIcon />{alertRecords.length > 0 && <span className="finance-notification-count">{alertRecords.length}</span>}
+            </button>
+            {notifications && <div className="finance-dropdown finance-notifications">
+              <header><strong>Notificações</strong><span>{alertRecords.length}</span></header>
+              {alertRecords.length ? <div>{alertRecords.map((record) => <button key={record.id} type="button" onClick={() => { setNotifications(false); setModal({ mode: 'view', record }); }}><strong>{record.description}</strong><small>{record.dueDate < today ? 'Vencida' : 'Vence hoje'} · {record.status} · {money(record.amount)}</small></button>)}</div> : <p>Nenhuma pendência financeira para hoje.</p>}
+            </div>}
+          </div>
+          <div className="finance-topbar-menu">
+            <button className="crm-user" type="button" aria-expanded={user} onClick={() => { setUser((value) => !value); setNotifications(false); }}><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div><span className="crm-user-caret">⌄</span></button>
+            {user && <div className="finance-dropdown finance-user-dropdown"><button type="button">Perfil</button><a href={href('/crm/configuracoes')}>Configurações</a><button type="button" className="is-danger">Logout</button></div>}
+          </div>
+        </div>
+      </header>
+
+      <main className="finance-content finance-transactions-content">
+        <nav className="finance-section-nav" aria-label="Configurações financeiras">
+          <div><strong>Movimentações</strong><span>Gerencie registros financeiros e conciliação.</span></div>
+          <div><a href={href('/crm/categorias-financeiras')}>Categorias financeiras</a><a href={href('/crm/regras-financeiras')}>Regras financeiras</a></div>
+        </nav>
+
+        <section className="finance-stats finance-transaction-stats">
+          <article><span>Receitas recebidas</span><strong>{money(received)}</strong><small>Entradas confirmadas</small></article>
+          <article><span>Despesas pagas</span><strong>{money(paid)}</strong><small>Saídas confirmadas</small></article>
+          <article><span>Contas a receber</span><strong>{money(receivable)}</strong><small>{records.filter((record) => record.status === 'A receber').length} pendentes</small></article>
+          <article><span>Contas a pagar</span><strong>{money(payable)}</strong><small>{records.filter((record) => record.status === 'A pagar').length} pendentes</small></article>
+          <article className={balance < 0 ? 'is-alert' : ''}><span>Saldo operacional</span><strong>{money(balance)}</strong><small>Receitas − despesas</small></article>
+        </section>
+
+        <section className="finance-card finance-transactions-card">
+          <div className="finance-filters finance-transaction-filters">
+            <label className="finance-search"><SearchIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar descrição, categoria, cliente ou pagamento" /></label>
+            <div className="finance-filter-dates"><label><span>De</span><input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label><span>Até</span><input type="date" value={end} onChange={(event) => setEnd(event.target.value)} /></label></div>
+            <select aria-label="Tipo" value={type} onChange={(event) => setType(event.target.value)}>{TYPES.map((item) => <option key={item}>{item}</option>)}</select>
+            <select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select>
+            <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select>
+            <button className="finance-clear-filters" type="button" disabled={!hasFilters} onClick={clearFilters}><SlidersIcon />Limpar</button>
+          </div>
+          <div className="finance-table-meta"><span>{filtered.length} {filtered.length === 1 ? 'transação' : 'transações'}</span>{overdueRecords.length > 0 && <strong>{overdueRecords.length} {overdueRecords.length === 1 ? 'vencida' : 'vencidas'}</strong>}</div>
+          <div className="finance-table finance-transactions-table">
+            <div className="finance-table-head"><span>Descrição</span><span>Categoria</span><span>Tipo</span><span>Valor</span><span>Data</span><span>Vencimento</span><span>Status</span><span>Ações</span></div>
+            {filtered.length ? filtered.map((record) => <div className="finance-row" key={record.id}>
+              <div data-label="Descrição"><strong>{record.description}</strong><small>{record.relatedName || 'Sem vínculo'}</small></div>
+              <span data-label="Categoria">{record.category}</span>
+              <span data-label="Tipo"><b className={`finance-type is-${classNamePart(record.type)}`}>{record.type}</b></span>
+              <strong data-label="Valor" className={record.type === 'Receita' ? 'finance-income' : 'finance-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong>
+              <span data-label="Data">{formatDate(record.date)}</span>
+              <span data-label="Vencimento" className={record.dueDate && record.dueDate < today && (record.status === 'A receber' || record.status === 'A pagar') ? 'is-overdue' : ''}>{formatDate(record.dueDate)}</span>
+              <span data-label="Status"><b className={`finance-status is-${classNamePart(record.status)}`}>{record.status}</b></span>
+              <div className="finance-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}>
+                <button className="finance-actions-trigger" type="button" aria-label={`Ações de ${record.description}`} aria-expanded={menu === record.id} onClick={() => setMenu((current) => current === record.id ? undefined : record.id)}>⋯</button>
+                {menu === record.id && <div className="finance-actions-menu"><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'view', record }); }}>Ver</button><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'edit', record }); }}>Editar</button><button type="button" className="is-danger" onClick={() => remove(record)}>Excluir</button></div>}
+              </div>
+            </div>) : <div className="finance-empty"><strong>Nenhuma transação encontrada</strong><span>Ajuste os filtros ou adicione uma nova transação.</span></div>}
+          </div>
+        </section>
+      </main>
+    </div>
+
+    {modal && <TransactionModal mode={modal.mode} record={modal.record} close={() => setModal(undefined)} save={save} />}
+    {ofx && <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && setOfx(false)}>
+      <div className="finance-ofx-modal finance-transaction-ofx-modal">
+        <header><div><span>IMPORTAR OFX</span><h2>Importar extrato bancário</h2><p>Selecione o arquivo e defina como as regras financeiras serão aplicadas.</p></div><button type="button" onClick={() => setOfx(false)} aria-label="Fechar">×</button></header>
+        <div className="finance-ofx-body">
+          <label className="finance-ofx-drop"><input type="file" accept=".ofx,application/x-ofx" /><UploadIcon /><strong>Selecionar arquivo OFX</strong><span>Arquivos .OFX exportados pelo banco</span></label>
+          <label><span>Aplicar regras financeiras</span><select defaultValue="Sim"><option>Sim</option><option>Não</option></select><small>As regras podem categorizar automaticamente as movimentações importadas.</small></label>
+        </div>
+        <footer><button className="crm-btn-secondary" type="button" onClick={() => setOfx(false)}>Cancelar</button><button className="crm-btn-primary" type="button" onClick={() => setOfx(false)}>Importar</button></footer>
+      </div>
+    </div>}
+  </div>;
 }
 
 export default FinanceTransactionsApp;
