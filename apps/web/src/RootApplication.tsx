@@ -5,6 +5,7 @@ import { LoginApp } from './modules/auth/LoginApp';
 import { AgendaApp } from './modules/agenda/AgendaApp';
 import { AttendanceApp } from './modules/attendance/AttendanceApp';
 import { CrmApp } from './modules/crm/CrmApp';
+import { CrmDashboardApp } from './modules/crm/CrmDashboardApp';
 import { FinanceTransactionsApp } from './modules/finance/FinanceTransactionsApp';
 import { FinanceInvoicesApp } from './modules/finance/FinanceInvoicesApp';
 import { FinancePLApp } from './modules/finance/FinancePLApp';
@@ -64,7 +65,8 @@ export function RootApplication() {
   if (path === '/crm/marketing' || path.startsWith('/crm/marketing/')) return withSharedSidebar(<MarketingApp />);
   if (path === '/crm/relatorios') return withSharedSidebar(<ReportsApp />);
   if (path === '/crm/configuracoes') return withSharedSidebar(<SettingsApp />);
-  if (path === '/crm' || path.startsWith('/crm/')) return withSharedSidebar(<CrmApp />);
+  if (path === '/crm') return withSharedSidebar(<CrmDashboardApp />);
+  if (path.startsWith('/crm/')) return withSharedSidebar(<CrmApp />);
 
   return <PublicSitePage />;
 }
