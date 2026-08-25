@@ -17,9 +17,9 @@ type NavItem = {label:string;href:string;icon:AppSidebarIconName};
 const MAIN_ITEMS:NavItem[] = [
   { label: 'Dashboard', href: '/crm', icon: 'dashboard' },
   { label: 'CRM', href: '/crm/relacionamento', icon: 'contacts' },
-  { label: 'VisaChat', href: '/crm/atendimentos', icon: 'support' },
-  { label: 'Tarefas', href: '/crm/tarefas', icon: 'tasks' },
   { label: 'Agenda', href: '/crm/agenda', icon: 'calendar' },
+  { label: 'Tarefas', href: '/crm/tarefas', icon: 'tasks' },
+  { label: 'VisaChat', href: '/crm/atendimentos', icon: 'support' },
 ];
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
