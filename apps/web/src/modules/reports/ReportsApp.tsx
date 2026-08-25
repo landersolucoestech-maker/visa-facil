@@ -18,8 +18,6 @@ const ENTITIES: ReportEntity[] = [
   { id: 'finance', label: 'Transações financeiras', description: 'Receitas, despesas, contas a pagar e a receber.', columns: ['Descrição', 'Tipo', 'Categoria', 'Valor', 'Data', 'Vencimento', 'Status'] },
 ];
 
-function basePath(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
-function href(path:string){return `${basePath()}${path}`||path}
 function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
 function downloadTemplate(entity: ReportEntity) {
   const csv = `\uFEFF${entity.columns.join(';')}\n`;
@@ -76,7 +74,6 @@ export function ReportsApp() {
         <div><small>VISA FÁCIL · CRM</small><h1>Relatórios</h1><p>Contratos de importação e exportação por domínio.</p></div>
         <div className="crm-topbar-actions" onClick={event => event.stopPropagation()}>
           <div className="reports-topbar-menu"><button className="reports-notification-button" type="button" aria-label="Alertas" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen(value => !value)}><BellIcon/></button>{notificationsOpen && <div className="reports-dropdown"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div>
-          <a className="crm-user" href={href('/crm/configuracoes')} aria-label="Abrir configurações"><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret">›</span></a>
         </div>
       </header>
 
