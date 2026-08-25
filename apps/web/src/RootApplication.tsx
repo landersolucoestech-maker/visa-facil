@@ -3,7 +3,7 @@ import { CrmSidebar } from './components/CrmSidebar';
 import { AgendaApp } from './modules/agenda/AgendaApp';
 import { AttendanceApp } from './modules/attendance/AttendanceApp';
 import { CrmApp } from './modules/crm/CrmApp';
-import { FinanceApp } from './modules/finance/FinanceApp';
+import { FinanceTransactionsApp } from './modules/finance/FinanceTransactionsApp';
 import { FinanceInvoicesApp } from './modules/finance/FinanceInvoicesApp';
 import { FinancePLApp } from './modules/finance/FinancePLApp';
 import { FinancialCategoriesApp } from './modules/finance/FinancialCategoriesApp';
@@ -27,7 +27,7 @@ export function RootApplication(){
  if(path==='/crm/regras-financeiras')return withSharedSidebar(<FinancialRulesApp/>);
  if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
  if(path==='/crm/financeiro/pl')return withSharedSidebar(<FinancePLApp/>);
- if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceApp/>);
+ if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceTransactionsApp/>);
  if(path==='/crm/marketing'||path.startsWith('/crm/marketing/'))return withSharedSidebar(<MarketingApp/>);
  if(path==='/crm/relatorios')return withSharedSidebar(<ReportsApp/>);
  if(path==='/crm'||path.startsWith('/crm/'))return withSharedSidebar(<CrmApp/>);
