@@ -26,6 +26,7 @@ import './styles/invoices-refinement.css';
 import './styles/invoices-header-actions-fix.css';
 import './styles/accounting-refinement.css';
 import './styles/marketing-refinement.css';
+import './styles/marketing-overview-refinement.css';
 import './styles/reports-refinement.css';
 import './styles/settings-refinement.css';
 
