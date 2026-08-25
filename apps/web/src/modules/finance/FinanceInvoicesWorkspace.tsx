@@ -28,8 +28,6 @@ const STATUS: InvoiceStatus[] = ['Rascunho', 'Pronta', 'Enviada', 'Em aberto', '
 const DERIVED_STATUS = new Set<InvoiceStatus>(['Parcialmente pago', 'Pago', 'Vencida']);
 const PAYMENT_METHODS = ['Pix', 'Cartão de crédito', 'Cartão de débito', 'Transferência bancária', 'Boleto', 'Dinheiro', 'Outro'];
 const today = () => new Date().toISOString().slice(0, 10);
-function basePath(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
-function href(path:string){return `${basePath()}${path}`||path}
 const EMPTY: Draft = {
   invoiceNumber: '', customer: '', billingContact: '', service: '', processRef: '', referenceNumbers: '', destination: '', visaType: '', processStage: '',
   appointmentDate: '', travelDate: '', noteDirection: 'Saída', natureOfOperation: 'Prestação de serviços', series: '1', fiscalNumber: '', accessKey: '',
@@ -214,7 +212,6 @@ export function FinanceInvoicesWorkspace() {
             <button className="invoice-notification-button" type="button" aria-label="Notificações de invoices" aria-expanded={notifications} onClick={() => setNotifications((current) => !current)}><BellIcon />{notificationRecords.length > 0 && <span>{notificationRecords.length}</span>}</button>
             {notifications && <div className="invoice-notification-menu"><header><strong>Notificações</strong><span>{notificationRecords.length}</span></header>{notificationRecords.length ? <div>{notificationRecords.map((invoice) => <button key={invoice.id} type="button" onClick={() => openAction('view', invoice)}><strong>{invoice.invoiceNumber} · {invoice.customer}</strong><small>{isOverdue(invoice) ? 'Vencida' : 'Vence hoje'} · saldo {money(balance(invoice))}</small></button>)}</div> : <p>Nenhuma invoice exige atenção hoje.</p>}</div>}
           </div>
-          <a className="crm-user" href={href('/crm/configuracoes')} aria-label="Abrir configurações"><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret">›</span></a>
         </div>
       </header>
 
