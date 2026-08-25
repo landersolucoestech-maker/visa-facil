@@ -37,6 +37,9 @@ jobs:
       - name: Contract tests
         run: npm test
 
+      - name: Dependency audit
+        run: npm run audit
+
       - name: Typecheck
         shell: bash
         run: |
