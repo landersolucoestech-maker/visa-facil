@@ -32,6 +32,8 @@ import './styles/reports-refinement.css';
 import './styles/settings-refinement.css';
 // Canonical topbar contract must be the final CRM override across every module.
 import './styles/crm-header-actions-unified.css';
+// Dashboard/CRM still use a legacy text glyph; force the real visible bell last.
+import './styles/crm-dashboard-relationship-bell-fix.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
