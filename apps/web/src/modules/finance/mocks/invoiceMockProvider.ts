@@ -53,7 +53,8 @@ export type InvoiceSeed = {
 const VALID_STATUSES = new Set<InvoiceSeedStatus>(['Rascunho', 'Pronta', 'Enviada', 'Em aberto', 'Parcialmente pago', 'Pago', 'Vencida', 'Cancelada']);
 const VALID_DIRECTIONS = new Set<InvoiceSeedDirection>(['Entrada', 'Saída']);
 const VALID_SETTLEMENT_STATUSES = new Set<InvoiceSeedSettlementStatus>(['Liquidado', 'Pendente']);
-const FINANCIAL_FIELDS = ['serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'paid', 'unitValue'] as const;
+const NUMERIC_FIELDS = ['quantity', 'unitValue', 'serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'taxBase', 'icms', 'ipi', 'pis', 'cofins', 'iss', 'withheldTaxes', 'freight', 'insurance', 'otherFiscalExpenses', 'paid'] as const;
+const TEXT_FIELDS = ['invoiceNumber', 'customer', 'billingContact', 'service', 'processRef', 'referenceNumbers', 'destination', 'visaType', 'processStage', 'appointmentDate', 'travelDate', 'natureOfOperation', 'series', 'fiscalNumber', 'accessKey', 'issueDate', 'operationDate', 'dueDate', 'fiscalStatus', 'issuerName', 'issuerDocument', 'issuerStateRegistration', 'issuerMunicipalRegistration', 'issuerAddress', 'issuerCity', 'issuerState', 'issuerZip', 'recipientName', 'recipientDocument', 'recipientStateRegistration', 'recipientAddress', 'recipientCity', 'recipientState', 'recipientZip', 'supplierName', 'supplierDocument', 'supplierInvoiceNumber', 'supplierSeries', 'supplierAccessKey', 'purchaseOrderRef', 'receiptDate', 'entryPurpose', 'customerOrderRef', 'deliveryAddress', 'shippingMethod', 'departureDate', 'salePurpose', 'cfop', 'serviceCode', 'ncm', 'cstCsosn', 'unit', 'paymentTerms', 'relatedDocuments', 'notes', 'instructions', 'additionalInfo'] as const;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -83,7 +84,11 @@ export function isInvoiceSeed(value: unknown): value is InvoiceSeed {
   if (!isObject(value) || typeof value.id !== 'string' || !value.id.trim()) return false;
   if (value.status !== undefined && (typeof value.status !== 'string' || !VALID_STATUSES.has(value.status as InvoiceSeedStatus))) return false;
   if (value.noteDirection !== undefined && (typeof value.noteDirection !== 'string' || !VALID_DIRECTIONS.has(value.noteDirection as InvoiceSeedDirection))) return false;
-  for (const field of FINANCIAL_FIELDS) {
+  for (const field of TEXT_FIELDS) {
+    const candidate = value[field];
+    if (candidate !== undefined && typeof candidate !== 'string') return false;
+  }
+  for (const field of NUMERIC_FIELDS) {
     const candidate = value[field];
     if (candidate !== undefined && (!isFiniteNumber(candidate) || candidate < 0)) return false;
   }
