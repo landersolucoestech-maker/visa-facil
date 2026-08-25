@@ -21,7 +21,7 @@ Principais áreas:
 - `/crm/categorias-financeiras` — categorias financeiras da sessão;
 - `/crm/regras-financeiras` — regras de classificação financeira da sessão;
 - `/crm/marketing/*` — marketing;
-- `/crm/relatorios` — templates e validação CSV; importação persistente/exportação de dados permanecem indisponíveis sem uma fonte compartilhada persistente;
+- `/crm/relatorios` — templates e validação CSV; importação persistente/exportação de dados permanecem indisponíveis sem uma fonte durável compartilhada;
 - `/crm/configuracoes` — configurações.
 
 A navegação lateral do CRM é compartilhada por todos os módulos internos. Rotas e módulos internos são carregados sob demanda para não aumentar desnecessariamente o bundle inicial do site público.
@@ -32,6 +32,8 @@ A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = fals
 
 Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
 
+Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham uma fonte operacional validada em `sessionStorage` por meio de `shared/operationalSessionStore.ts`. Isso preserva alterações entre rotas durante a sessão atual e permite que o Dashboard derive seus números da mesma fonte usada pelos módulos. Essa camada não é banco de dados nem sincronização remota.
+
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
 A importação OFX funciona no frontend e adiciona transações à sessão atual. Movimentações válidas passam pelas regras financeiras configuradas na sessão; regras incompatíveis ou categorias órfãs não são aplicadas.
@@ -39,10 +41,11 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 ## Fonte canônica dos domínios
 
 - relacionamento: `modules/crm/types.ts`;
+- estado operacional compartilhado entre rotas: `shared/operationalSessionStore.ts` + `shared/sessionRecords.ts`;
 - transações financeiras: `modules/finance/types.ts`;
 - categorias e regras financeiras da sessão: `modules/finance/financeConfigStore.ts`;
 - contabilidade: derivada exclusivamente das transações canônicas recebidas/pagas;
-- fixtures: providers em `mocks/*Provider.ts`, nunca importados diretamente pela UI.
+- fixtures: providers em `mocks/*Provider.ts`, usados como seed da fonte de sessão e nunca importados diretamente pela UI.
 
 Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos liquidados entram em `paid` e alteram o status financeiro da invoice.
 
@@ -53,7 +56,7 @@ npm ci
 VITE_CRM_MOCKS=true npm run dev
 ```
 
-Sem `VITE_CRM_MOCKS=true`, os módulos que dependem de fixtures iniciam sem dados demonstrativos.
+Sem `VITE_CRM_MOCKS=true`, os módulos que dependem de fixtures iniciam sem dados demonstrativos; registros criados durante o uso continuam restritos à sessão atual do navegador.
 
 ## Validação obrigatória
 
