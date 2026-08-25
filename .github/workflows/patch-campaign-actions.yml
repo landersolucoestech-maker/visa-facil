@@ -75,3 +75,5 @@ jobs:
           git add apps/web/src/modules/marketing/MarketingApp.tsx apps/web/src/modules/marketing/marketing-overrides.css
           git commit -m "fix(marketing): add campaign actions menu"
           git push origin dev
+
+# retrigger
