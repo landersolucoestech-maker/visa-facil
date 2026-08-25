@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import './settings.css';
 
-export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'cadastro-publico'|'billing'|'usuarios';
+export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'billing'|'usuarios';
 type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
 export type AutomationKey='email'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
 export type IntegrationStatus='Conectado'|'Não conectado'|'Reconexão necessária'|'Indisponível';
@@ -14,7 +14,6 @@ export const TABS:Array<{id:Tab;label:string;icon:string}>=[
  {id:'automacoes',label:'Automações',icon:'⚡'},
  {id:'seguranca',label:'Segurança',icon:'◈'},
  {id:'integracoes',label:'Integrações',icon:'↗'},
- {id:'cadastro-publico',label:'Cadastro Público',icon:'◎'},
  {id:'billing',label:'Billing',icon:'▤'},
  {id:'usuarios',label:'Usuários',icon:'♙'},
 ];
@@ -82,6 +81,5 @@ export function StatusBadge({status}:{status:IntegrationStatus}){
 export function MiniModal({title,description,close,children,footer}:{title:string;description?:string;close:()=>void;children:ReactNode;footer?:ReactNode}){
  return <div className="settings-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="settings-mini-modal" role="dialog" aria-modal="true"><header><div><span>CONFIGURAÇÕES</span><h2>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="settings-mini-modal-body">{children}</div>{footer&&<footer>{footer}</footer>}</div></div>;
 }
-
 
 export function SettingsGroup({title,icon,children}:{title:string;icon:string;children:ReactNode}){return <div className="settings-section-block"><div className="settings-section-title"><span>{icon}</span><div><h3>{title}</h3></div></div><div className="settings-setting-list">{children}</div></div>}
