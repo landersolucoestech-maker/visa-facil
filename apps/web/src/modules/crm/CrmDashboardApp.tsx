@@ -1,9 +1,35 @@
 import { useMemo } from 'react';
 import { getCrmInitialRecords } from './mocks/mockDataProvider';
 import { getFinanceInitialRecords } from '../finance/mocks/financeMockProvider';
-import { getAgendaInitialEvents } from '../agenda/mocks/agendaMockProvider';
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const RECENT_ACTIVITIES = [
+  { name: 'André', activity: 'Novo lead via WhatsApp' },
+  { name: 'Juliana', activity: 'Alterada para qualificado' },
+  { name: 'Camila', activity: 'Follow-up realizado' },
+  { name: 'Mariana', activity: 'Contato atualizado' },
+];
+
+const TODAY_AGENDA = [
+  { time: '09:30', label: 'Entrevista' },
+  { time: '14:00', label: 'Reunião' },
+  { time: '16:30', label: 'Follow-up' },
+];
+
+const LEAD_ORIGINS = [
+  { source: 'WhatsApp', count: 4 },
+  { source: 'Instagram', count: 3 },
+  { source: 'Indicação', count: 2 },
+  { source: 'Website', count: 1 },
+];
+
+const PENDING_ITEMS = [
+  { count: 2, label: 'follow-ups' },
+  { count: 1, label: 'lead aguardando resposta' },
+  { count: 3, label: 'tarefas' },
+  { count: 1, label: 'atendimento não lido' },
+];
 
 function basePath() {
   return import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -11,12 +37,6 @@ function basePath() {
 
 function href(path: string) {
   return `${basePath()}${path}` || path;
-}
-
-function formatShortDate(value: string) {
-  if (!value) return '—';
-  const date = new Date(`${value}T12:00:00`);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
 function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
@@ -35,7 +55,6 @@ function KpiCard({ label, value, detail, tone }: { label: string; value: string;
 export function CrmDashboardApp() {
   const crmRecords = useMemo(() => getCrmInitialRecords(), []);
   const financeRecords = useMemo(() => getFinanceInitialRecords(), []);
-  const agendaEvents = useMemo(() => getAgendaInitialEvents(), []);
 
   const contacts = crmRecords.filter((record) => record.kind === 'contact').length;
   const leads = crmRecords.filter((record) => record.kind === 'lead').length;
@@ -49,28 +68,13 @@ export function CrmDashboardApp() {
     .reduce((total, record) => total + record.amount, 0);
   const result = revenue - expenses;
 
-  const recentActivities = [...crmRecords]
-    .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
-    .slice(0, 4);
-
-  const upcomingAgenda = [...agendaEvents]
-    .filter((event) => event.status !== 'Cancelado' && event.status !== 'Realizado')
-    .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))
-    .slice(0, 3);
-
-  const leadOrigins = ['Website', 'WhatsApp', 'Instagram', 'Facebook'].map((source) => ({
-    source,
-    count: crmRecords.filter((record) => record.kind === 'lead' && record.source === source).length,
-  }));
-
   return (
     <div className="crm-shell">
       <div className="crm-workspace">
-        <header className="crm-topbar">
+        <header className="crm-topbar crm-dashboard-topbar">
           <div>
-            <small>VISA FÁCIL · CRM</small>
-            <h1>Dashboard</h1>
-            <p>Visão geral do relacionamento e da operação comercial.</p>
+            <h1>DASHBOARD</h1>
+            <p>Visão geral da operação</p>
           </div>
           <div className="crm-topbar-actions">
             <button type="button" aria-label="Alertas">⌁</button>
@@ -89,7 +93,7 @@ export function CrmDashboardApp() {
           </div>
         </header>
 
-        <main className="crm-content">
+        <main className="crm-content crm-dashboard-content">
           <section className="crm-kpi-grid" aria-label="Indicadores do Dashboard" data-dashboard-kpi-count="6">
             <KpiCard label="Contatos" value={String(contacts)} detail="cadastrados" tone="blue" />
             <KpiCard label="Leads" value={String(leads)} detail="em acompanhamento" tone="red" />
@@ -99,61 +103,59 @@ export function CrmDashboardApp() {
             <KpiCard label="Resultado" value={money(result)} detail="receitas − despesas" tone="navy" />
           </section>
 
-          <section className="crm-dashboard-grid crm-dashboard-grid--top">
-            <article className="crm-panel crm-dashboard-activity-card">
-              <div className="crm-panel__heading">
-                <h2>Atividades recentes</h2>
-                <a href={href('/crm/relacionamento')}>Ver CRM</a>
-              </div>
-              <div className="crm-dashboard-activity-list">
-                {recentActivities.length ? recentActivities.map((record) => (
-                  <div className="crm-dashboard-activity-item" key={record.id}>
-                    <span className={`crm-dashboard-activity-dot is-${record.kind}`} aria-hidden="true" />
-                    <div>
-                      <strong>{record.fullName || 'Contato sem nome'}</strong>
-                      <small>{record.kind === 'lead' ? 'Lead atualizado' : 'Contato atualizado'} · {record.source || 'CRM'}</small>
-                    </div>
-                    <time>{new Date(record.updatedAt || record.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</time>
-                  </div>
-                )) : <p className="crm-dashboard-card-empty">Nenhuma atividade registrada.</p>}
-              </div>
-            </article>
-
-            <article className="crm-panel crm-dashboard-agenda-card">
-              <div className="crm-panel__heading">
-                <h2>Agenda</h2>
-                <a href={href('/crm/agenda')}>Abrir agenda</a>
-              </div>
-              <div className="crm-dashboard-agenda-list">
-                {upcomingAgenda.length ? upcomingAgenda.map((event) => (
-                  <div className="crm-dashboard-agenda-item" key={event.id}>
-                    <div className="crm-dashboard-agenda-date">
-                      <strong>{formatShortDate(event.date)}</strong>
-                      <small>{event.startTime}</small>
-                    </div>
-                    <div>
-                      <strong>{event.title}</strong>
-                      <small>{event.location || event.type} · {event.status}</small>
-                    </div>
-                  </div>
-                )) : <p className="crm-dashboard-card-empty">Nenhum compromisso agendado.</p>}
-              </div>
-            </article>
-
-            <article className="crm-panel">
-              <div className="crm-panel__heading"><h2>Origem dos leads</h2></div>
-              <div className="crm-bars">
-                {leadOrigins.map((origin) => (
-                  <div key={origin.source}><span>{origin.source}</span><i /><b>{origin.count}</b></div>
+          <section className="crm-dashboard-grid crm-dashboard-overview-grid">
+            <article className="crm-panel crm-dashboard-summary-card">
+              <div className="crm-panel__heading"><h2>ATIVIDADES RECENTES</h2></div>
+              <ul className="crm-dashboard-simple-list crm-dashboard-activity-preview">
+                {RECENT_ACTIVITIES.map((item) => (
+                  <li key={item.name}>
+                    <strong>{item.name}</strong>
+                    <span>· {item.activity}</span>
+                  </li>
                 ))}
+              </ul>
+            </article>
+
+            <article className="crm-panel crm-dashboard-summary-card">
+              <div className="crm-panel__heading"><h2>AGENDA</h2></div>
+              <div className="crm-dashboard-agenda-preview">
+                <strong className="crm-dashboard-agenda-day">Hoje</strong>
+                <ul className="crm-dashboard-simple-list crm-dashboard-time-list">
+                  {TODAY_AGENDA.map((item) => (
+                    <li key={`${item.time}-${item.label}`}>
+                      <strong>{item.time}</strong>
+                      <span>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </article>
           </section>
 
-          <section className="crm-dashboard-grid crm-dashboard-grid--bottom">
-            <article className="crm-panel crm-empty-panel"><div className="crm-panel__heading"><h2>Atendimentos recentes</h2><a href={href('/crm/atendimentos')}>Ver todos</a></div><p>Nenhum atendimento registrado.</p></article>
-            <article className="crm-panel crm-empty-panel"><div className="crm-panel__heading"><h2>Tarefas pendentes</h2><a href={href('/crm/tarefas')}>Ver todas</a></div><p>Nenhuma tarefa pendente.</p></article>
-            <article className="crm-panel crm-empty-panel"><div className="crm-panel__heading"><h2>Conversas</h2><a href={href('/crm/atendimentos')}>Abrir central</a></div><p>Nenhuma conversa iniciada.</p></article>
+          <section className="crm-dashboard-grid crm-dashboard-overview-grid">
+            <article className="crm-panel crm-dashboard-summary-card">
+              <div className="crm-panel__heading"><h2>ORIGEM DOS LEADS</h2></div>
+              <ul className="crm-dashboard-simple-list crm-dashboard-origin-list">
+                {LEAD_ORIGINS.map((item) => (
+                  <li key={item.source}>
+                    <span>{item.source}</span>
+                    <strong>{item.count}</strong>
+                  </li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="crm-panel crm-dashboard-summary-card">
+              <div className="crm-panel__heading"><h2>PENDÊNCIAS</h2></div>
+              <ul className="crm-dashboard-simple-list crm-dashboard-pending-list">
+                {PENDING_ITEMS.map((item) => (
+                  <li key={item.label}>
+                    <strong>{item.count}</strong>
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
           </section>
         </main>
       </div>
