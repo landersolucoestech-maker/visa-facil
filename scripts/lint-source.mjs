@@ -29,6 +29,13 @@ for(const path of sourceFiles){
       if(/return\s+structuredClone\([^;\n]+\)\s+as\s+/m.test(source))fail(`${path}: development fixture must not be returned through an unchecked type assertion.`);
     }
   }
+  if(path.endsWith('.tsx')){
+    for(const match of source.matchAll(/<button\b[^>]*>/g)){
+      const tag=match[0];
+      if(/className=["'][^"']*\bcrm-user\b/.test(tag)&&!tag.includes('onClick='))fail(`${path}: crm-user button has no action; render static identity or a real action instead.`);
+      if(/aria-label=["'](?:Alertas|Notifica(?:ç|c)ões)/i.test(tag)&&!tag.includes('onClick=')&&!/\bdisabled\b/.test(tag))fail(`${path}: notification control has no behavior and is not explicitly disabled.`);
+    }
+  }
 }
 
 const sidebarOwners=sourceFiles.filter((path)=>read(path).includes('<aside className="crm-sidebar'));
