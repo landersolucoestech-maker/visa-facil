@@ -28,9 +28,11 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
-function isAgendaEvent(value: unknown): value is AgendaEvent {
+export function isAgendaEvent(value: unknown): value is AgendaEvent {
   if (!isObject(value)) return false;
-  if (typeof value.startTime !== 'string' || typeof value.endTime !== 'string' || !TIME_RE.test(value.startTime) || !TIME_RE.test(value.endTime) || value.endTime <= value.startTime) return false;
+  if (typeof value.startTime !== 'string' || typeof value.endTime !== 'string') return false;
+  if ((value.startTime !== '' && !TIME_RE.test(value.startTime)) || (value.endTime !== '' && !TIME_RE.test(value.endTime))) return false;
+  if (value.startTime && value.endTime && value.endTime <= value.startTime) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.title === 'string' && value.title.trim().length > 0
     && isText(value.type)
