@@ -15,6 +15,8 @@ const invoiceTotal=(item)=>{
   const subtotal=Math.max(0,number('serviceFee')+number('consularFee')+number('translationFee')+number('courierFee')+number('thirdPartyFee')+number('otherCharges')-number('discounts'));
   return Math.max(0,subtotal+number('tax')+number('icms')+number('ipi')+number('pis')+number('cofins')+number('iss')+number('freight')+number('insurance')+number('otherFiscalExpenses')-number('withheldTaxes'));
 };
+const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE=/^([01]\d|2[0-3]):[0-5]\d$/;
 
 test('CRM fixtures satisfy the person relationship contract',()=>{
   const items=json('apps/web/src/modules/crm/mocks/crm-records.dev.json');
@@ -23,10 +25,21 @@ test('CRM fixtures satisfy the person relationship contract',()=>{
   for(const item of items){
     assert.ok(['contact','lead'].includes(item.kind));
     assert.equal(typeof item.fullName,'string');
+    assert.ok(item.fullName.trim());
     assert.equal(typeof item.email,'string');
+    assert.ok(item.email.trim());
     assert.equal(typeof item.cpf,'string');
     assert.equal(typeof item.rg,'string');
     assert.equal(typeof item.passportNumber,'string');
+    assert.ok(Number.isFinite(Date.parse(item.createdAt)));
+    assert.ok(Number.isFinite(Date.parse(item.updatedAt)));
+    if(item.kind==='contact'){
+      assert.ok(['Cliente','Parceiro','Outro'].includes(item.relationship));
+      assert.ok(['Ativo','Inativo'].includes(item.contactStatus));
+    }else{
+      assert.ok(['Novo','Em contato','Qualificado','Não qualificado','Convertido','Perdido'].includes(item.leadStatus));
+      assert.ok(['Frio','Morno','Quente'].includes(item.temperature));
+    }
     for(const forbidden of ['cnpj','legalName','tradeName','contactPerson','personType'])assert.equal(forbidden in item,false,`CRM person fixture contains forbidden company field ${forbidden}`);
   }
 });
@@ -37,10 +50,12 @@ test('finance transaction fixtures satisfy the canonical transaction model',()=>
   uniqueIds(items,'Finance fixtures');
   for(const item of items){
     assert.ok(['Receita','Despesa'].includes(item.type));
-    assert.ok(['Recebido','A receber','Pago','A pagar'].includes(item.status));
+    const allowed=item.type==='Receita'?['Recebido','A receber']:['Pago','A pagar'];
+    assert.ok(allowed.includes(item.status),`${item.id} status must be compatible with ${item.type}`);
     assert.equal(typeof item.amount,'number');
-    assert.ok(Number.isFinite(item.amount)&&item.amount>=0);
-    assert.match(item.date,/^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(Number.isFinite(item.amount)&&item.amount>0);
+    assert.match(item.date,DATE_RE);
+    assert.ok(item.dueDate===''||DATE_RE.test(item.dueDate));
   }
 });
 
@@ -76,7 +91,7 @@ test('invoice fixtures have unique documents and settlement-consistent payment l
   }
 });
 
-test('task fixtures use known status and priority values',()=>{
+test('task fixtures use canonical statuses, priorities and valid scheduling fields',()=>{
   const items=json('apps/web/src/modules/tasks/mocks/tasks.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Task fixtures');
@@ -84,39 +99,63 @@ test('task fixtures use known status and priority values',()=>{
     assert.ok(['Pendente','Em andamento','Concluída'].includes(item.status));
     assert.ok(['Baixa','Média','Alta'].includes(item.priority));
     assert.ok(['Contato','Lead'].includes(item.relatedType));
+    assert.match(item.dueDate,DATE_RE);
+    assert.match(item.dueTime,TIME_RE);
+    assert.ok(Number.isFinite(Date.parse(item.createdAt)));
+    assert.ok(Number.isFinite(Date.parse(item.updatedAt)));
   }
 });
 
-test('agenda fixtures use valid dates and statuses',()=>{
+test('agenda fixtures use valid dates, statuses and chronological time ranges',()=>{
   const items=json('apps/web/src/modules/agenda/mocks/agenda.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Agenda fixtures');
   for(const item of items){
-    assert.match(item.date,/^\d{4}-\d{2}-\d{2}$/);
+    assert.match(item.date,DATE_RE);
+    assert.match(item.startTime,TIME_RE);
+    assert.match(item.endTime,TIME_RE);
+    assert.ok(item.endTime>item.startTime,`${item.id} must end after it starts`);
     assert.ok(['Confirmado','Pendente','Realizado','Cancelado'].includes(item.status));
+    assert.ok(['Contato','Lead','Cliente'].includes(item.relatedType));
   }
 });
 
 test('attendance fixtures keep conversations and message ids unique',()=>{
   const data=json('apps/web/src/modules/attendance/mocks/attendance.dev.json');
+  assert.deepEqual(Object.keys(data).sort(),['conversations']);
   assert.ok(Array.isArray(data.conversations));
   uniqueIds(data.conversations,'Attendance conversations');
   for(const conversation of data.conversations){
+    assert.ok(Number.isInteger(conversation.unread)&&conversation.unread>=0);
     assert.ok(Array.isArray(conversation.messages));
     uniqueIds(conversation.messages,`Messages for ${conversation.id}`);
+    conversation.messages.forEach((message)=>assert.ok(['customer','agent','system'].includes(message.sender)));
   }
 });
 
-test('marketing fixtures expose only supported content/campaign primitive contracts',()=>{
+test('marketing fixtures expose only supported content and campaign contracts',()=>{
   const data=json('apps/web/src/modules/marketing/mocks/marketing.dev.json');
+  assert.deepEqual(Object.keys(data).sort(),['campaigns','contents']);
   assert.ok(Array.isArray(data.contents));
   assert.ok(Array.isArray(data.campaigns));
   uniqueIds(data.contents,'Marketing contents');
   uniqueIds(data.campaigns,'Marketing campaigns');
+  const contentChannels=['Instagram','Facebook','TikTok','YouTube','X','Threads'];
+  const campaignChannels=['Meta Ads','Google Ads','YouTube','TikTok','Instagram'];
+  data.contents.forEach((content)=>{
+    assert.ok(contentChannels.includes(content.channel));
+    assert.match(content.date,DATE_RE);
+    assert.match(content.time,TIME_RE);
+    assert.ok(content.title.trim());
+  });
   data.campaigns.forEach((campaign)=>{
-    assert.equal(typeof campaign.budget,'number');
-    assert.equal(typeof campaign.spent,'number');
-    assert.equal(typeof campaign.leads,'number');
-    assert.equal(typeof campaign.conversions,'number');
+    assert.ok(campaignChannels.includes(campaign.channel));
+    assert.ok(Number.isFinite(campaign.budget)&&campaign.budget>=0);
+    assert.ok(Number.isFinite(campaign.spent)&&campaign.spent>=0&&campaign.spent<=campaign.budget);
+    assert.ok(Number.isInteger(campaign.leads)&&campaign.leads>=0);
+    assert.ok(Number.isInteger(campaign.conversions)&&campaign.conversions>=0&&campaign.conversions<=campaign.leads);
+    assert.match(campaign.startDate,DATE_RE);
+    assert.match(campaign.endDate,DATE_RE);
+    assert.ok(campaign.endDate>=campaign.startDate);
   });
 });
