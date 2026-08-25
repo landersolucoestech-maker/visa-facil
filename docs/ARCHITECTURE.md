@@ -1,0 +1,152 @@
+# Arquitetura técnica
+
+## Escopo do repositório
+
+O projeto Visa Fácil é atualmente uma aplicação **frontend-only** construída com React, TypeScript e Vite. Este repositório não contém backend, banco de dados, migrations, jobs, filas, workers, controllers, repositories ou APIs server-side.
+
+Essa ausência é um limite arquitetural explícito: nenhuma tela deve representar autenticação, autorização, integração externa, persistência remota ou automação como funcional quando não existe uma implementação real para sustentá-la.
+
+## Composição da aplicação
+
+`RootApplication.tsx` é o ponto canônico de roteamento. O site público é carregado diretamente; workspaces internos usam `React.lazy` e `Suspense` para manter o bundle público separado dos módulos administrativos.
+
+O CRM possui uma única navegação global em `components/CrmSidebar.tsx`. Módulos internos não devem implementar sidebars concorrentes.
+
+Principais domínios:
+
+- `modules/public-site` — website institucional;
+- `modules/site-cms` — edição e publicação local do conteúdo do site;
+- `modules/crm` — relacionamento e dashboard;
+- `modules/attendance` — VisaChat/atendimentos;
+- `modules/tasks` — tarefas;
+- `modules/agenda` — agenda;
+- `modules/finance` — transações, invoices, categorias, regras e contabilidade;
+- `modules/marketing` — marketing;
+- `modules/reports` — importação/exportação disponível no frontend;
+- `modules/settings` — configurações compatíveis com o escopo frontend atual;
+- `modules/auth` — contrato de autenticação, atualmente desativado.
+
+## Modelos e fontes de verdade
+
+### Relacionamento
+
+`modules/crm/types.ts` define o modelo canônico de registros de relacionamento. Providers de fixtures dependem desse modelo; componentes não devem criar uma definição concorrente para a mesma entidade.
+
+### Financeiro
+
+`modules/finance/types.ts` define a transação canônica. A Contabilidade é uma projeção das Transações e deve derivar seus números somente de transações com estados financeiros aplicáveis.
+
+Invoices representam documentos de faturamento/fiscais. Elas podem referenciar valores e pagamentos, mas não constituem uma segunda fonte de receita para Contabilidade; isso evita dupla contagem.
+
+### Fixtures de desenvolvimento
+
+Arquivos `*.dev.json` são dados de demonstração, não persistência. Eles devem ser acessados somente por providers governados por `shared/runtimeFlags.ts`.
+
+Regra obrigatória:
+
+```text
+import.meta.env.DEV === true
+AND
+VITE_CRM_MOCKS === "true"
+```
+
+Builds publicados não devem habilitar fixtures.
+
+## Autenticação, autorização e segurança
+
+`AUTHENTICATION_ENABLED` permanece `false` até existir um provedor de autenticação real. Validação de e-mail/senha executada apenas no navegador não constitui autenticação.
+
+Enquanto a autenticação estiver desativada, o ambiente interno é acessível para desenvolvimento/demonstração e não deve ser tratado como fronteira de segurança para dados reais.
+
+Permissões e papéis exibidos no frontend não representam enforcement server-side. Não armazenar segredos, tokens privados, credenciais ou dados sensíveis reais em código, fixtures, localStorage ou variáveis `VITE_*`, pois estas são incorporadas ao bundle cliente.
+
+Conteúdo do CMS recuperado de armazenamento local deve passar por validação antes de ser aceito. Renderização com `dangerouslySetInnerHTML` e iframes não autorizados é bloqueada pelo lint estrutural.
+
+Uploads e arquivos importados devem validar formato/tamanho e nunca ser interpretados como HTML executável.
+
+## OFX
+
+`modules/finance/ofx.ts` é o parser canônico de OFX no frontend. Ele:
+
+- limita o arquivo a 5 MB;
+- exige extensão `.ofx`;
+- extrai movimentações `STMTTRN`;
+- valida datas e valores;
+- rejeita movimentações inválidas e IDs duplicados;
+- normaliza entradas para `Receita/Recebido`;
+- normaliza saídas para `Despesa/Pago`;
+- grava categoria inicial `Outros` e pagamento `OFX`.
+
+A importação modifica somente o estado da sessão atual. Regras financeiras ainda não são aplicadas automaticamente porque `FinancialRulesApp` não possui persistência compartilhada/motor de regras.
+
+## CMS
+
+O CMS mantém draft e publicação no armazenamento local enquanto não existe uma API de conteúdo. Essa persistência é válida apenas para o navegador atual e não deve ser descrita como banco de dados ou sincronização multiusuário.
+
+## Integrações externas
+
+WhatsApp, e-mail, assinatura eletrônica, nota fiscal, plataformas de anúncios e calendários somente podem ser marcados como conectados quando houver adapter/API e credenciais reais fora do bundle cliente.
+
+Não implementar fallbacks que simulem sucesso de integração.
+
+## Relatórios
+
+Exportações devem corresponder ao formato anunciado. Uma ação chamada XLSX não pode gerar TXT/CSV. Importações devem validar e realmente processar os dados ou permanecer indisponíveis com explicação clara.
+
+## Qualidade e validação
+
+O comando canônico é:
+
+```bash
+npm run check
+```
+
+Ele executa:
+
+1. validação do contrato arquitetural;
+2. lint estrutural;
+3. testes automatizados;
+4. auditoria de vulnerabilidades npm de severidade alta ou crítica;
+5. TypeScript;
+6. build de produção.
+
+O workflow CI acrescenta smoke runtime após o build. O deploy do Pages repete os gates antes da publicação.
+
+### Lint estrutural
+
+`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo retorno de `any` explícito, imports diretos de fixtures, sidebars concorrentes, mocks de produção e padrões de renderização inseguros.
+
+### Testes
+
+`scripts/tests` valida contratos dos fixtures e comportamentos que possuem lógica isolável, como o parser OFX. Testes não devem cristalizar implementações legadas apenas porque elas existiam anteriormente; devem proteger o contrato canônico atual.
+
+## Critérios para novas features
+
+Uma feature só deve ser considerada integrada quando:
+
+- existe uma única fonte de verdade para seu domínio;
+- tipos, fixtures, UI e regras usam o mesmo contrato;
+- estados vazios e falhas são explícitos;
+- não depende de mocks para funcionar em produção;
+- não declara sucesso de operação que não ocorreu;
+- não cria uma segunda navegação, modelo ou regra concorrente;
+- possui teste quando introduz transformação de dados ou regra de negócio relevante;
+- passa `npm run check` e smoke runtime;
+- documentação é atualizada quando a arquitetura/contrato muda.
+
+## Limites para futura camada backend
+
+Quando backend e banco forem introduzidos, eles devem ser adicionados como arquitetura explícita, não inferidos a partir das telas atuais. A implementação deverá definir, no mínimo:
+
+- autenticação e sessões server-side;
+- autorização e RBAC aplicados no servidor;
+- schemas persistentes e migrations;
+- validação de entrada e saída;
+- contratos de API versionáveis;
+- services/repositories quando houver responsabilidade real para essas camadas;
+- integridade referencial e constraints;
+- observabilidade e tratamento de erros;
+- adapters reais para integrações externas;
+- estratégia de migração dos estados locais existentes.
+
+Até que isso exista, o frontend deve continuar deixando seus limites explícitos.
