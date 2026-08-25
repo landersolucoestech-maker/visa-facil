@@ -40,14 +40,7 @@ function parse(raw: string | null): AuthSession | null {
 }
 
 export function getAuthSession(): AuthSession | null {
-  if (!AUTHENTICATION_ENABLED) {
-    return {
-      userId: 'authentication-disabled',
-      email: 'dev@visafacil.local',
-      name: 'Administrador',
-      authenticatedAt: new Date().toISOString(),
-    };
-  }
+  if (!AUTHENTICATION_ENABLED) return null;
   return parse(sessionStorage.getItem(SESSION_KEY)) || parse(localStorage.getItem(SESSION_KEY));
 }
 
@@ -60,8 +53,7 @@ export async function signIn(email: string, password: string, remember = false):
   if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) throw new Error('Informe um e-mail válido.');
   if (password.length < 6) throw new Error('A senha precisa ter pelo menos 6 caracteres.');
 
-  // This branch is intentionally unreachable while authentication is disabled.
-  // Replace it with a real server/provider exchange before enabling auth.
+  void remember;
   throw new Error('Nenhum provedor de autenticação real está configurado.');
 }
 
