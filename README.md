@@ -32,7 +32,7 @@ A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = fals
 
 Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
 
-Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham uma fonte operacional validada em `sessionStorage` por meio de `shared/operationalSessionStore.ts`. Isso preserva alterações entre rotas durante a sessão atual e permite que o Dashboard derive seus números da mesma fonte usada pelos módulos. Essa camada não é banco de dados nem sincronização remota.
+Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Todas essas fontes usam `sessionStorage`: preservam alterações entre rotas na sessão atual, mas não constituem banco de dados ou sincronização remota.
 
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
@@ -41,13 +41,16 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 ## Fonte canônica dos domínios
 
 - relacionamento: `modules/crm/types.ts`;
-- estado operacional compartilhado entre rotas: `shared/operationalSessionStore.ts` + `shared/sessionRecords.ts`;
+- infraestrutura de registros da sessão: `shared/sessionRecords.ts`;
+- estado operacional de CRM/Tarefas/Agenda/Transações/VisaChat: `shared/operationalSessionStore.ts`;
+- invoices da sessão: `modules/finance/invoiceSessionStore.ts`;
+- campanhas e conteúdos de Marketing: `modules/marketing/marketingSessionStore.ts`;
 - transações financeiras: `modules/finance/types.ts`;
 - categorias e regras financeiras da sessão: `modules/finance/financeConfigStore.ts`;
 - contabilidade: derivada exclusivamente das transações canônicas recebidas/pagas;
-- fixtures: providers em `mocks/*Provider.ts`, usados como seed da fonte de sessão e nunca importados diretamente pela UI.
+- fixtures: providers em `mocks/*Provider.ts`, usados apenas como seeds validados e nunca importados diretamente pela UI mutável.
 
-Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos liquidados entram em `paid` e alteram o status financeiro da invoice.
+Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos `Liquidado` entram em `paid`; `Pago` e `Parcialmente pago` são derivados do ledger, e o total não pode ser reduzido abaixo do valor já liquidado.
 
 ## Desenvolvimento
 
