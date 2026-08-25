@@ -92,15 +92,17 @@ export function isInvoiceSeed(value: unknown): value is InvoiceSeed {
     const candidate = value[field];
     if (candidate !== undefined && (!isFiniteNumber(candidate) || candidate < 0)) return false;
   }
+  const paid = value.paid;
+  if (paid !== undefined && !isFiniteNumber(paid)) return false;
   if (value.payments !== undefined) {
     if (!Array.isArray(value.payments) || !value.payments.every(isPayment)) return false;
     const ids = value.payments.map((payment) => payment.id);
     if (new Set(ids).size !== ids.length) return false;
-    if (value.paid !== undefined) {
+    if (paid !== undefined) {
       const liquidated = value.payments.filter((payment) => payment.settlementStatus === 'Liquidado').reduce((sum, payment) => sum + payment.amount, 0);
-      if (Math.abs(liquidated - value.paid) > 0.0001) return false;
+      if (Math.abs(liquidated - paid) > 0.0001) return false;
     }
-  } else if (value.paid !== undefined && value.paid !== 0) {
+  } else if (paid !== undefined && paid !== 0) {
     return false;
   }
   return true;
