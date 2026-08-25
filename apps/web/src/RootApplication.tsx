@@ -21,7 +21,6 @@ const CrmApp = lazy(async () => {
 });
 const CrmDashboardApp = lazy(async () => {
   const module = await import('./modules/crm/CrmDashboardApp');
-  await import('./styles/crm-dashboard-kpis.css');
   await import('./styles/crm-dashboard-cards.css');
   return { default: module.default };
 });
