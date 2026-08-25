@@ -1,4 +1,5 @@
 import { getAuthSession, signOut } from '../auth/auth';
+import { AppSidebarIcon, type AppSidebarIconName } from '../../components/AppSidebarIcon';
 import { sectionDefinition } from './siteSchema';
 import type { CmsDocument, CmsFieldDefinition, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionInstance, CmsStatus, CmsValue } from './types';
 import { go, href, now, statusLabel, type View } from './siteCmsUtils';
@@ -6,8 +7,29 @@ import { go, href, now, statusLabel, type View } from './siteCmsUtils';
 function CmsBrandMark(){return <span className="site-cms-brand-mark" aria-hidden="true"><i/><b/></span>}
 
 export function CmsSidebar({view}:{view:View}){
- const session=getAuthSession();const nav=[{id:'overview',label:'Visão Geral',icon:'⌂',path:'/site-admin'},{id:'pages',label:'Páginas',icon:'▤',path:'/site-admin/pages'},{id:'media',label:'Mídia',icon:'▧',path:'/site-admin/media'},{id:'globals',label:'Globais',icon:'◎',path:'/site-admin/globals'},{id:'settings',label:'Configurações',icon:'⚙',path:'/site-admin/settings'}] as const;
- return <aside className="site-cms-sidebar"><a className="site-cms-brand" href={href('/site-admin')}><CmsBrandMark/><span><strong>VISA FÁCIL</strong><small>Site / Website</small></span></a><div className="site-cms-workspace-switch"><span>WORKSPACE</span><select value="website" onChange={e=>{if(e.target.value==='crm')go('/crm');if(e.target.value==='selector')go('/workspaces')}}><option value="website">Site / Website</option><option value="crm">CRM</option><option value="selector">Selecionar workspace…</option></select></div><span className="site-cms-nav-label">GESTÃO DO SITE</span><nav>{nav.map(item=><a className={view===item.id?'is-active':''} href={href(item.path)} key={item.id}><span>{item.icon}</span>{item.label}</a>)}</nav><div className="site-cms-sidebar-footer"><a className="site-cms-public-link" href={href('/')} target="_blank" rel="noreferrer">↗ Abrir site público</a><div className="site-cms-user"><span>{(session?.name||'A').slice(0,2).toUpperCase()}</span><div><strong>{session?.name||'Administrador'}</strong><small>{session?.email||'Conta interna'}</small></div></div><button onClick={()=>{signOut();go('/login')}}>Sair da conta</button></div></aside>
+ const session=getAuthSession();
+ const nav:Array<{id:View;label:string;icon:AppSidebarIconName;path:string}>=[
+  {id:'overview',label:'Visão Geral',icon:'overview',path:'/site-admin'},
+  {id:'pages',label:'Páginas',icon:'pages',path:'/site-admin/pages'},
+  {id:'media',label:'Mídia',icon:'media',path:'/site-admin/media'},
+  {id:'globals',label:'Globais',icon:'globe',path:'/site-admin/globals'},
+  {id:'settings',label:'Configurações',icon:'settings',path:'/site-admin/settings'},
+ ];
+ return <aside className="site-cms-sidebar">
+  <div className="site-cms-sidebar-head">
+   <a className="site-cms-brand" href={href('/site-admin')}><CmsBrandMark/><span><strong>VISA FÁCIL</strong><small>Gerenciador do site</small></span></a>
+   <div className="site-cms-workspace-switch"><span>Ambiente</span><select value="website" aria-label="Selecionar ambiente" onChange={e=>{if(e.target.value==='crm')go('/crm');if(e.target.value==='selector')go('/workspaces')}}><option value="website">Gerenciador do site</option><option value="crm">CRM</option><option value="selector">Trocar workspace…</option></select></div>
+  </div>
+  <div className="site-cms-sidebar-body">
+   <span className="site-cms-nav-label">Navegação</span>
+   <nav>{nav.map(item=><a className={view===item.id?'is-active':''} href={href(item.path)} key={item.id}><AppSidebarIcon name={item.icon}/><span>{item.label}</span></a>)}</nav>
+  </div>
+  <div className="site-cms-sidebar-footer">
+   <a className="site-cms-public-link" href={href('/')} target="_blank" rel="noreferrer"><AppSidebarIcon name="external"/><span>Site público</span></a>
+   <div className="site-cms-user"><span>{(session?.name||'A').slice(0,2).toUpperCase()}</span><div><strong>{session?.name||'Administrador'}</strong><small>{session?.email||'Conta interna'}</small></div></div>
+   <button onClick={()=>{signOut();go('/login')}}><AppSidebarIcon name="logout"/><span>Sair</span></button>
+  </div>
+ </aside>
 }
 
 export function StatusBadge({status}:{status:CmsStatus}){return <span className={`site-cms-status is-${status}`}>{statusLabel(status)}</span>}
