@@ -133,7 +133,7 @@ test('attendance fixtures keep conversations and message ids unique',()=>{
   }
 });
 
-test('marketing fixtures expose only supported content and campaign contracts',()=>{
+test('marketing fixtures expose only supported content and paid campaign contracts',()=>{
   const data=json('apps/web/src/modules/marketing/mocks/marketing.dev.json');
   assert.deepEqual(Object.keys(data).sort(),['campaigns','contents']);
   assert.ok(Array.isArray(data.contents));
@@ -141,7 +141,7 @@ test('marketing fixtures expose only supported content and campaign contracts',(
   uniqueIds(data.contents,'Marketing contents');
   uniqueIds(data.campaigns,'Marketing campaigns');
   const contentChannels=['Instagram','Facebook','TikTok','YouTube','X','Threads'];
-  const campaignChannels=['Meta Ads','Google Ads','YouTube','TikTok','Instagram'];
+  const campaignChannels=['Meta Ads','Google Ads','YouTube','TikTok'];
   data.contents.forEach((content)=>{
     assert.ok(contentChannels.includes(content.channel));
     assert.match(content.date,DATE_RE);
@@ -150,7 +150,7 @@ test('marketing fixtures expose only supported content and campaign contracts',(
   });
   data.campaigns.forEach((campaign)=>{
     assert.ok(campaignChannels.includes(campaign.channel));
-    assert.ok(Number.isFinite(campaign.budget)&&campaign.budget>=0);
+    assert.ok(Number.isFinite(campaign.budget)&&campaign.budget>0);
     assert.ok(Number.isFinite(campaign.spent)&&campaign.spent>=0&&campaign.spent<=campaign.budget);
     assert.ok(Number.isInteger(campaign.leads)&&campaign.leads>=0);
     assert.ok(Number.isInteger(campaign.conversions)&&campaign.conversions>=0&&campaign.conversions<=campaign.leads);
