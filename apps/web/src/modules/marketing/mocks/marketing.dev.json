@@ -10,19 +10,6 @@
     {"id":"cnt-3","date":"2026-08-26","time":"14:00","title":"Post: prazo ideal para solicitar o visto","channel":"Facebook","type":"Post","status":"Produção","owner":"Marketing","copy":"Explique quando o cliente deve começar o processo antes da viagem."},
     {"id":"cnt-4","date":"2026-08-27","time":"11:00","title":"Carrossel: erros na entrevista","channel":"Facebook","type":"Carrossel","status":"Revisão","owner":"Conteúdo","copy":"Erros frequentes que podem prejudicar uma entrevista consular."},
     {"id":"cnt-5","date":"2026-08-28","time":"16:00","title":"Vídeo: como funciona nossa assessoria","channel":"YouTube","type":"Vídeo","status":"Agendado","owner":"Marketing","copy":"Apresentação do fluxo de atendimento da Visa Fácil."},
-    {"id":"cnt-6","date":"2026-08-29","time":"12:00","title":"Anúncio: renovação sem entrevista","channel":"Meta Ads","type":"Feed","status":"Revisão","owner":"Tráfego","copy":"Criativo focado em clientes que podem se enquadrar na renovação."},
-    {"id":"cnt-7","date":"2026-08-31","time":"18:00","title":"Reels: perguntas frequentes sobre visto","channel":"Instagram","type":"Reels","status":"Agendado","owner":"Conteúdo","copy":"FAQ rápido sobre dúvidas mais comuns de novos leads."},
-    {"id":"cnt-8","date":"2026-09-02","time":"09:30","title":"Campanha Search: assessoria para visto","channel":"Google Ads","type":"Post","status":"Rascunho","owner":"Tráfego","copy":"Variações de anúncios de pesquisa para geração de leads qualificados."}
-  ],
-  "calendar": [
-    {"id":"cal-1","date":"2026-08-25","title":"Reels: documentos para B1/B2","channel":"Instagram","status":"Agendado"},
-    {"id":"cal-2","date":"2026-08-27","title":"Carrossel: erros na entrevista","channel":"Facebook","status":"Produção"},
-    {"id":"cal-3","date":"2026-08-29","title":"Anúncio: renovação sem entrevista","channel":"Meta Ads","status":"Revisão"}
-  ],
-  "activities": [
-    {"id":"act-1","title":"Campanha B1/B2 atualizada","time":"há 18 min"},
-    {"id":"act-2","title":"Conteúdo enviado para revisão","time":"há 42 min"},
-    {"id":"act-3","title":"Novo criativo gerado na IA Criativa","time":"há 1 h"},
-    {"id":"act-4","title":"Campanha Search teve orçamento ajustado","time":"há 3 h"}
+    {"id":"cnt-7","date":"2026-08-31","time":"18:00","title":"Reels: perguntas frequentes sobre visto","channel":"Instagram","type":"Reels","status":"Agendado","owner":"Conteúdo","copy":"FAQ rápido sobre dúvidas mais comuns de novos leads."}
   ]
 }
