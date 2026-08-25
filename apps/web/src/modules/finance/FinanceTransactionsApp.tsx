@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './finance.css';
 import { activeFinanceCategories } from './financeConfigStore';
-import { getFinanceInitialRecords, type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
+import { type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
+import { getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
 import { OfxImportModal } from './OfxImportModal';
 
 type Mode = 'create' | 'view' | 'edit';
@@ -14,10 +15,9 @@ const STATUS_BY_TYPE: Record<FinanceType, FinanceStatus[]> = {
   Despesa: ['Pago', 'A pagar'],
 };
 const DEFAULT_STATUS: Record<FinanceType, FinanceStatus> = { Receita: 'A receber', Despesa: 'A pagar' };
-const ACTIVE_CATEGORIES = activeFinanceCategories();
-function categoryNames(type: FinanceType) { return ACTIVE_CATEGORIES.filter((category) => category.type === type).map((category) => category.name); }
+function categoryNames(type: FinanceType) { return activeFinanceCategories(type).map((category) => category.name); }
 function defaultCategory(type: FinanceType) { return categoryNames(type)[0] ?? ''; }
-const EMPTY: Draft = { description: '', type: 'Receita', category: defaultCategory('Receita'), amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' };
+function emptyDraft(): Draft { return { description: '', type: 'Receita', category: defaultCategory('Receita'), amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' }; }
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR') : '—';
@@ -49,7 +49,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
     paymentMethod: record.paymentMethod,
     relatedName: record.relatedName,
     notes: record.notes,
-  } : EMPTY);
+  } : emptyDraft());
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const changeType = (next: FinanceType) => setDraft((current) => ({ ...current, type: next, category: categoryNames(next).includes(current.category) ? current.category : defaultCategory(next), status: isValidStatus(next, current.status) ? current.status : DEFAULT_STATUS[next] }));
   const modalCategories = categoryNames(draft.type);
@@ -97,7 +97,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
 }
 
 export function FinanceTransactionsApp() {
-  const [records, setRecords] = useState<FinanceRecord[]>(() => getFinanceInitialRecords());
+  const [records, setRecords] = useState<FinanceRecord[]>(() => getFinanceSessionRecords());
   const [query, setQuery] = useState('');
   const [type, setType] = useState('Todos');
   const [status, setStatus] = useState('Todos');
@@ -109,9 +109,11 @@ export function FinanceTransactionsApp() {
   const [ofx, setOfx] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [user, setUser] = useState(false);
+  useEffect(() => { saveFinanceSessionRecords(records); }, [records]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const filterCategories = useMemo(() => ['Todas', ...Array.from(new Set([...ACTIVE_CATEGORIES.map((item) => item.name), ...records.map((record) => record.category).filter(Boolean)]))], [records]);
+  const activeCategories = activeFinanceCategories();
+  const filterCategories = useMemo(() => ['Todas', ...Array.from(new Set([...activeCategories.map((item) => item.name), ...records.map((record) => record.category).filter(Boolean)]))], [records, activeCategories]);
   const invalidPeriod = Boolean(start && end && end < start);
   const filtered = useMemo(() => invalidPeriod ? [] : records.filter((record) => {
     const normalizedQuery = query.trim().toLowerCase();
