@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './tasks.css';
-import { getTaskInitialRecords, type RelatedType, type TaskPriority, type TaskRecord, type TaskStatus } from './mocks/tasksMockProvider';
+import { type RelatedType, type TaskPriority, type TaskRecord, type TaskStatus } from './mocks/tasksMockProvider';
+import { getTaskSessionRecords, saveTaskSessionRecords } from '../../shared/operationalSessionStore';
 
 const STATUS_OPTIONS: TaskStatus[] = ['Pendente', 'Em andamento', 'Concluída'];
 const PRIORITY_OPTIONS: TaskPriority[] = ['Baixa', 'Média', 'Alta'];
@@ -58,7 +59,7 @@ function TaskModal({ mode, task, onClose, onSave }: { mode: ModalMode; task?: Ta
 }
 
 export function TasksApp() {
-  const [tasks, setTasks] = useState<TaskRecord[]>(() => getTaskInitialRecords());
+  const [tasks, setTasks] = useState<TaskRecord[]>(() => getTaskSessionRecords());
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [priorityFilter, setPriorityFilter] = useState('Todas');
@@ -66,6 +67,7 @@ export function TasksApp() {
   const [openActionId, setOpenActionId] = useState<string>();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  useEffect(() => { saveTaskSessionRecords(tasks); }, [tasks]);
 
   const today = new Date().toISOString().slice(0, 10);
   const filtered = useMemo(() => tasks.filter((task) => {
