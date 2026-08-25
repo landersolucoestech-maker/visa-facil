@@ -79,7 +79,7 @@ function isPayment(value: unknown): value is InvoiceSeedPayment {
     && typeof value.notes === 'string';
 }
 
-function isInvoiceSeed(value: unknown): value is InvoiceSeed {
+export function isInvoiceSeed(value: unknown): value is InvoiceSeed {
   if (!isObject(value) || typeof value.id !== 'string' || !value.id.trim()) return false;
   if (value.status !== undefined && (typeof value.status !== 'string' || !VALID_STATUSES.has(value.status as InvoiceSeedStatus))) return false;
   if (value.noteDirection !== undefined && (typeof value.noteDirection !== 'string' || !VALID_DIRECTIONS.has(value.noteDirection as InvoiceSeedDirection))) return false;
@@ -87,7 +87,17 @@ function isInvoiceSeed(value: unknown): value is InvoiceSeed {
     const candidate = value[field];
     if (candidate !== undefined && (!isFiniteNumber(candidate) || candidate < 0)) return false;
   }
-  if (value.payments !== undefined && (!Array.isArray(value.payments) || !value.payments.every(isPayment))) return false;
+  if (value.payments !== undefined) {
+    if (!Array.isArray(value.payments) || !value.payments.every(isPayment)) return false;
+    const ids = value.payments.map((payment) => payment.id);
+    if (new Set(ids).size !== ids.length) return false;
+    if (value.paid !== undefined) {
+      const liquidated = value.payments.filter((payment) => payment.settlementStatus === 'Liquidado').reduce((sum, payment) => sum + payment.amount, 0);
+      if (Math.abs(liquidated - value.paid) > 0.0001) return false;
+    }
+  } else if (value.paid !== undefined && value.paid !== 0) {
+    return false;
+  }
   return true;
 }
 
