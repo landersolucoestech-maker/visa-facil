@@ -22,6 +22,7 @@ import './styles/tasks-refinement.css';
 import './styles/agenda-refinement.css';
 // Module refinement layers stay last so legacy module CSS cannot override them.
 import './styles/finance-transactions-refinement.css';
+import './styles/invoices-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
