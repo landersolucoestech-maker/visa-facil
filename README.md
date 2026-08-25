@@ -18,8 +18,10 @@ Principais áreas:
 - `/crm/tarefas` — tarefas;
 - `/crm/agenda` — agenda;
 - `/crm/financeiro/*` — transações, invoices e contabilidade;
+- `/crm/categorias-financeiras` — categorias financeiras da sessão;
+- `/crm/regras-financeiras` — regras de classificação financeira da sessão;
 - `/crm/marketing/*` — marketing;
-- `/crm/relatorios` — relatórios;
+- `/crm/relatorios` — templates e validação CSV; importação persistente/exportação de dados permanecem indisponíveis sem uma fonte compartilhada persistente;
 - `/crm/configuracoes` — configurações.
 
 A navegação lateral do CRM é compartilhada por todos os módulos internos. Rotas e módulos internos são carregados sob demanda para não aumentar desnecessariamente o bundle inicial do site público.
@@ -28,20 +30,21 @@ A navegação lateral do CRM é compartilhada por todos os módulos internos. Ro
 
 A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = false`) enquanto não existir um provedor real. Não deve ser substituída por validação de credenciais apenas no navegador.
 
-Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento e somente quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
+Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
 
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
-A importação OFX funciona no frontend e adiciona transações à sessão atual. Regras financeiras ainda não são aplicadas automaticamente porque não existe armazenamento compartilhado/motor de regras persistente.
+A importação OFX funciona no frontend e adiciona transações à sessão atual. Movimentações válidas passam pelas regras financeiras configuradas na sessão; regras incompatíveis ou categorias órfãs não são aplicadas.
 
 ## Fonte canônica dos domínios
 
 - relacionamento: `modules/crm/types.ts`;
 - transações financeiras: `modules/finance/types.ts`;
+- categorias e regras financeiras da sessão: `modules/finance/financeConfigStore.ts`;
 - contabilidade: derivada exclusivamente das transações canônicas recebidas/pagas;
 - fixtures: providers em `mocks/*Provider.ts`, nunca importados diretamente pela UI.
 
-Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações.
+Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos liquidados entram em `paid` e alteram o status financeiro da invoice.
 
 ## Desenvolvimento
 
