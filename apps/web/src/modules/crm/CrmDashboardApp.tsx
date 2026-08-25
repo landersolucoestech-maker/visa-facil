@@ -12,6 +12,19 @@ function href(path: string) {
   return `${basePath()}${path}` || path;
 }
 
+function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
+  return (
+    <article className="crm-kpi-card" data-dashboard-kpi={label}>
+      <span className={`crm-kpi-card__icon crm-kpi-card__icon--${tone}`}>●</span>
+      <div>
+        <small>{label}</small>
+        <strong>{value}</strong>
+        <p>{detail}</p>
+      </div>
+    </article>
+  );
+}
+
 export function CrmDashboardApp() {
   const crmRecords = useMemo(() => getCrmInitialRecords(), []);
   const financeRecords = useMemo(() => getFinanceInitialRecords(), []);
@@ -27,15 +40,6 @@ export function CrmDashboardApp() {
     .filter((record) => record.type === 'Despesa' && record.status === 'Pago')
     .reduce((total, record) => total + record.amount, 0);
   const result = revenue - expenses;
-
-  const kpis = [
-    { label: 'Contatos', value: String(contacts), detail: 'cadastrados', tone: 'blue' },
-    { label: 'Leads', value: String(leads), detail: 'em acompanhamento', tone: 'red' },
-    { label: 'Clientes', value: String(clients), detail: 'cadastrados', tone: 'navy' },
-    { label: 'Receitas', value: money(revenue), detail: 'recebidas', tone: 'blue' },
-    { label: 'Despesas', value: money(expenses), detail: 'pagas', tone: 'red' },
-    { label: 'Resultado', value: money(result), detail: 'receitas − despesas', tone: 'navy' },
-  ] as const;
 
   const leadCounts = {
     Novo: crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus === 'Novo').length,
@@ -76,17 +80,13 @@ export function CrmDashboardApp() {
         </header>
 
         <main className="crm-content">
-          <section className="crm-kpi-grid" aria-label="Indicadores do Dashboard">
-            {kpis.map((item) => (
-              <article key={item.label} className="crm-kpi-card" data-dashboard-kpi={item.label}>
-                <span className={`crm-kpi-card__icon crm-kpi-card__icon--${item.tone}`}>●</span>
-                <div>
-                  <small>{item.label}</small>
-                  <strong>{item.value}</strong>
-                  <p>{item.detail}</p>
-                </div>
-              </article>
-            ))}
+          <section className="crm-kpi-grid" aria-label="Indicadores do Dashboard" data-dashboard-kpi-count="6">
+            <KpiCard label="Contatos" value={String(contacts)} detail="cadastrados" tone="blue" />
+            <KpiCard label="Leads" value={String(leads)} detail="em acompanhamento" tone="red" />
+            <KpiCard label="Clientes" value={String(clients)} detail="cadastrados" tone="navy" />
+            <KpiCard label="Receitas" value={money(revenue)} detail="recebidas" tone="blue" />
+            <KpiCard label="Despesas" value={money(expenses)} detail="pagas" tone="red" />
+            <KpiCard label="Resultado" value={money(result)} detail="receitas − despesas" tone="navy" />
           </section>
 
           <section className="crm-dashboard-grid crm-dashboard-grid--top">
