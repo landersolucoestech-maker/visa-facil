@@ -17,7 +17,7 @@ const MAIN_ITEMS = [
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
   {label:'Transações',href:'/crm/financeiro/transacoes',section:'transactions'},
   {label:'Invoices',href:'/crm/financeiro/invoices',section:'invoices'},
-  {label:'P&L',href:'/crm/financeiro/pl',section:'pl'},
+  {label:'Contabilidade',href:'/crm/financeiro/pl',section:'pl'},
 ];
 
 const MARKETING_ITEMS: Array<{ label: string; href: string; section: MarketingSection }> = [
