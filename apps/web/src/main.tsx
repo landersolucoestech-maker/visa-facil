@@ -13,6 +13,7 @@ import './styles/crm-fullwidth-overrides.css';
 import './styles/crm-header-fill.css';
 import './modules/finance/finance-transactions-label.css';
 import './modules/finance/invoice-document.css';
+import './modules/finance/finance-fiscal-invoice.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
