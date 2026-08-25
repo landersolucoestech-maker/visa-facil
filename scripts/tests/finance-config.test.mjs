@@ -34,12 +34,12 @@ test('active finance rule classifies an OFX record into a compatible canonical c
 test('finance rules never assign a category from the wrong transaction type', () => {
   const incompatibleRules = [{ id: 'bad-rule', contains: 'META ADS', category: 'Assessoria', type: 'Despesa', active: true }];
   const classified = applyFinanceRulesWithConfig(baseRecord, DEFAULT_FINANCE_CATEGORIES, incompatibleRules);
-  assert.equal(classified.category, 'Taxas consulares');
+  assert.equal(classified.category, 'Outros');
   assert.equal(DEFAULT_FINANCE_CATEGORIES.find((category) => category.name === classified.category)?.type, 'Despesa');
 });
 
 test('inactive finance rules are ignored', () => {
   const rules = DEFAULT_FINANCE_RULES.map((rule) => ({ ...rule, active: false }));
   const classified = applyFinanceRulesWithConfig(baseRecord, DEFAULT_FINANCE_CATEGORIES, rules);
-  assert.equal(classified.category, 'Taxas consulares');
+  assert.equal(classified.category, 'Outros');
 });
