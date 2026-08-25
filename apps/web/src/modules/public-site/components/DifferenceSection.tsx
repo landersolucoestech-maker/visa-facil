@@ -1,19 +1,6 @@
-export function DifferenceSection() {
-  return (
-    <section className="section difference">
-      <div className="container difference__grid">
-        <div className="difference__heading reveal">
-          <span className="kicker">Nosso jeito de trabalhar</span>
-          <h2>Confiança nasce de preparo, clareza e acompanhamento.</h2>
-          <p>A assessoria organiza informações, reduz inconsistências e prepara o cliente para cada etapa dentro do escopo contratado.</p>
-        </div>
-        <div className="difference__items">
-          <article className="reveal"><span>01</span><div><h3>Atendimento próximo</h3><p>Comunicação humana, acompanhamento e orientação em linguagem simples.</p></div></article>
-          <article className="reveal"><span>02</span><div><h3>Escopo transparente</h3><p>Você sabe o que está incluído, quais custos são externos e onde termina a atuação da equipe.</p></div></article>
-          <article className="reveal"><span>03</span><div><h3>Informação responsável</h3><p>Grande taxa de aceitação, com índice de aprovação de até 99%.</p></div></article>
-          <article className="reveal"><span>04</span><div><h3>Visão da jornada inteira</h3><p>Visto, viagem e chegada tratados como partes conectadas do mesmo projeto.</p></div></article>
-        </div>
-      </div>
-    </section>
-  );
+import { cmsList, cmsText, itemText, usePageSection } from '../content/SiteContentContext';
+
+export function DifferenceSection({sectionId='difference'}:{sectionId?:string}) {
+  const section=usePageSection(sectionId);const values=section?.values||{};const items=cmsList(values.items);
+  return <section className="section difference"><div className="container difference__grid"><div className="difference__heading reveal"><span className="kicker">{cmsText(values.kicker)}</span><h2>{cmsText(values.title)}</h2><p>{cmsText(values.description)}</p></div><div className="difference__items">{items.map((item,index)=><article className="reveal" key={index}><span>{itemText(item,'number',String(index+1).padStart(2,'0'))}</span><div><h3>{itemText(item,'title')}</h3><p>{itemText(item,'description')}</p></div></article>)}</div></div></section>
 }

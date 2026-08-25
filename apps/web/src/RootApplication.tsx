@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { CrmSidebar } from './components/CrmSidebar';
+import { getAuthSession, isInternalPath } from './modules/auth/auth';
+import { LoginApp } from './modules/auth/LoginApp';
 import { AgendaApp } from './modules/agenda/AgendaApp';
 import { AttendanceApp } from './modules/attendance/AttendanceApp';
 import { CrmApp } from './modules/crm/CrmApp';
@@ -12,7 +14,9 @@ import { MarketingApp } from './modules/marketing/MarketingApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import { ReportsApp } from './modules/reports/ReportsApp';
 import { SettingsApp } from './modules/settings/SettingsApp';
+import { SiteCmsApp } from './modules/site-cms/SiteCmsApp';
 import { TasksApp } from './modules/tasks/TasksApp';
+import { WorkspaceSelectorApp } from './modules/workspaces/WorkspaceSelectorApp';
 
 function basePath() {
   return import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -24,15 +28,25 @@ function normalizePath(pathname: string) {
   return path.replace(/\/+$/, '') || '/';
 }
 
+function replacePath(path:string){window.history.replaceState(null,'',`${basePath()}${path}`||path)}
+
 function withSharedSidebar(page: ReactNode) {
-  return <div className="crm-global-shell">
-    <CrmSidebar />
-    <div className="crm-global-page">{page}</div>
-  </div>;
+  return <div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>;
 }
 
 export function RootApplication() {
   let path = normalizePath(window.location.pathname);
+  const session=getAuthSession();
+
+  if(path==='/login'){
+    if(session){replacePath('/workspaces');return <WorkspaceSelectorApp/>}
+    return <LoginApp/>;
+  }
+
+  if(isInternalPath(path)&&!session){replacePath('/login');return <LoginApp/>}
+  if(path==='/workspaces')return <WorkspaceSelectorApp/>;
+  if(path==='/site-admin'||path.startsWith('/site-admin/'))return <SiteCmsApp/>;
+  if(path==='/preview')return <PublicSitePage preview/>;
 
   if (path === '/crm/marketing/ia-criativa') {
     window.history.replaceState(null, '', `${basePath()}/crm/marketing` || '/crm/marketing');

@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { signOut } from '../modules/auth/auth';
 import './crm-sidebar.css';
+import './crm-workspace-switch.css';
 
 type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
 type FinanceSection = 'transactions' | 'invoices' | 'pl';
@@ -32,6 +34,7 @@ const AFTER_ITEMS = [
 
 function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
 function href(path:string){return `${basePath()}${path}`||path}
+function go(path:string){window.location.href=href(path)}
 function currentPath(){const base=basePath();const pathname=window.location.pathname;const normalized=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return normalized.replace(/\/+$/,'')||'/'}
 function marketingSection(path:string):MarketingSection{if(path.endsWith('/campanhas'))return'campaigns';if(path.endsWith('/calendario'))return'calendar';if(path.endsWith('/metricas'))return'metrics';return'overview'}
 function financeSection(path:string):FinanceSection{if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
@@ -46,11 +49,11 @@ export function CrmSidebar(){
  const [financeOpen,setFinanceOpen]=useState(isFinance);
  const [marketingOpen,setMarketingOpen]=useState(isMarketing);
  const fSection=financeSection(path);const mSection=marketingSection(path);
- return <aside className="crm-sidebar crm-sidebar--shared"><a className="crm-brand" href={href('/crm')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>CRM · Relacionamento</small></span></a><div className="crm-sidebar-accent"><i/><i/><i/></div><span className="crm-sidebar-label">OPERAÇÃO</span><nav>
+ return <aside className="crm-sidebar crm-sidebar--shared"><a className="crm-brand" href={href('/crm')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>CRM · Relacionamento</small></span></a><div className="crm-sidebar-accent"><i/><i/><i/></div><div className="crm-workspace-switch"><span>WORKSPACE</span><select value="crm" onChange={e=>{if(e.target.value==='website')go('/site-admin');if(e.target.value==='selector')go('/workspaces')}}><option value="crm">CRM</option><option value="website">Site / Website</option><option value="selector">Selecionar workspace…</option></select></div><span className="crm-sidebar-label">OPERAÇÃO</span><nav>
   {MAIN_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
   <div className={`crm-sidebar-marketing ${isFinance?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isFinance?'is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><span>$</span><b>Financeiro</b><i>{financeOpen?'⌃':'⌄'}</i></button>{financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   <div className={`crm-sidebar-marketing ${isMarketing?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isMarketing?'is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><span>◈</span><b>Marketing</b><i>{marketingOpen?'⌃':'⌄'}</i></button>{marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   {AFTER_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
- </nav><div className="crm-sidebar-footer"><FlagCard/><a href={href('/')}>← Voltar ao site</a><small>Protótipo · branch dev</small></div></aside>
+ </nav><div className="crm-sidebar-footer"><FlagCard/><a href={href('/')}>← Voltar ao site</a><button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}>Sair da conta</button><small>Protótipo · branch dev</small></div></aside>
 }
 export default CrmSidebar;

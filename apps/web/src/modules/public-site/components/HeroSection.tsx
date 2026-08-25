@@ -1,52 +1,17 @@
-import { HERO_SLIDES } from '../content/heroSlides';
+import heroVisaFacil from '../assets/hero-visa-facil.webp';
+import { cmsList, cmsText, itemText, usePageSection } from '../content/SiteContentContext';
 
-export function HeroSection() {
+export function HeroSection({sectionId='hero'}:{sectionId?:string}) {
+  const section=usePageSection(sectionId);const values=section?.values||{};
+  const slides=cmsList(values.slides);const trust=cmsList(values.trustItems);const mini=cmsList(values.miniBenefits);const confidence=cmsList(values.confidenceItems);
   return (
     <section className="hero" aria-label="Destaques VISA FÁCIL">
       <div className="hero-slider hero-slider--background" data-hero-slider="" aria-label="Destaques e campanhas">
-        {HERO_SLIDES.map((slide, index) => (
-          <article className={`hero-slide${index === 0 ? ' is-active' : ''}`} data-hero-slide="" key={`${slide.src}-${index}`}>
-            <img src={slide.src} alt={slide.alt} />
-          </article>
-        ))}
-        {HERO_SLIDES.length > 1 && <>
-          <button type="button" className="hero-slider__side hero-slider__side--prev" aria-label="Banner anterior" data-hero-prev="">‹</button>
-          <button type="button" className="hero-slider__side hero-slider__side--next" aria-label="Próximo banner" data-hero-next="">›</button>
-          <div className="hero-slider__dots" aria-label="Selecionar banner">
-            {HERO_SLIDES.map((_, index) => (
-              <button className={`hero-slider__dot${index === 0 ? ' is-active' : ''}`} type="button" aria-label={`Mostrar banner ${index + 1}`} data-hero-dot={index} key={index} />
-            ))}
-          </div>
-        </>}
+        {slides.map((slide,index)=><article className={`hero-slide${index===0?' is-active':''}`} data-hero-slide="" key={`${itemText(slide,'image')}-${index}`}><img src={itemText(slide,'image')||heroVisaFacil} alt={itemText(slide,'alt','Destaque VISA FÁCIL')}/></article>)}
+        {slides.length>1&&<><button type="button" className="hero-slider__side hero-slider__side--prev" aria-label="Banner anterior" data-hero-prev="">‹</button><button type="button" className="hero-slider__side hero-slider__side--next" aria-label="Próximo banner" data-hero-next="">›</button><div className="hero-slider__dots" aria-label="Selecionar banner">{slides.map((_,index)=><button className={`hero-slider__dot${index===0?' is-active':''}`} type="button" aria-label={`Mostrar banner ${index+1}`} data-hero-dot={index} key={index}/>)}</div></>}
       </div>
-
-      <div className="container hero__grid">
-        <div className="hero__content reveal">
-          <h1>O caminho mais fácil<br />para o seu visto<br /><em>começa aqui.</em></h1>
-          <div className="hero__trust">
-            <div><span className="check">✓</span><b>Atendimento online</b></div>
-            <div><span className="check">✓</span><b>Suporte em português</b></div>
-            <div><span className="check">✓</span><b>Processo personalizado</b></div>
-          </div>
-          <div className="hero__mini-benefits" aria-label="Diferenciais do atendimento">
-            <div><span>★</span><b>Atendimento nacional</b></div>
-            <div><span>◎</span><b>Estratégia individual</b></div>
-            <div><span>↗</span><b>Jornada conectada</b></div>
-            <div><span>◯</span><b>Comunicação clara</b></div>
-          </div>
-          <div className="hero__actions">
-            <a className="btn btn--primary btn--large" href="#diagnostico">Analisar meu perfil</a>
-            <a className="btn btn--outline btn--large" href="#servicos">Conhecer os serviços</a>
-          </div>
-        </div>
-      </div>
-
-      <div className="container confidence-strip reveal">
-        <div><b>Atendimento nacional</b><span>Onde você estiver</span></div>
-        <div><b>Estratégia individual</b><span>Sem pacote genérico</span></div>
-        <div><b>Jornada conectada</b><span>Do visto à próxima etapa</span></div>
-        <div><b>Comunicação clara</b><span>Orientação em português</span></div>
-      </div>
+      <div className="container hero__grid"><div className="hero__content reveal"><h1>{cmsText(values.headlineLine1,'O caminho mais fácil')}<br/>{cmsText(values.headlineLine2,'para o seu visto')}<br/><em>{cmsText(values.headlineAccent,'começa aqui.')}</em></h1><div className="hero__trust">{trust.map((item,index)=><div key={index}><span className="check">✓</span><b>{itemText(item,'text')}</b></div>)}</div><div className="hero__mini-benefits" aria-label="Diferenciais do atendimento">{mini.map((item,index)=><div key={index}><span>{itemText(item,'icon','•')}</span><b>{itemText(item,'text')}</b></div>)}</div><div className="hero__actions"><a className="btn btn--primary btn--large" href={cmsText(values.primaryCtaUrl,'#diagnostico')} target={cmsText(values.primaryCtaTarget,'_self')}>{cmsText(values.primaryCtaLabel,'Analisar meu perfil')}</a><a className="btn btn--outline btn--large" href={cmsText(values.secondaryCtaUrl,'#servicos')} target={cmsText(values.secondaryCtaTarget,'_self')}>{cmsText(values.secondaryCtaLabel,'Conhecer os serviços')}</a></div></div></div>
+      <div className="container confidence-strip reveal">{confidence.map((item,index)=><div key={index}><b>{itemText(item,'title')}</b><span>{itemText(item,'description')}</span></div>)}</div>
     </section>
   );
 }

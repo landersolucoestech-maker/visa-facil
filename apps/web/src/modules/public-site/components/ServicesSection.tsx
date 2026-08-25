@@ -1,45 +1,13 @@
-export function ServicesSection() {
-  return (
-    <>
-      <section className="section intro" id="servicos">
-        <div className="container intro__grid">
-          <div className="section-heading reveal">
-            <span className="kicker">O que fazemos</span>
-            <h2>Uma assessoria completa para transformar planos em possibilidades reais.</h2>
-          </div>
-          <div className="intro__copy reveal reveal--delay">
-            <p>Um processo de visto envolve perfil, formulários, documentos, prazos e entrevista. Por isso, cada serviço é organizado de forma personalizada, com atenção aos detalhes e acompanhamento próximo.</p>
-            <a className="text-link" href="#diagnostico">Descobrir por onde começar <span>↗</span></a>
-          </div>
-        </div>
-      </section>
-      <section className="section services" id="vistos">
-        <div className="container">
-          <div className="services__grid">
-            <article className="service-card service-card--featured reveal" id="eua">
-              <div className="service-card__image"><img src="https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=1200&q=86" alt="Nova York, Estados Unidos" /><span className="service-card__number">01</span></div>
-              <div className="service-card__body"><span className="service-card__label">Estados Unidos</span><h3>Visto americano</h3><p>Análise de perfil, preenchimento do DS-160, organização documental, agendamento e preparação individual para entrevista.</p><ul><li>Turismo e negócios</li><li>Renovação de visto</li><li>Reaplicação após negativa</li></ul><a href="#diagnostico">Ver como funciona <span>→</span></a></div>
-            </article>
-            <article className="service-card reveal" id="canada">
-              <div className="service-card__image"><img src="https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=900&q=86" alt="Toronto, Canadá" /><span className="service-card__number">02</span></div>
-              <div className="service-card__body"><span className="service-card__label">Canadá</span><h3>Visto canadense</h3><p>Orientação para formulários, documentos, biometria e eventuais solicitações adicionais da autoridade canadense.</p><a href="#diagnostico">Analisar meu caso <span>→</span></a></div>
-            </article>
-            <article className="service-card reveal reveal--delay" id="australia">
-              <div className="service-card__image"><img src="https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?auto=format&fit=crop&w=900&q=86" alt="Sydney, Austrália" /><span className="service-card__number">03</span></div>
-              <div className="service-card__body"><span className="service-card__label">Austrália</span><h3>Visto australiano</h3><p>Planejamento da solicitação, revisão das evidências e acompanhamento documental conforme a categoria aplicável.</p><a href="#diagnostico">Analisar meu caso <span>→</span></a></div>
-            </article>
-            <article className="service-card reveal" id="europa-schengen">
-              <div className="service-card__image"><img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=900&q=86" alt="Paris, França" /><span className="service-card__number">04</span></div>
-              <div className="service-card__body"><span className="service-card__label">Europa</span><h3>Vistos e autorizações</h3><p>Suporte para destinos e categorias que exigem visto, autorização, seguro ou comprovação documental específica.</p><a href="#diagnostico">Analisar meu destino <span>→</span></a></div>
-            </article>
-          </div>
-          <div className="support-services reveal">
-            <article><span className="support-services__icon">↻</span><div><h4>Renovação de visto</h4><p>Atualização do processo conforme histórico, perfil e regras vigentes.</p></div></article>
-            <article><span className="support-services__icon">◎</span><div><h4>Preparação para entrevista</h4><p>Simulação individual, coerência e comunicação clara — sem respostas decoradas.</p></div></article>
-            <article><span className="support-services__icon">✓</span><div><h4>Revisão de formulários</h4><p>Conferência técnica para reduzir erros, omissões e inconsistências.</p></div></article>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+import { cmsList, cmsText, itemText, usePageSection } from '../content/SiteContentContext';
+
+export function ServicesIntroSection({sectionId='services-intro'}:{sectionId?:string}){
+ const section=usePageSection(sectionId);const values=section?.values||{};
+ return <section className="section intro" id="servicos"><div className="container intro__grid"><div className="section-heading reveal"><span className="kicker">{cmsText(values.kicker,'O que fazemos')}</span><h2>{cmsText(values.title)}</h2></div><div className="intro__copy reveal reveal--delay"><p>{cmsText(values.description)}</p><a className="text-link" href={cmsText(values.ctaUrl,'#diagnostico')} target={cmsText(values.ctaTarget,'_self')}>{cmsText(values.ctaLabel,'Descobrir por onde começar')} <span>↗</span></a></div></div></section>
 }
+
+export function ServicesGridSection({sectionId='services'}:{sectionId?:string}){
+ const section=usePageSection(sectionId);const values=section?.values||{};const cards=cmsList(values.cards);const supports=cmsList(values.supportCards);
+ return <section className="section services" id="vistos"><div className="container"><div className="services__grid">{cards.map((item,index)=>{const bullets=itemText(item,'bullets').split('\n').map(v=>v.trim()).filter(Boolean);return <article className={`service-card${index===0?' service-card--featured':''} reveal${index%2?' reveal--delay':''}`} id={itemText(item,'anchor')||undefined} key={`${itemText(item,'title')}-${index}`}><div className="service-card__image"><img src={itemText(item,'image')} alt={itemText(item,'alt',itemText(item,'title'))}/><span className="service-card__number">{String(index+1).padStart(2,'0')}</span></div><div className="service-card__body"><span className="service-card__label">{itemText(item,'label')}</span><h3>{itemText(item,'title')}</h3><p>{itemText(item,'description')}</p>{bullets.length>0&&<ul>{bullets.map(bullet=><li key={bullet}>{bullet}</li>)}</ul>}<a href={itemText(item,'ctaUrl','#diagnostico')} target={itemText(item,'ctaTarget','_self')} rel={itemText(item,'ctaTarget')==='_blank'?'noreferrer':undefined}>{itemText(item,'ctaLabel','Saiba mais')} <span>→</span></a></div></article>})}</div><div className="support-services reveal">{supports.map((item,index)=><article key={index}><span className="support-services__icon">{itemText(item,'icon','✓')}</span><div><h4>{itemText(item,'title')}</h4><p>{itemText(item,'description')}</p></div></article>)}</div></div></section>
+}
+
+export function ServicesSection(){return <><ServicesIntroSection/><ServicesGridSection/></>}
