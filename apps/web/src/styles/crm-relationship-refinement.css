@@ -1,6 +1,6 @@
-/* CRM relationship refinement — table alignment and topbar actions only. */
+/* CRM relationship refinement — table alignment only.
+   Header actions and notification glyphs belong to crm-header-actions-unified.css. */
 
-/* TableView: proportional columns, vertically centered content, left-aligned text. */
 .crm-global-page .crm-directory-table{
   width:100%;
   min-width:800px;
@@ -56,9 +56,7 @@
   overflow:hidden;
   line-height:1.35;
 }
-.crm-global-page .crm-directory-row>span>.crm-status-pill{
-  align-self:flex-start;
-}
+.crm-global-page .crm-directory-row>span>.crm-status-pill{align-self:flex-start}
 .crm-global-page .crm-directory-row>div>strong{
   width:100%;
   overflow:hidden;
@@ -138,113 +136,6 @@
   box-shadow:0 10px 24px rgba(13,27,61,.12)!important;
 }
 
-/* Create contact / lead: compact product action, not a floating CTA. */
-.crm-global-page .crm-topbar .crm-topbar-primary{
-  width:auto!important;
-  min-width:118px!important;
-  height:36px!important;
-  min-height:36px!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  gap:7px!important;
-  padding:0 13px!important;
-  border:1px solid #b22234!important;
-  border-radius:5px!important;
-  background:#b22234!important;
-  color:#fff!important;
-  box-shadow:none!important;
-  font-size:11px!important;
-  font-weight:700!important;
-  line-height:1!important;
-  letter-spacing:0!important;
-  white-space:nowrap;
-  transition:background-color .12s ease,border-color .12s ease!important;
-}
-.crm-global-page .crm-topbar .crm-topbar-primary:hover,
-.crm-global-page .crm-topbar .crm-topbar-primary:focus-visible{
-  border-color:#951b2b!important;
-  background:#951b2b!important;
-  outline:none!important;
-  box-shadow:none!important;
-}
-
-/* Notifications: neutral toolbar control with a restrained bell glyph. */
-.crm-global-page .crm-topbar-actions>button[aria-label="Alertas"]{
-  position:relative!important;
-  width:36px!important;
-  min-width:36px!important;
-  height:36px!important;
-  min-height:36px!important;
-  display:grid!important;
-  place-items:center!important;
-  padding:0!important;
-  border:1px solid #d9dfe7!important;
-  border-radius:5px!important;
-  background:#fff!important;
-  color:transparent!important;
-  box-shadow:none!important;
-  font-size:0!important;
-  line-height:0!important;
-  transition:background-color .12s ease,border-color .12s ease!important;
-}
-.crm-global-page .crm-topbar-actions>button[aria-label="Alertas"]::before{
-  content:""!important;
-  position:absolute!important;
-  left:50%!important;
-  top:50%!important;
-  width:12px!important;
-  height:13px!important;
-  border:1.7px solid #344155!important;
-  border-bottom-width:2px!important;
-  border-radius:7px 7px 5px 5px!important;
-  background:transparent!important;
-  box-sizing:border-box!important;
-  transform:translate(-50%,-55%)!important;
-}
-.crm-global-page .crm-topbar-actions>button[aria-label="Alertas"]::after{
-  content:""!important;
-  position:absolute!important;
-  left:50%!important;
-  top:calc(50% + 7px)!important;
-  width:4px!important;
-  height:2px!important;
-  border-radius:0 0 4px 4px!important;
-  background:#344155!important;
-  transform:translateX(-50%)!important;
-}
-.crm-global-page .crm-topbar-actions>button[aria-label="Alertas"]:hover,
-.crm-global-page .crm-topbar-actions>button[aria-label="Alertas"]:focus{
-  border-color:#b8c1cc!important;
-  background:#f6f7f9!important;
-  outline:none!important;
-  box-shadow:none!important;
-}
-
-/* Notification popover: match the restrained toolbar treatment. */
-.crm-global-page .crm-topbar-actions:has(>button[aria-label="Alertas"]:focus)::before{
-  top:43px!important;
-  right:111px!important;
-  width:10px!important;
-  height:10px!important;
-  border-color:#d9dfe7!important;
-  box-shadow:none!important;
-}
-.crm-global-page .crm-topbar-actions:has(>button[aria-label="Alertas"]:focus)::after{
-  top:48px!important;
-  right:78px!important;
-  width:280px!important;
-  min-height:112px!important;
-  padding:16px!important;
-  border:1px solid #d9dfe7!important;
-  border-radius:7px!important;
-  background:#fff!important;
-  color:#697586!important;
-  font-size:12px!important;
-  line-height:1.5!important;
-  box-shadow:0 12px 28px rgba(13,27,61,.12)!important;
-}
-
 @media(max-width:1100px){
   .crm-global-page .crm-directory-table__head,
   .crm-global-page .crm-directory-row{column-gap:10px!important}
@@ -257,9 +148,4 @@
     column-gap:9px!important;
   }
   .crm-global-page .crm-row-actions{width:48px;min-width:48px!important}
-}
-@media(max-width:680px){
-  .crm-global-page .crm-topbar .crm-topbar-primary{min-width:102px!important;padding:0 10px!important;font-size:10px!important}
-  .crm-global-page .crm-topbar-actions:has(>button[aria-label="Alertas"]:focus)::before{right:13px!important}
-  .crm-global-page .crm-topbar-actions:has(>button[aria-label="Alertas"]:focus)::after{right:0!important;width:min(280px,calc(100vw - 28px))!important}
 }
