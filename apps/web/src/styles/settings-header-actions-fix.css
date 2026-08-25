@@ -48,21 +48,24 @@
   display:none!important;
 }
 
-/* Settings navigation must remain one horizontal row on every viewport.
-   Narrow layouts scroll horizontally instead of stacking tabs. */
+/* Settings navigation stays on one horizontal row without stretching each tab. */
 .crm-global-shell .crm-global-page .settings-shell .settings-tabs{
   display:flex!important;
   flex-direction:row!important;
   flex-wrap:nowrap!important;
   align-items:stretch!important;
-  width:100%!important;
+  justify-content:flex-start!important;
+  width:max-content!important;
   max-width:100%!important;
   overflow-x:auto!important;
   overflow-y:hidden!important;
 }
 
 .crm-global-shell .crm-global-page .settings-shell .settings-tabs > button{
-  flex:1 0 auto!important;
+  flex:0 0 auto!important;
+  width:auto!important;
   min-width:max-content!important;
+  padding-left:12px!important;
+  padding-right:12px!important;
   white-space:nowrap!important;
 }
