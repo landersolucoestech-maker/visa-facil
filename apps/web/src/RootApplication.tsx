@@ -4,20 +4,78 @@ import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
 const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
-const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp').then(module => ({ default: module.AgendaApp })));
-const AttendanceApp = lazy(() => import('./modules/attendance/AttendanceApp').then(module => ({ default: module.AttendanceApp })));
-const CrmApp = lazy(() => import('./modules/crm/CrmApp'));
-const CrmDashboardApp = lazy(() => import('./modules/crm/CrmDashboardApp'));
-const FinanceTransactionsApp = lazy(() => import('./modules/finance/FinanceTransactionsApp'));
-const FinanceInvoicesApp = lazy(() => import('./modules/finance/FinanceInvoicesApp'));
-const FinancePLApp = lazy(() => import('./modules/finance/FinancePLApp'));
+const AgendaApp = lazy(async () => {
+  const module = await import('./modules/agenda/AgendaApp');
+  await import('./styles/agenda-refinement.css');
+  return { default: module.AgendaApp };
+});
+const AttendanceApp = lazy(async () => {
+  const module = await import('./modules/attendance/AttendanceApp');
+  await import('./styles/visachat-refinement.css');
+  return { default: module.AttendanceApp };
+});
+const CrmApp = lazy(async () => {
+  const module = await import('./modules/crm/CrmApp');
+  await import('./styles/crm-relationship-refinement.css');
+  return { default: module.default };
+});
+const CrmDashboardApp = lazy(async () => {
+  const module = await import('./modules/crm/CrmDashboardApp');
+  await import('./styles/crm-dashboard-kpis.css');
+  await import('./styles/crm-dashboard-cards.css');
+  return { default: module.default };
+});
+const FinanceTransactionsApp = lazy(async () => {
+  const module = await import('./modules/finance/FinanceTransactionsApp');
+  await import('./styles/finance-transactions-refinement.css');
+  return { default: module.default };
+});
+const FinanceInvoicesApp = lazy(async () => {
+  const module = await import('./modules/finance/FinanceInvoicesApp');
+  await import('./modules/finance/invoice-document.css');
+  await import('./modules/finance/finance-fiscal-invoice.css');
+  await import('./styles/invoices-refinement.css');
+  await import('./styles/invoices-header-actions-fix.css');
+  return { default: module.default };
+});
+const FinancePLApp = lazy(async () => {
+  const module = await import('./modules/finance/FinancePLApp');
+  await import('./styles/accounting-refinement.css');
+  return { default: module.default };
+});
 const FinancialCategoriesApp = lazy(() => import('./modules/finance/FinancialCategoriesApp').then(module => ({ default: module.FinancialCategoriesApp })));
 const FinancialRulesApp = lazy(() => import('./modules/finance/FinancialRulesApp').then(module => ({ default: module.FinancialRulesApp })));
-const MarketingApp = lazy(() => import('./modules/marketing/MarketingApp'));
-const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
-const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
-const SiteCmsApp = lazy(() => import('./modules/site-cms/SiteCmsApp'));
-const TasksApp = lazy(() => import('./modules/tasks/TasksApp').then(module => ({ default: module.TasksApp })));
+const MarketingApp = lazy(async () => {
+  const module = await import('./modules/marketing/MarketingApp');
+  await import('./modules/marketing/marketing-overrides.css');
+  await import('./modules/marketing/marketing-year-reference.css');
+  await import('./styles/marketing-refinement.css');
+  await import('./styles/marketing-overview-refinement.css');
+  await import('./styles/marketing-campaigns-refinement.css');
+  return { default: module.default };
+});
+const ReportsApp = lazy(async () => {
+  const module = await import('./modules/reports/ReportsApp');
+  await import('./styles/reports-refinement.css');
+  return { default: module.default };
+});
+const SettingsApp = lazy(async () => {
+  const module = await import('./modules/settings/SettingsApp');
+  await import('./styles/settings-refinement.css');
+  await import('./styles/settings-tabs-refinement.css');
+  return { default: module.default };
+});
+const SiteCmsApp = lazy(async () => {
+  const module = await import('./modules/site-cms/SiteCmsApp');
+  await import('./styles/ui-system.css');
+  await import('./styles/product-refinement.css');
+  return { default: module.default };
+});
+const TasksApp = lazy(async () => {
+  const module = await import('./modules/tasks/TasksApp');
+  await import('./styles/tasks-refinement.css');
+  return { default: module.TasksApp };
+});
 const WorkspaceSelectorApp = lazy(() => import('./modules/workspaces/WorkspaceSelectorApp'));
 
 function basePath() {
