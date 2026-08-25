@@ -4,8 +4,6 @@ import './settings.css';
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
 export type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
 export type AutomationKey='email'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
-export type IntegrationStatus='Conectado'|'Não conectado'|'Reconexão necessária'|'Indisponível';
-export type Integration={id:string;category:string;name:string;description:string;icon:string;status:IntegrationStatus};
 export type UserRecord={id:string;name:string;email:string;role:string;status:'Ativo'|'Inativo'|'Pendente'};
 export type Role={id:string;name:string;description:string;permissions:string[];system?:boolean};
 
@@ -30,20 +28,6 @@ export const INITIAL_COMPANY:Company={
 export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>={
  email:true,push:true,newLead:true,leadFollowup:true,financeMovement:true,weeklyFinance:false,weeklyReport:true,criticalAlerts:true,operational:true,backup:false,
 };
-
-/**
- * Integration cards describe planned connectors only. No API/backend connector
- * exists in this repository, so none may be represented as connected.
- */
-export const INITIAL_INTEGRATIONS:Integration[]=[
- {id:'whatsapp',category:'Comunicação',name:'WhatsApp Business',description:'Atendimento, notificações e conversas com clientes.',icon:'◉',status:'Indisponível'},
- {id:'resend',category:'Comunicação',name:'E-mail transacional',description:'Envio de e-mails operacionais, avisos e confirmações.',icon:'✉',status:'Indisponível'},
- {id:'autentique',category:'Assinatura Digital',name:'Autentique',description:'Assinatura eletrônica de contratos e documentos.',icon:'✎',status:'Indisponível'},
- {id:'nfe',category:'Fiscal',name:'NFe',description:'Emissão e gestão de documentos fiscais.',icon:'▧',status:'Indisponível'},
- {id:'meta',category:'Marketing Digital',name:'Meta Ads',description:'Campanhas, públicos e dados de desempenho.',icon:'M',status:'Indisponível'},
- {id:'google',category:'Marketing Digital',name:'Google Ads',description:'Campanhas e dados de aquisição do Google.',icon:'G',status:'Indisponível'},
- {id:'calendar',category:'Produtividade',name:'Google Calendar',description:'Sincronização de compromissos, entrevistas e lembretes.',icon:'□',status:'Indisponível'},
-];
 
 export const INITIAL_USERS:UserRecord[]=[
  {id:'u-1',name:'Administrador',email:'admin@visafacil.com.br',role:'Administrador',status:'Ativo'},
@@ -74,10 +58,6 @@ export function Field({label,children,help}:{label:string;children:ReactNode;hel
 
 export function SettingRow({title,description,checked,onChange,disabled=false}:{title:string;description:string;checked:boolean;onChange:(v:boolean)=>void;disabled?:boolean}){
  return <div className={`settings-setting-row ${disabled?'is-disabled':''}`}><div><strong>{title}</strong><p>{description}</p></div><Toggle checked={checked} onChange={onChange} disabled={disabled}/></div>;
-}
-
-export function StatusBadge({status}:{status:IntegrationStatus}){
- return <span className={`settings-status is-${status.toLowerCase().replace(/\s+/g,'-').normalize('NFD').replace(/[\u0300-\u036f]/g,'')}`}>{status}</span>;
 }
 
 export function MiniModal({title,description,close,children,footer}:{title:string;description?:string;close:()=>void;children:ReactNode;footer?:ReactNode}){
