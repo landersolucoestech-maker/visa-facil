@@ -31,8 +31,11 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
-function isTaskRecord(value: unknown): value is TaskRecord {
+export function isTaskRecord(value: unknown): value is TaskRecord {
   if (!isObject(value)) return false;
+  if (typeof value.dueDate !== 'string' || (value.dueDate !== '' && !DATE_RE.test(value.dueDate))) return false;
+  if (typeof value.dueTime !== 'string' || (value.dueTime !== '' && !TIME_RE.test(value.dueTime))) return false;
+  if (!value.dueDate && (value.dueTime !== '' || value.reminder !== 'Sem lembrete')) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.title === 'string' && value.title.trim().length > 0
     && isText(value.description)
@@ -41,8 +44,6 @@ function isTaskRecord(value: unknown): value is TaskRecord {
     && isText(value.owner)
     && typeof value.priority === 'string' && PRIORITIES.has(value.priority as TaskPriority)
     && typeof value.status === 'string' && STATUSES.has(value.status as TaskStatus)
-    && typeof value.dueDate === 'string' && DATE_RE.test(value.dueDate)
-    && typeof value.dueTime === 'string' && TIME_RE.test(value.dueTime)
     && isText(value.reminder)
     && typeof value.createdAt === 'string' && Number.isFinite(Date.parse(value.createdAt))
     && typeof value.updatedAt === 'string' && Number.isFinite(Date.parse(value.updatedAt));
