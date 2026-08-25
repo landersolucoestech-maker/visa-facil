@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './attendance.css';
 import './attendanceSidebarKpis.css';
-import { getAttendanceInitialConversations, type AttendanceConversation, type AttendanceMessage } from './mocks/attendanceMockProvider';
+import { type AttendanceConversation, type AttendanceMessage } from './mocks/attendanceMockProvider';
+import { getAttendanceSessionConversations, saveAttendanceSessionConversations } from '../../shared/operationalSessionStore';
 
 const STATUS_OPTIONS = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Resolvida', 'Arquivada'];
 type NewConversationDraft = { customer: string; handle: string; channel: string; message: string };
@@ -16,7 +17,7 @@ function PlusIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="n
 function timeNow() { return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
 
 export function AttendanceApp() {
-  const [conversations, setConversations] = useState<AttendanceConversation[]>(() => getAttendanceInitialConversations());
+  const [conversations, setConversations] = useState<AttendanceConversation[]>(() => getAttendanceSessionConversations());
   const [selectedId, setSelectedId] = useState<string>(() => conversations[0]?.id ?? '');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos');
@@ -26,6 +27,7 @@ export function AttendanceApp() {
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newConversation, setNewConversation] = useState<NewConversationDraft>(EMPTY_NEW_CONVERSATION);
   const [newConversationError, setNewConversationError] = useState('');
+  useEffect(() => { saveAttendanceSessionConversations(conversations); }, [conversations]);
 
   const selected = conversations.find((item) => item.id === selectedId) ?? conversations[0];
   const filtered = useMemo(() => conversations.filter((item) => {
@@ -116,7 +118,7 @@ export function AttendanceApp() {
       </section></main>
     </div>
 
-    {newConversationOpen && <div className="attendance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && setNewConversationOpen(false)}><div className="attendance-modal" role="dialog" aria-modal="true"><header><div><span>NOVA CONVERSA</span><h2>Iniciar conversa</h2><p>Crie um atendimento local nesta sessão. O vínculo persistente com CRM depende de uma fonte compartilhada de dados.</p></div><button type="button" onClick={() => setNewConversationOpen(false)} aria-label="Fechar">×</button></header><div className="attendance-modal-body"><label><span>Nome do contato / lead</span><input value={newConversation.customer} onChange={(event) => setNewConversation((current) => ({ ...current, customer: event.target.value }))} placeholder="Nome completo" /></label><label><span>Canal</span><select value={newConversation.channel} onChange={(event) => setNewConversation((current) => ({ ...current, channel: event.target.value }))}><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Website</option><option>E-mail</option></select></label><label><span>Telefone / usuário</span><input value={newConversation.handle} onChange={(event) => setNewConversation((current) => ({ ...current, handle: event.target.value }))} placeholder="Contato do canal" /></label><label><span>Mensagem inicial</span><textarea rows={4} value={newConversation.message} onChange={(event) => setNewConversation((current) => ({ ...current, message: event.target.value }))} placeholder="Mensagem inicial opcional" /></label>{newConversationError && <p className="attendance-empty" role="alert">{newConversationError}</p>}</div><footer><button className="crm-btn-secondary" type="button" onClick={() => setNewConversationOpen(false)}>Cancelar</button><button className="crm-btn-primary" type="button" onClick={createConversation}>Iniciar conversa</button></footer></div></div>}
+    {newConversationOpen && <div className="attendance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && setNewConversationOpen(false)}><div className="attendance-modal" role="dialog" aria-modal="true"><header><div><span>NOVA CONVERSA</span><h2>Iniciar conversa</h2><p>A conversa é preservada nesta sessão do navegador. O vínculo automático com um registro do CRM ainda não está implementado.</p></div><button type="button" onClick={() => setNewConversationOpen(false)} aria-label="Fechar">×</button></header><div className="attendance-modal-body"><label><span>Nome do contato / lead</span><input value={newConversation.customer} onChange={(event) => setNewConversation((current) => ({ ...current, customer: event.target.value }))} placeholder="Nome completo" /></label><label><span>Canal</span><select value={newConversation.channel} onChange={(event) => setNewConversation((current) => ({ ...current, channel: event.target.value }))}><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Website</option><option>E-mail</option></select></label><label><span>Telefone / usuário</span><input value={newConversation.handle} onChange={(event) => setNewConversation((current) => ({ ...current, handle: event.target.value }))} placeholder="Contato do canal" /></label><label><span>Mensagem inicial</span><textarea rows={4} value={newConversation.message} onChange={(event) => setNewConversation((current) => ({ ...current, message: event.target.value }))} placeholder="Mensagem inicial opcional" /></label>{newConversationError && <p className="attendance-empty" role="alert">{newConversationError}</p>}</div><footer><button className="crm-btn-secondary" type="button" onClick={() => setNewConversationOpen(false)}>Cancelar</button><button className="crm-btn-primary" type="button" onClick={createConversation}>Iniciar conversa</button></footer></div></div>}
   </div>;
 }
 
