@@ -66,6 +66,11 @@ const SettingsApp = lazy(async () => {
   await import('./styles/settings-tabs-refinement.css');
   return { default: module.default };
 });
+const ProfileApp = lazy(async () => {
+  const module = await import('./modules/settings/ProfileApp');
+  await import('./styles/settings-refinement.css');
+  return { default: module.default };
+});
 const SiteCmsApp = lazy(async () => {
   const module = await import('./modules/site-cms/SiteCmsApp');
   await import('./styles/ui-system.css');
@@ -132,6 +137,7 @@ export function RootApplication() {
   if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceTransactionsApp/>);
   if(path==='/crm/marketing'||path==='/crm/marketing/campanhas'||path==='/crm/marketing/calendario'||path==='/crm/marketing/metricas')return withSharedSidebar(<MarketingApp/>);
   if(path==='/crm/relatorios')return withSharedSidebar(<ReportsApp/>);
+  if(path==='/crm/perfil')return withSharedSidebar(<ProfileApp/>);
   if(path==='/crm/configuracoes')return withSharedSidebar(<SettingsApp/>);
   if(path==='/crm')return withSharedSidebar(<CrmDashboardApp/>);
   if(path==='/crm/relacionamento')return withSharedSidebar(<CrmApp/>);
