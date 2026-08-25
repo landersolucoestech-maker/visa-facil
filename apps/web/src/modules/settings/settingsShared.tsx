@@ -54,7 +54,7 @@ export const INITIAL_ROLES:Role[]=[
 ];
 
 export function base(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
-export function Bell(){return <span className="settings-bell" aria-hidden="true"/>}
+export function Bell(){return <svg className="settings-bell-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
 export function initials(name:string){return name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'VF'}
 
 export function Toggle({checked,onChange,disabled=false}:{checked:boolean;onChange:(v:boolean)=>void;disabled?:boolean}){
