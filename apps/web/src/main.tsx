@@ -30,6 +30,8 @@ import './styles/marketing-overview-refinement.css';
 import './styles/marketing-campaigns-refinement.css';
 import './styles/reports-refinement.css';
 import './styles/settings-refinement.css';
+// Canonical topbar contract must be the final CRM override across every module.
+import './styles/crm-header-actions-unified.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
