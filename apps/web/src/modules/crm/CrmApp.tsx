@@ -19,9 +19,9 @@ const KPI_ITEMS = [
   { label: 'Contatos', value: '0', detail: 'cadastrados', tone: 'blue' },
   { label: 'Leads', value: '0', detail: 'em acompanhamento', tone: 'red' },
   { label: 'Clientes', value: '0', detail: 'ativos', tone: 'navy' },
-  { label: 'Oportunidades', value: '0', detail: 'em aberto', tone: 'red' },
-  { label: 'Conversas', value: '0', detail: 'não lidas', tone: 'navy' },
-  { label: 'Tarefas', value: '0', detail: 'pendentes', tone: 'blue' },
+  { label: 'Receitas', value: 'R$ 0,00', detail: 'no período', tone: 'blue' },
+  { label: 'Despesas', value: 'R$ 0,00', detail: 'no período', tone: 'red' },
+  { label: 'Resultado', value: 'R$ 0,00', detail: 'líquido', tone: 'navy' },
 ];
 
 const SERVICE_OPTIONS = ['Assessoria para visto de turismo', 'Renovação de visto', 'Visto de estudante', 'Visto de trabalho', 'Visto de negócios', 'Outro'];
