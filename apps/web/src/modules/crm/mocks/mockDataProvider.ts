@@ -1,13 +1,15 @@
 import records from './crm-records.dev.json';
-import type { CrmRecord } from '../CrmApp';
+import type { CrmRecord } from '../types';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 type RawMockRecord = Partial<CrmRecord>;
 
 export function getCrmInitialRecords(): CrmRecord[] {
-  if (import.meta.env.VITE_CRM_MOCKS !== 'true') return [];
+  if (!isMockDataEnabled()) return [];
 
   return structuredClone(records).map((record) => {
     const raw = record as RawMockRecord;
+    const now = new Date().toISOString();
 
     return {
       id: raw.id ?? crypto.randomUUID(),
@@ -23,8 +25,8 @@ export function getCrmInitialRecords(): CrmRecord[] {
       state: raw.state ?? '',
       country: raw.country ?? 'Brasil',
       notes: raw.notes ?? '',
-      createdAt: raw.createdAt ?? new Date().toISOString(),
-      updatedAt: raw.updatedAt ?? new Date().toISOString(),
+      createdAt: raw.createdAt ?? now,
+      updatedAt: raw.updatedAt ?? now,
       relationship: raw.relationship,
       contactStatus: raw.contactStatus,
       source: raw.source,
