@@ -11,6 +11,7 @@ import { FinancialRulesApp } from './modules/finance/FinancialRulesApp';
 import { MarketingApp } from './modules/marketing/MarketingApp';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import { ReportsApp } from './modules/reports/ReportsApp';
+import { SettingsApp } from './modules/settings/SettingsApp';
 import { TasksApp } from './modules/tasks/TasksApp';
 
 function basePath() {
@@ -48,6 +49,7 @@ export function RootApplication() {
   if (path === '/crm/financeiro' || path === '/crm/financeiro/transacoes') return withSharedSidebar(<FinanceTransactionsApp />);
   if (path === '/crm/marketing' || path.startsWith('/crm/marketing/')) return withSharedSidebar(<MarketingApp />);
   if (path === '/crm/relatorios') return withSharedSidebar(<ReportsApp />);
+  if (path === '/crm/configuracoes') return withSharedSidebar(<SettingsApp />);
   if (path === '/crm' || path.startsWith('/crm/')) return withSharedSidebar(<CrmApp />);
 
   return <PublicSitePage />;
