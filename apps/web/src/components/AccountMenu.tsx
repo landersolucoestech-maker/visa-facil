@@ -20,12 +20,12 @@ function ChevronIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m8 10 4 4 4-4" /></svg>;
 }
 
-function SettingsIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.36a1.7 1.7 0 0 0-1 .64 1.7 1.7 0 0 0-.36 1.06V21h-4v-.08A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.24 15a1.7 1.7 0 0 0-.64-1 1.7 1.7 0 0 0-1.06-.36H2.5v-4h.08A1.7 1.7 0 0 0 4.1 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.5 4.24a1.7 1.7 0 0 0 1-.64 1.7 1.7 0 0 0 .36-1.06V2.5h4v.08A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.36 8.5a1.7 1.7 0 0 0 .64 1 1.7 1.7 0 0 0 1.06.36h.04v4h-.08A1.7 1.7 0 0 0 19.4 15Z" /></svg>;
+function ProfileIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.7 3.1-5.5 7-5.5s6.2 1.8 7 5.5" /></svg>;
 }
 
-function WorkspacesIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.4" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.4" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.4" /></svg>;
+function SettingsIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.36a1.7 1.7 0 0 0-1 .64 1.7 1.7 0 0 0-.36 1.06V21h-4v-.08A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.24 15a1.7 1.7 0 0 0-.64-1 1.7 1.7 0 0 0-1.06-.36H2.5v-4h.08A1.7 1.7 0 0 0 4.1 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.5 4.24a1.7 1.7 0 0 0 1-.64 1.7 1.7 0 0 0 .36-1.06V2.5h4v.08A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.36 8.5a1.7 1.7 0 0 0 .64 1 1.7 1.7 0 0 0 1.06.36h.04v4h-.08A1.7 1.7 0 0 0 19.4 15Z" /></svg>;
 }
 
 function LogoutIcon() {
@@ -55,6 +55,12 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
     };
   }, []);
 
+  const logout = () => {
+    signOut();
+    setOpen(false);
+    go(AUTHENTICATION_ENABLED ? '/login' : '/workspaces');
+  };
+
   return <div className={`account-menu account-menu--${surface}`} ref={rootRef}>
     <button
       className="account-menu__trigger"
@@ -70,9 +76,10 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
       <span className="account-menu__caret" aria-hidden="true"><ChevronIcon /></span>
     </button>
     {open && <div className="account-menu__panel" id="global-account-menu" role="menu" aria-label="Menu da conta">
+      <a role="menuitem" href={href('/crm/perfil')} onClick={() => setOpen(false)}><ProfileIcon /><span>Perfil</span></a>
       <a role="menuitem" href={href('/crm/configuracoes')} onClick={() => setOpen(false)}><SettingsIcon /><span>Configurações</span></a>
-      <a role="menuitem" href={href('/workspaces')} onClick={() => setOpen(false)}><WorkspacesIcon /><span>Workspaces</span></a>
-      {AUTHENTICATION_ENABLED && <><div className="account-menu__separator" /><button role="menuitem" type="button" onClick={() => { signOut(); setOpen(false); go('/login'); }}><LogoutIcon /><span>Sair</span></button></>}
+      <div className="account-menu__separator" />
+      <button role="menuitem" type="button" onClick={logout}><LogoutIcon /><span>Logout</span></button>
     </div>}
   </div>;
 }
