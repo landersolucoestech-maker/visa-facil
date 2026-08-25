@@ -20,6 +20,7 @@ import './styles/crm-relationship-refinement.css';
 import './styles/visachat-refinement.css';
 import './styles/tasks-refinement.css';
 import './styles/agenda-refinement.css';
+// Module refinement layers stay last so legacy module CSS cannot override them.
 import './styles/finance-transactions-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
