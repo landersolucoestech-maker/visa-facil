@@ -1,35 +1,12 @@
 import { useMemo } from 'react';
 import { getCrmInitialRecords } from './mocks/mockDataProvider';
 import { getFinanceInitialRecords } from '../finance/mocks/financeMockProvider';
+import { getAgendaInitialEvents } from '../agenda/mocks/agendaMockProvider';
+import { getTaskInitialRecords } from '../tasks/mocks/tasksMockProvider';
+import { getAttendanceInitialConversations } from '../attendance/mocks/attendanceMockProvider';
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-const RECENT_ACTIVITIES = [
-  { name: 'André', activity: 'Novo lead via WhatsApp', time: 'há 8 min' },
-  { name: 'Juliana', activity: 'Alterada para qualificado', time: 'há 24 min' },
-  { name: 'Camila', activity: 'Follow-up realizado', time: 'há 1 h' },
-  { name: 'Mariana', activity: 'Contato atualizado', time: 'há 2 h' },
-];
-
-const TODAY_AGENDA = [
-  { time: '09:30', label: 'Entrevista', meta: 'Cliente · Confirmado' },
-  { time: '14:00', label: 'Reunião', meta: 'Lead · Pendente' },
-  { time: '16:30', label: 'Follow-up', meta: 'Cliente · Confirmado' },
-];
-
-const LEAD_ORIGINS = [
-  { source: 'WhatsApp', count: 4 },
-  { source: 'Instagram', count: 3 },
-  { source: 'Indicação', count: 2 },
-  { source: 'Website', count: 1 },
-];
-
-const PENDING_ITEMS = [
-  { count: 2, label: 'Follow-ups', detail: 'para concluir hoje', priority: 'Alta' },
-  { count: 1, label: 'Lead aguardando resposta', detail: 'sem retorno', priority: 'Média' },
-  { count: 3, label: 'Tarefas', detail: 'em aberto', priority: 'Normal' },
-  { count: 1, label: 'Atendimento não lido', detail: 'requer atenção', priority: 'Alta' },
-];
+const isoToday = () => new Date().toISOString().slice(0, 10);
 
 function basePath() {
   return import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -37,6 +14,12 @@ function basePath() {
 
 function href(path: string) {
   return `${basePath()}${path}` || path;
+}
+
+function formatActivityTime(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return '—';
+  return parsed.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
@@ -54,6 +37,10 @@ function KpiCard({ label, value, detail, tone }: { label: string; value: string;
 export function CrmDashboardApp() {
   const crmRecords = useMemo(() => getCrmInitialRecords(), []);
   const financeRecords = useMemo(() => getFinanceInitialRecords(), []);
+  const agendaEvents = useMemo(() => getAgendaInitialEvents(), []);
+  const tasks = useMemo(() => getTaskInitialRecords(), []);
+  const conversations = useMemo(() => getAttendanceInitialConversations(), []);
+  const today = isoToday();
 
   const contacts = crmRecords.filter((record) => record.kind === 'contact').length;
   const leads = crmRecords.filter((record) => record.kind === 'lead').length;
@@ -67,9 +54,46 @@ export function CrmDashboardApp() {
     .reduce((total, record) => total + record.amount, 0);
   const result = revenue - expenses;
 
-  const maxOrigin = Math.max(...LEAD_ORIGINS.map((item) => item.count), 1);
-  const originTotal = LEAD_ORIGINS.reduce((total, item) => total + item.count, 0);
-  const pendingTotal = PENDING_ITEMS.reduce((total, item) => total + item.count, 0);
+  const recentActivities = [...crmRecords]
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+    .slice(0, 4)
+    .map((record) => ({
+      id: record.id,
+      name: record.fullName,
+      activity: record.kind === 'lead'
+        ? `Lead · ${record.leadStatus || 'atualizado'}`
+        : `Contato · ${record.relationship || record.contactStatus || 'atualizado'}`,
+      time: formatActivityTime(record.updatedAt),
+    }));
+
+  const todayAgenda = agendaEvents
+    .filter((event) => event.date === today && event.status !== 'Cancelado')
+    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const leadOrigins = Array.from(
+    crmRecords
+      .filter((record) => record.kind === 'lead')
+      .reduce((groups, record) => {
+        const source = record.source?.trim() || 'Não informado';
+        groups.set(source, (groups.get(source) || 0) + 1);
+        return groups;
+      }, new Map<string, number>()),
+    ([source, count]) => ({ source, count }),
+  ).sort((a, b) => b.count - a.count);
+  const maxOrigin = Math.max(...leadOrigins.map((item) => item.count), 1);
+  const originTotal = leadOrigins.reduce((total, item) => total + item.count, 0);
+
+  const dueLeadActions = crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus !== 'Convertido' && Boolean(record.nextActionDate) && record.nextActionDate! <= today).length;
+  const openTasks = tasks.filter((task) => task.status !== 'Concluída').length;
+  const pendingAgenda = agendaEvents.filter((event) => event.status === 'Pendente' && event.date >= today).length;
+  const unreadMessages = conversations.reduce((total, conversation) => total + Math.max(0, conversation.unread), 0);
+  const pendingItems = [
+    dueLeadActions > 0 ? { count: dueLeadActions, label: 'Próximas ações de leads', detail: 'vencidas ou para hoje', priority: 'Alta' } : null,
+    openTasks > 0 ? { count: openTasks, label: 'Tarefas', detail: 'em aberto', priority: 'Normal' } : null,
+    pendingAgenda > 0 ? { count: pendingAgenda, label: 'Compromissos pendentes', detail: 'aguardando confirmação', priority: 'Média' } : null,
+    unreadMessages > 0 ? { count: unreadMessages, label: 'Mensagens não lidas', detail: 'no VisaChat', priority: 'Alta' } : null,
+  ].filter((item): item is NonNullable<typeof item> => item !== null);
+  const pendingTotal = pendingItems.reduce((total, item) => total + item.count, 0);
 
   return (
     <div className="crm-shell">
@@ -84,13 +108,11 @@ export function CrmDashboardApp() {
             <div className="crm-user-menu">
               <button className="crm-user" type="button" aria-haspopup="menu">
                 <span>VF</span>
-                <div><strong>Administrador</strong><small>Protótipo frontend</small></div>
+                <div><strong>Administrador</strong><small>Ambiente interno</small></div>
                 <span className="crm-user-caret" aria-hidden="true">⌄</span>
               </button>
               <div className="crm-user-dropdown" role="menu">
-                <button type="button" role="menuitem">Perfil</button>
                 <a role="menuitem" href={href('/crm/configuracoes')}>Configurações</a>
-                <button type="button" role="menuitem" className="is-danger">Logout</button>
               </div>
             </div>
           </div>
@@ -109,12 +131,12 @@ export function CrmDashboardApp() {
           <section className="crm-dashboard-grid crm-dashboard-overview-grid">
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-activity-card">
               <div className="crm-dashboard-card-heading">
-                <div><h2>ATIVIDADES RECENTES</h2><p>Movimentações mais recentes do CRM</p></div>
+                <div><h2>ATIVIDADES RECENTES</h2><p>Atualizações mais recentes do relacionamento</p></div>
                 <a href={href('/crm/relacionamento')}>Ver todas</a>
               </div>
-              <ul className="crm-dashboard-activity-list">
-                {RECENT_ACTIVITIES.map((item) => (
-                  <li key={item.name}>
+              {recentActivities.length ? <ul className="crm-dashboard-activity-list">
+                {recentActivities.map((item) => (
+                  <li key={item.id}>
                     <span className="crm-dashboard-activity-marker" aria-hidden="true" />
                     <div className="crm-dashboard-activity-copy">
                       <strong>{item.name}</strong>
@@ -123,7 +145,7 @@ export function CrmDashboardApp() {
                     <time>{item.time}</time>
                   </li>
                 ))}
-              </ul>
+              </ul> : <p className="crm-dashboard-empty">Nenhuma atividade disponível.</p>}
             </article>
 
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-agenda-card">
@@ -133,19 +155,19 @@ export function CrmDashboardApp() {
               </div>
               <div className="crm-dashboard-section-meta">
                 <span>Hoje</span>
-                <strong>{TODAY_AGENDA.length} compromissos</strong>
+                <strong>{todayAgenda.length} {todayAgenda.length === 1 ? 'compromisso' : 'compromissos'}</strong>
               </div>
-              <div className="crm-dashboard-agenda-list">
-                {TODAY_AGENDA.map((item) => (
-                  <div className="crm-dashboard-agenda-row" key={`${item.time}-${item.label}`}>
-                    <time>{item.time}</time>
+              {todayAgenda.length ? <div className="crm-dashboard-agenda-list">
+                {todayAgenda.map((item) => (
+                  <div className="crm-dashboard-agenda-row" key={item.id}>
+                    <time>{item.startTime || '—'}</time>
                     <div>
-                      <strong>{item.label}</strong>
-                      <small>{item.meta}</small>
+                      <strong>{item.title}</strong>
+                      <small>{item.relatedType} · {item.status}</small>
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> : <p className="crm-dashboard-empty">Nenhum compromisso para hoje.</p>}
             </article>
           </section>
 
@@ -155,8 +177,8 @@ export function CrmDashboardApp() {
                 <div><h2>ORIGEM DOS LEADS</h2><p>Distribuição por canal de aquisição</p></div>
                 <span className="crm-dashboard-card-total">{originTotal} leads</span>
               </div>
-              <div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">
-                {LEAD_ORIGINS.map((item) => (
+              {leadOrigins.length ? <div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">
+                {leadOrigins.map((item) => (
                   <div className="crm-dashboard-origin-row" key={item.source}>
                     <div className="crm-dashboard-origin-label"><span>{item.source}</span><strong>{item.count}</strong></div>
                     <div className="crm-dashboard-origin-track">
@@ -164,7 +186,7 @@ export function CrmDashboardApp() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div> : <p className="crm-dashboard-empty">Nenhum lead disponível para distribuição por origem.</p>}
             </article>
 
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-pending-card">
@@ -172,15 +194,15 @@ export function CrmDashboardApp() {
                 <div><h2>PENDÊNCIAS</h2><p>Itens que precisam de atenção</p></div>
                 <span className="crm-dashboard-card-total">{pendingTotal} abertas</span>
               </div>
-              <div className="crm-dashboard-pending-list">
-                {PENDING_ITEMS.map((item) => (
+              {pendingItems.length ? <div className="crm-dashboard-pending-list">
+                {pendingItems.map((item) => (
                   <div className="crm-dashboard-pending-item" key={item.label}>
                     <strong className="crm-dashboard-pending-number">{item.count}</strong>
                     <div><strong>{item.label}</strong><small>{item.detail}</small></div>
                     <span className={`crm-dashboard-priority is-${item.priority.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`}>{item.priority}</span>
                   </div>
                 ))}
-              </div>
+              </div> : <p className="crm-dashboard-empty">Nenhuma pendência operacional disponível.</p>}
             </article>
           </section>
         </main>
