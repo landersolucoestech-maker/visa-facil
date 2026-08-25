@@ -1,64 +1,56 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInitialCmsDocument } from '../../apps/web/src/modules/site-cms/siteSchema.ts';
-import { findPageByPath, loadDraft, loadPublished } from '../../apps/web/src/modules/site-cms/siteStore.ts';
+import { isCmsDocument, normalizeCmsPath, parseCmsDocument } from '../../apps/web/src/modules/site-cms/cmsDocumentContract.ts';
 
-const DRAFT_KEY='visa-facil.cms.draft.v1';
-const PUBLISHED_KEY='visa-facil.cms.published.v1';
-
-function memoryStorage(initial={}){
-  const values=new Map(Object.entries(initial));
+function validDocument(){
   return {
-    getItem:key=>values.has(key)?values.get(key):null,
-    setItem:(key,value)=>values.set(key,String(value)),
-    removeItem:key=>values.delete(key),
-    clear:()=>values.clear(),
+    version:1,
+    updatedAt:'2026-08-25T12:00:00.000Z',
+    publishedAt:'2026-08-25T12:00:00.000Z',
+    pages:[{
+      id:'home',name:'Home',slug:'/',status:'published',scheduledAt:'',updatedAt:'2026-08-25T12:00:00.000Z',
+      seo:{title:'Home',description:'Descrição',ogImage:'',canonicalUrl:'',noIndex:false},
+      sections:[{id:'hero',type:'hero',label:'Hero',visible:true,order:0,values:{title:'Visa Fácil',visible:true,items:[{label:'Item',enabled:true}]}}],
+    }],
+    globals:[{id:'global-header',type:'header',label:'Header',visible:true,order:0,values:{title:'Visa Fácil'}}],
+    media:[],
+    settings:{siteName:'VISA FÁCIL',siteUrl:'',locale:'pt-BR',defaultOgImage:'',organizationName:'VISA FÁCIL'},
   };
 }
 
-function withLocalStorage(initial,callback){
-  const previous=globalThis.localStorage;
-  globalThis.localStorage=memoryStorage(initial);
-  try{return callback();}
-  finally{
-    if(previous===undefined)delete globalThis.localStorage;
-    else globalThis.localStorage=previous;
-  }
-}
-
-test('CMS draft rejects malformed persisted JSON and falls back to a valid initial document',()=>withLocalStorage({[DRAFT_KEY]:'{broken'},()=>{
-  const draft=loadDraft();
-  assert.ok(draft.pages.length>0);
-  assert.ok(draft.globals.length>0);
-  assert.equal(typeof draft.version,'number');
-}));
-
-test('CMS rejects duplicate page ids instead of accepting an ambiguous persisted document',()=>{
-  const invalid=createInitialCmsDocument();
-  invalid.pages=[...invalid.pages,{...structuredClone(invalid.pages[0]),name:'Duplicada'}];
-  return withLocalStorage({[DRAFT_KEY]:JSON.stringify(invalid)},()=>{
-    const draft=loadDraft();
-    const ids=draft.pages.map(page=>page.id);
-    assert.equal(ids.length,new Set(ids).size);
-    assert.equal(draft.pages.some(page=>page.name==='Duplicada'),false);
-  });
+test('CMS persisted document contract accepts a complete valid document',()=>{
+  const document=validDocument();
+  assert.equal(isCmsDocument(document),true);
+  assert.deepEqual(parseCmsDocument(JSON.stringify(document)),document);
 });
 
-test('CMS rejects invalid media entries and invalid page statuses from persistence',()=>{
-  const invalid=createInitialCmsDocument();
-  invalid.pages[0].status='invalid-status';
-  invalid.media=[{id:'media-1',name:'Arquivo',url:'/x',alt:'',kind:'executable',createdAt:new Date().toISOString()}];
-  return withLocalStorage({[PUBLISHED_KEY]:JSON.stringify(invalid)},()=>{
-    const published=loadPublished();
-    assert.notEqual(published.pages[0]?.status,'invalid-status');
-    assert.equal(published.media.some(item=>item.kind==='executable'),false);
-  });
+test('CMS persisted document contract rejects malformed JSON',()=>{
+  assert.equal(parseCmsDocument('{broken'),null);
 });
 
-test('CMS path lookup normalizes trailing slashes without changing the canonical slug',()=>{
-  const document=createInitialCmsDocument();
-  const page=document.pages.find(item=>item.slug!=='/')??document.pages[0];
-  assert.ok(page);
-  const lookup=page.slug==='/'?'/':`${page.slug}/`;
-  assert.equal(findPageByPath(document,lookup)?.id,page.id);
+test('CMS persisted document contract rejects duplicate page and section ids',()=>{
+  const duplicatePage=validDocument();
+  duplicatePage.pages.push({...structuredClone(duplicatePage.pages[0]),name:'Duplicada'});
+  assert.equal(isCmsDocument(duplicatePage),false);
+
+  const duplicateSection=validDocument();
+  duplicateSection.pages[0].sections.push(structuredClone(duplicateSection.pages[0].sections[0]));
+  assert.equal(isCmsDocument(duplicateSection),false);
+});
+
+test('CMS persisted document contract rejects invalid page status and media kind',()=>{
+  const invalidStatus=validDocument();
+  invalidStatus.pages[0].status='invalid-status';
+  assert.equal(isCmsDocument(invalidStatus),false);
+
+  const invalidMedia=validDocument();
+  invalidMedia.media=[{id:'media-1',name:'Arquivo',url:'/x',alt:'',kind:'executable',createdAt:'2026-08-25T12:00:00.000Z'}];
+  assert.equal(isCmsDocument(invalidMedia),false);
+});
+
+test('CMS path normalization removes trailing slashes and preserves root',()=>{
+  assert.equal(normalizeCmsPath('/'),'/');
+  assert.equal(normalizeCmsPath('/servicos/'),'/servicos');
+  assert.equal(normalizeCmsPath('/servicos///'),'/servicos');
+  assert.equal(normalizeCmsPath(''),'/');
 });
