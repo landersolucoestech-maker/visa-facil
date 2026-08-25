@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import './finance.css';
+import { activeFinanceCategories } from './financeConfigStore';
 import { getFinanceInitialRecords, type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
 import { OfxImportModal } from './OfxImportModal';
 
@@ -8,13 +9,15 @@ type Draft = Omit<FinanceRecord, 'id'>;
 
 const TYPES: Array<'Todos' | FinanceType> = ['Todos', 'Receita', 'Despesa'];
 const STATUSES: Array<'Todos' | FinanceStatus> = ['Todos', 'Recebido', 'A receber', 'Pago', 'A pagar'];
-const CATEGORIES = ['Todas', 'Assessoria', 'Renovação', 'Taxas consulares', 'Serviços terceiros', 'Marketing', 'Outros'];
 const STATUS_BY_TYPE: Record<FinanceType, FinanceStatus[]> = {
   Receita: ['Recebido', 'A receber'],
   Despesa: ['Pago', 'A pagar'],
 };
 const DEFAULT_STATUS: Record<FinanceType, FinanceStatus> = { Receita: 'A receber', Despesa: 'A pagar' };
-const EMPTY: Draft = { description: '', type: 'Receita', category: 'Assessoria', amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' };
+const ACTIVE_CATEGORIES = activeFinanceCategories();
+function categoryNames(type: FinanceType) { return ACTIVE_CATEGORIES.filter((category) => category.type === type).map((category) => category.name); }
+function defaultCategory(type: FinanceType) { return categoryNames(type)[0] ?? ''; }
+const EMPTY: Draft = { description: '', type: 'Receita', category: defaultCategory('Receita'), amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' };
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR') : '—';
@@ -38,7 +41,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
   const [draft, setDraft] = useState<Draft>(() => record ? {
     description: record.description,
     type: record.type,
-    category: record.category,
+    category: categoryNames(record.type).includes(record.category) ? record.category : defaultCategory(record.type),
     amount: record.amount,
     date: record.date,
     dueDate: record.dueDate,
@@ -48,7 +51,8 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
     notes: record.notes,
   } : EMPTY);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
-  const changeType = (next: FinanceType) => setDraft((current) => ({ ...current, type: next, status: isValidStatus(next, current.status) ? current.status : DEFAULT_STATUS[next] }));
+  const changeType = (next: FinanceType) => setDraft((current) => ({ ...current, type: next, category: categoryNames(next).includes(current.category) ? current.category : defaultCategory(next), status: isValidStatus(next, current.status) ? current.status : DEFAULT_STATUS[next] }));
+  const modalCategories = categoryNames(draft.type);
 
   if (mode === 'view' && record) {
     return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
@@ -66,7 +70,8 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
     </div>;
   }
 
-  const invalid = !draft.description.trim() || draft.amount <= 0 || !draft.date || !isValidStatus(draft.type, draft.status);
+  const invalidDueDate = Boolean(draft.date && draft.dueDate && draft.dueDate < draft.date);
+  const invalid = !draft.description.trim() || draft.amount <= 0 || !draft.date || !draft.category || !isValidStatus(draft.type, draft.status) || invalidDueDate;
   return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
     <div className="finance-form-modal finance-transaction-form-modal" role="dialog" aria-modal="true">
       <header><div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2>{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
@@ -74,7 +79,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
         <div className="finance-form-grid finance-transaction-form-grid">
           <label className="finance-field-wide"><span>Descrição</span><input required value={draft.description} onChange={(event) => set('description', event.target.value)} /></label>
           <label><span>Tipo</span><select value={draft.type} onChange={(event) => changeType(event.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label>
-          <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)}>{CATEGORIES.filter((item) => item !== 'Todas').map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)} disabled={!modalCategories.length}>{modalCategories.length ? modalCategories.map((item) => <option key={item}>{item}</option>) : <option value="">Nenhuma categoria ativa</option>}</select></label>
           <label><span>Valor</span><input required type="number" min="0.01" step="0.01" value={draft.amount || ''} onChange={(event) => set('amount', Number(event.target.value))} /></label>
           <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as FinanceStatus)}>{STATUS_BY_TYPE[draft.type].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Data</span><input required type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
@@ -83,6 +88,8 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
           <label className="finance-field-wide"><span>Cliente / contato relacionado</span><input value={draft.relatedName} onChange={(event) => set('relatedName', event.target.value)} /></label>
           <label className="finance-field-wide"><span>Observações</span><textarea rows={4} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label>
         </div>
+        {invalidDueDate && <p className="finance-inline-error" role="alert">O vencimento não pode ser anterior à data da transação.</p>}
+        {!modalCategories.length && <p className="finance-inline-error" role="alert">Não existe categoria financeira ativa para {draft.type.toLowerCase()}. Cadastre uma categoria antes de salvar.</p>}
         <footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary" disabled={invalid}>Salvar transação</button></footer>
       </form>
     </div>
@@ -104,7 +111,9 @@ export function FinanceTransactionsApp() {
   const [user, setUser] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
-  const filtered = useMemo(() => records.filter((record) => {
+  const filterCategories = useMemo(() => ['Todas', ...Array.from(new Set([...ACTIVE_CATEGORIES.map((item) => item.name), ...records.map((record) => record.category).filter(Boolean)]))], [records]);
+  const invalidPeriod = Boolean(start && end && end < start);
+  const filtered = useMemo(() => invalidPeriod ? [] : records.filter((record) => {
     const normalizedQuery = query.trim().toLowerCase();
     return (!normalizedQuery || `${record.description} ${record.category} ${record.relatedName} ${record.paymentMethod}`.toLowerCase().includes(normalizedQuery))
       && (type === 'Todos' || record.type === type)
@@ -112,7 +121,7 @@ export function FinanceTransactionsApp() {
       && (category === 'Todas' || record.category === category)
       && (!start || record.date >= start)
       && (!end || record.date <= end);
-  }), [records, query, type, status, category, start, end]);
+  }), [records, query, type, status, category, start, end, invalidPeriod]);
 
   const received = records.filter((record) => record.type === 'Receita' && record.status === 'Recebido').reduce((sum, record) => sum + record.amount, 0);
   const paid = records.filter((record) => record.type === 'Despesa' && record.status === 'Pago').reduce((sum, record) => sum + record.amount, 0);
@@ -165,9 +174,10 @@ export function FinanceTransactionsApp() {
             <div className="finance-filter-dates"><label><span>De</span><input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label><span>Até</span><input type="date" min={start || undefined} value={end} onChange={(event) => setEnd(event.target.value)} /></label></div>
             <select aria-label="Tipo" value={type} onChange={(event) => setType(event.target.value)}>{TYPES.map((item) => <option key={item}>{item}</option>)}</select>
             <select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select>
-            <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select>
+            <select aria-label="Categoria" value={category} onChange={(event) => setCategory(event.target.value)}>{filterCategories.map((item) => <option key={item}>{item}</option>)}</select>
             <button className="finance-clear-filters" type="button" disabled={!hasFilters} onClick={clearFilters}><SlidersIcon />Limpar</button>
           </div>
+          {invalidPeriod && <p className="finance-inline-error" role="alert">O período é inválido: a data final deve ser posterior ou igual à data inicial.</p>}
           <div className="finance-table-meta"><span>{filtered.length} {filtered.length === 1 ? 'transação' : 'transações'}</span>{overdueRecords.length > 0 && <strong>{overdueRecords.length} {overdueRecords.length === 1 ? 'vencida' : 'vencidas'}</strong>}</div>
           <div className="finance-table finance-transactions-table">
             <div className="finance-table-head"><span>Descrição</span><span>Categoria</span><span>Tipo</span><span>Valor</span><span>Data</span><span>Vencimento</span><span>Status</span><span>Ações</span></div>
