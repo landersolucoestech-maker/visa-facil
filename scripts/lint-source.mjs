@@ -53,6 +53,26 @@ if(authenticationDisabled){
   }
 }
 
+const operationalStore=read('apps/web/src/shared/operationalSessionStore.ts');
+const sessionStore=read('apps/web/src/shared/sessionRecords.ts');
+if(!operationalStore.includes('readSessionRecords')||!operationalStore.includes('writeSessionRecords'))fail('Operational session domains must use the validated shared session record store.');
+if(!sessionStore.includes('uniqueIds')||!sessionStore.includes('sessionStorage'))fail('Shared session record store must validate identity and remain browser-session scoped.');
+const operationalConsumers=[
+  ['apps/web/src/modules/crm/CrmApp.tsx','getCrmSessionRecords','saveCrmSessionRecords','getCrmInitialRecords'],
+  ['apps/web/src/modules/tasks/TasksApp.tsx','getTaskSessionRecords','saveTaskSessionRecords','getTaskInitialRecords'],
+  ['apps/web/src/modules/agenda/AgendaApp.tsx','getAgendaSessionEvents','saveAgendaSessionEvents','getAgendaInitialEvents'],
+  ['apps/web/src/modules/finance/FinanceTransactionsApp.tsx','getFinanceSessionRecords','saveFinanceSessionRecords','getFinanceInitialRecords'],
+  ['apps/web/src/modules/attendance/AttendanceApp.tsx','getAttendanceSessionConversations','saveAttendanceSessionConversations','getAttendanceInitialConversations'],
+];
+for(const [path,getter,saver,legacyGetter] of operationalConsumers){
+  const source=read(path);
+  if(!source.includes(getter)||!source.includes(saver))fail(`${path}: operational records must read and write the canonical browser-session source.`);
+  if(source.includes(legacyGetter))fail(`${path}: UI must not initialize directly from development fixtures; use the canonical session source.`);
+}
+const dashboard=read('apps/web/src/modules/crm/CrmDashboardApp.tsx');
+for(const getter of ['getCrmSessionRecords','getTaskSessionRecords','getAgendaSessionEvents','getFinanceSessionRecords','getAttendanceSessionConversations'])if(!dashboard.includes(getter))fail(`Dashboard must derive operational data from ${getter}.`);
+for(const legacyGetter of ['getCrmInitialRecords','getTaskInitialRecords','getAgendaInitialEvents','getFinanceInitialRecords','getAttendanceInitialConversations'])if(dashboard.includes(legacyGetter))fail(`Dashboard must not bypass canonical session state through ${legacyGetter}.`);
+
 const packageJson=read('package.json');
 if(!packageJson.includes('npm run audit'))fail('Root quality gate must include dependency audit.');
 const ci=read('.github/workflows/frontend-ci.yml');
