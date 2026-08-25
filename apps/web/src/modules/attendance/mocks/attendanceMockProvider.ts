@@ -1,4 +1,5 @@
 import raw from './attendance.dev.json';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type AttendanceMessage = {
   id: string;
@@ -30,6 +31,6 @@ export type AttendanceConversation = {
 };
 
 export function getAttendanceInitialConversations(): AttendanceConversation[] {
-  if (import.meta.env.VITE_CRM_MOCKS !== 'true') return [];
+  if (!isMockDataEnabled()) return [];
   return structuredClone(raw.conversations) as AttendanceConversation[];
 }
