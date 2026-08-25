@@ -1,16 +1,14 @@
-/* VISA FÁCIL — canonical CRM header actions
-   Loaded last. High-specificity contract so no legacy module override wins. */
+/* VISA FÁCIL — canonical CRM header contract.
+   This file is the single visual source of truth for CRM topbar actions. */
 
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{
   display:flex!important;
   align-items:center!important;
   justify-content:flex-end!important;
   gap:8px!important;
 }
 
-/* Primary action: canonical Tarefas reference. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions button.crm-topbar-primary.crm-topbar-primary,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions a.crm-topbar-primary.crm-topbar-primary{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(button.crm-topbar-primary.crm-topbar-primary,a.crm-topbar-primary.crm-topbar-primary){
   width:auto!important;
   min-width:0!important;
   height:36px!important;
@@ -32,20 +30,19 @@
   text-decoration:none!important;
   white-space:nowrap!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions button.crm-topbar-primary.crm-topbar-primary:hover,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions a.crm-topbar-primary.crm-topbar-primary:hover{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(button.crm-topbar-primary.crm-topbar-primary,a.crm-topbar-primary.crm-topbar-primary):hover{
   border-color:#9f1f30!important;
   background:#9f1f30!important;
   color:#fff!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary.crm-topbar-primary svg{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary svg{
   width:14px!important;
   height:14px!important;
   flex:0 0 auto!important;
 }
 
-/* Direct secondary header actions. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary){
+/* Direct secondary actions only. Notification controls are excluded and styled below. */
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]){
   width:auto!important;
   min-width:0!important;
   height:36px!important;
@@ -67,19 +64,13 @@
   text-decoration:none!important;
   white-space:nowrap!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary):hover{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]):hover{
   border-color:#aeb8c7!important;
   background:#f7f8fa!important;
   color:#102a59!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary) svg{
-  width:14px!important;
-  height:14px!important;
-  flex:0 0 auto!important;
-}
 
-/* User control shares the same 36px rhythm. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-user.crm-user{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-user.crm-user{
   min-height:36px!important;
   height:36px!important;
   border:1px solid #d8dde5!important;
@@ -88,20 +79,19 @@
   box-shadow:none!important;
 }
 
-/* One exact notification button across every CRM module. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+/* Exact canonical notification bell used by every CRM module. */
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],
+  button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,
+  .tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,
+  .finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,
+  .accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,
+  .reports-notification-button.reports-notification-button,
+  .settings-notification-btn.settings-notification-btn
 ){
   position:relative!important;
   width:36px!important;
@@ -127,98 +117,57 @@
   box-shadow:none!important;
   cursor:pointer!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,.tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,.finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,.accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,.reports-notification-button.reports-notification-button,.settings-notification-btn.settings-notification-btn
 ):hover,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,.tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,.finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,.accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,.reports-notification-button.reports-notification-button,.settings-notification-btn.settings-notification-btn
 )[aria-expanded="true"]{
   border-color:#aeb8c7!important;
   background-color:#f7f8fa!important;
 }
 
-/* Suppress all module-specific bell drawings and pseudo-elements. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+/* Child icon implementations and legacy pseudo drawings may not alter the canonical glyph. */
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,.tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,.finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,.accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,.reports-notification-button.reports-notification-button,.settings-notification-btn.settings-notification-btn
 ) > svg,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .reports-bell,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .settings-bell{
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar .crm-topbar-actions :is(.reports-bell,.settings-bell,.settings-bell-icon){
   display:none!important;
 }
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,.tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,.finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,.accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,.reports-notification-button.reports-notification-button,.settings-notification-btn.settings-notification-btn
 )::before,
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  button[aria-label="Alertas"],
-  button[aria-label="Notificações"],
-  button[aria-label^="Notificações"],
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button,
-  .marketing-bell,
-  .reports-notification-button,
-  .settings-notification-btn
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"][aria-label],button[aria-label^="Notificações"][aria-label],
+  .attendance-notification-button.attendance-notification-button,.tasks-notification-button.tasks-notification-button,
+  .agenda-notification-button.agenda-notification-button,.finance-notification-button.finance-notification-button,
+  .invoice-notification-button.invoice-notification-button,.accounting-notification-button.accounting-notification-button,
+  .marketing-bell.marketing-bell,.reports-notification-button.reports-notification-button,.settings-notification-btn.settings-notification-btn
 )::after{
   content:none!important;
   display:none!important;
 }
 
-/* Same red count badge wherever a real count exists. */
-.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
-  .attendance-notification-button,
-  .tasks-notification-button,
-  .agenda-notification-button,
-  .finance-notification-button,
-  .invoice-notification-button,
-  .accounting-notification-button
-) > span:not(.reports-bell):not(.settings-bell){
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  .attendance-notification-button,.tasks-notification-button,.agenda-notification-button,
+  .finance-notification-button,.invoice-notification-button,.accounting-notification-button
+) > span{
   position:absolute!important;
   right:-4px!important;
   top:-4px!important;
@@ -240,10 +189,5 @@
 }
 
 @media(max-width:760px){
-  .crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{gap:6px!important}
-  .crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-user):not(.crm-topbar-primary),
-  .crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary.crm-topbar-primary{
-    padding-left:9px!important;
-    padding-right:9px!important;
-  }
+  .crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{gap:6px!important}
 }
