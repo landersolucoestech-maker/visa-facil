@@ -1,0 +1,58 @@
+/* VISA FÁCIL — Dashboard + CRM bell structural fix
+   These two legacy headers still render a text glyph (⌁). Replace that glyph
+   with a visible CSS-drawn bell so the icon no longer depends on text/background-image. */
+
+.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class]){
+  position:relative!important;
+  width:36px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  max-height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid #d8dde5!important;
+  border-radius:5px!important;
+  background:#fff!important;
+  background-image:none!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class])::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:13px!important;
+  height:14px!important;
+  transform:translate(-50%,-58%)!important;
+  border:1.8px solid #1b365f!important;
+  border-radius:8px 8px 4px 4px!important;
+  background:transparent!important;
+  box-sizing:border-box!important;
+}
+
+.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class])::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  left:50%!important;
+  top:calc(50% + 8px)!important;
+  width:4px!important;
+  height:2px!important;
+  transform:translateX(-50%)!important;
+  border-radius:0 0 4px 4px!important;
+  background:#1b365f!important;
+}
+
+.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > button[aria-label="Alertas"]:not([class]):hover{
+  border-color:#aeb8c7!important;
+  background:#f7f8fa!important;
+}
