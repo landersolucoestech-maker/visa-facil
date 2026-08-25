@@ -34,6 +34,8 @@ import './styles/settings-refinement.css';
 import './styles/crm-header-actions-unified.css';
 // Dashboard/CRM still use a legacy text glyph; force the real visible bell last.
 import './styles/crm-dashboard-relationship-bell-fix.css';
+// Configurações uses the same real SVG bell as Tarefas and must override legacy/global hiding.
+import './styles/settings-header-actions-fix.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
