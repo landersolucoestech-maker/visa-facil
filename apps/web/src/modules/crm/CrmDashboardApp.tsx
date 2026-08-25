@@ -111,15 +111,6 @@ export function CrmDashboardApp() {
                 ))}
               </div>
             </article>
-
-            <article className="crm-panel">
-              <div className="crm-panel__heading"><h2>Financeiro (Resumo)</h2><a href={href('/crm/financeiro/transacoes')}>Ver módulo</a></div>
-              <div className="crm-finance-summary">
-                <div><small>Receitas</small><strong>{money(revenue)}</strong></div>
-                <div><small>Despesas</small><strong>{money(expenses)}</strong></div>
-              </div>
-              <div className="crm-result"><small>Resultado</small><strong>{money(result)}</strong><p>Receitas recebidas menos despesas pagas</p></div>
-            </article>
           </section>
 
           <section className="crm-dashboard-grid crm-dashboard-grid--bottom">
