@@ -1,16 +1,64 @@
-/* Restore the original VISA FÁCIL navy tone without changing sidebar v2 structure. */
+/* Restore the VISA FÁCIL navy tone and keep all sidebar text white. */
 :root{
   --vf-sidebar-bg:#102a59;
   --vf-sidebar-surface:#17366b;
   --vf-sidebar-active:#1b3f73;
   --vf-sidebar-border:rgba(255,255,255,.10);
-  --vf-sidebar-text:#e0e8f5;
-  --vf-sidebar-muted:#9aacca;
+  --vf-sidebar-text:#ffffff;
+  --vf-sidebar-muted:#ffffff;
 }
 
 .crm-sidebar--shared,
 .site-cms-sidebar{
   background:#102a59!important;
+  color:#fff!important;
+}
+
+/* All textual content in both authenticated sidebars is white. */
+.crm-sidebar--shared :is(
+  .crm-brand strong,
+  .crm-brand small,
+  .crm-workspace-switch>span,
+  .crm-workspace-switch select,
+  .crm-sidebar-label,
+  .crm-sidebar-body nav>a,
+  .crm-sidebar-group__trigger,
+  .crm-sidebar-subnav a,
+  .crm-sidebar-footer-link,
+  .crm-sidebar-logout
+),
+.site-cms-sidebar :is(
+  .site-cms-brand strong,
+  .site-cms-brand small,
+  .site-cms-workspace-switch>span,
+  .site-cms-workspace-switch select,
+  .site-cms-nav-label,
+  .site-cms-sidebar-body nav>a,
+  .site-cms-public-link,
+  .site-cms-user strong,
+  .site-cms-user small,
+  .site-cms-sidebar-footer>button
+){
+  color:#fff!important;
+}
+
+.crm-sidebar--shared :is(
+  .crm-sidebar-body nav>a:hover,
+  .crm-sidebar-body nav>a.is-active,
+  .crm-sidebar-group__trigger:hover,
+  .crm-sidebar-group__trigger.is-active,
+  .crm-sidebar-subnav a:hover,
+  .crm-sidebar-subnav a.is-active,
+  .crm-sidebar-footer-link:hover,
+  .crm-sidebar-logout:hover
+),
+.site-cms-sidebar :is(
+  .site-cms-sidebar-body nav>a:hover,
+  .site-cms-sidebar-body nav>a.is-active,
+  .site-cms-public-link:hover,
+  .site-cms-sidebar-footer>button:hover
+){
+  color:#fff!important;
 }
 
 .crm-sidebar-footer,
@@ -20,6 +68,7 @@
 
 .site-cms-user>span{
   background:#1b3f73!important;
+  color:#fff!important;
 }
 
 @media(max-width:680px){
