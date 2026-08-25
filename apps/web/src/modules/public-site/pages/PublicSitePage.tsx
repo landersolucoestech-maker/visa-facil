@@ -16,7 +16,7 @@ export function PublicSitePage() {
   usePublicSiteInteractions(rootRef);
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} className="public-site">
       <PublicHeader />
       <main>
         <HeroSection />
