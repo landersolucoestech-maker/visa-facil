@@ -1,7 +1,6 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import './marketing.css';
-import mockData from './mocks/marketing.dev.json';
-import { isMockDataEnabled } from '../../shared/runtimeFlags';
+import { getMarketingMockFixture } from './mocks/marketingMockProvider';
 
 type Section='overview'|'campaigns'|'calendar'|'metrics';
 type CalendarView='dia'|'semana'|'mes'|'ano';
@@ -36,9 +35,9 @@ function periodLabel(date:Date,view:CalendarView){if(view==='dia')return date.to
 function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
 function paidPlatform(channel?:string):PaidPlatform{return channel==='Google Ads'?'Google Ads':channel==='YouTube'?'YouTube Ads':channel==='TikTok'?'TikTok Ads':'Meta Ads'}
 
-const fixture=mockData as MarketingFixture;
-const initialContents:ContentItem[]=isMockDataEnabled()?(fixture.contents??[]).map(content=>({id:content.id??crypto.randomUUID(),date:content.date??'',time:content.time??'',title:content.title??'',channels:[(content.channel??'Instagram') as Platform],primaryChannel:(content.channel??'Instagram') as Platform,type:content.type??'Feed',status:content.status??'Agendado',owner:content.owner??'',copy:content.copy??''})):[];
-const initialCampaigns:Campaign[]=isMockDataEnabled()?(fixture.campaigns??[]).map(campaign=>({id:campaign.id??crypto.randomUUID(),name:campaign.name??'',objective:campaign.objective??'',status:campaign.status??'Rascunho',paidPlatforms:[paidPlatform(campaign.channel)],budget:campaign.budget??0,dailyBudget:Math.round((campaign.budget??0)/30),spent:campaign.spent??0,leads:campaign.leads??0,conversions:campaign.conversions??0,startDate:campaign.startDate??'',endDate:campaign.endDate??'',audience:'Brasileiros interessados em assessoria de vistos',ageRange:'25–34',destinationUrl:'https://visafacil.com.br',placements:['Feed','Stories'],headline:campaign.name??'',primaryCopy:campaign.objective??'',cta:'Saiba mais'})):[];
+const fixture=getMarketingMockFixture() as MarketingFixture;
+const initialContents:ContentItem[]=(fixture.contents??[]).map(content=>({id:content.id??crypto.randomUUID(),date:content.date??'',time:content.time??'',title:content.title??'',channels:[(content.channel??'Instagram') as Platform],primaryChannel:(content.channel??'Instagram') as Platform,type:content.type??'Feed',status:content.status??'Agendado',owner:content.owner??'',copy:content.copy??''}));
+const initialCampaigns:Campaign[]=(fixture.campaigns??[]).map(campaign=>({id:campaign.id??crypto.randomUUID(),name:campaign.name??'',objective:campaign.objective??'',status:campaign.status??'Rascunho',paidPlatforms:[paidPlatform(campaign.channel)],budget:campaign.budget??0,dailyBudget:Math.round((campaign.budget??0)/30),spent:campaign.spent??0,leads:campaign.leads??0,conversions:campaign.conversions??0,startDate:campaign.startDate??'',endDate:campaign.endDate??'',audience:'Brasileiros interessados em assessoria de vistos',ageRange:'25–34',destinationUrl:'https://visafacil.com.br',placements:['Feed','Stories'],headline:campaign.name??'',primaryCopy:campaign.objective??'',cta:'Saiba mais'}));
 
 export function MarketingApp(){
  const section=currentSection();
@@ -47,7 +46,6 @@ export function MarketingApp(){
  const [campaignModal,setCampaignModal]=useState<{mode:'create'|'edit';record?:Campaign}>();
  const [contentModal,setContentModal]=useState<{mode:'create'|'edit';record?:ContentItem}>();
  const [notificationsOpen,setNotificationsOpen]=useState(false);
- const [userOpen,setUserOpen]=useState(false);
  const [calendarView,setCalendarView]=useState<CalendarView>('semana');
  const [referenceDate,setReferenceDate]=useState(()=>new Date());
  const totals=useMemo(()=>({budget:campaigns.reduce((sum,campaign)=>sum+campaign.budget,0),spent:campaigns.reduce((sum,campaign)=>sum+campaign.spent,0),leads:campaigns.reduce((sum,campaign)=>sum+campaign.leads,0),conversions:campaigns.reduce((sum,campaign)=>sum+campaign.conversions,0)}),[campaigns]);
@@ -55,12 +53,12 @@ export function MarketingApp(){
  const subtitle=section==='overview'?'Cockpit operacional do setor de marketing':section==='campaigns'?'Planeje, execute e monitore campanhas e tráfego pago':section==='calendar'?'Programação de conteúdos':'Performance derivada das campanhas registradas';
  const saveContent=(draft:Omit<ContentItem,'id'>)=>{if(contentModal?.record)setContents(current=>current.map(item=>item.id===contentModal.record!.id?{...item,...draft}:item));else setContents(current=>[{...draft,id:crypto.randomUUID()},...current]);setContentModal(undefined)};
  const saveCampaign=(draft:CampaignDraft)=>{if(campaignModal?.record)setCampaigns(current=>current.map(item=>item.id===campaignModal.record!.id?{...item,...draft}:item));else setCampaigns(current=>[{...draft,id:crypto.randomUUID(),spent:0,leads:0,conversions:0},...current]);setCampaignModal(undefined)};
- return <div className="crm-shell marketing-shell" onClick={()=>{setNotificationsOpen(false);setUserOpen(false)}}>
+ return <div className="crm-shell marketing-shell" onClick={()=>setNotificationsOpen(false)}>
   <div className="crm-workspace"><header className="crm-topbar"><div><small>VISA FÁCIL · CRM · MARKETING</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions" onClick={event=>event.stopPropagation()}>
    {section==='campaigns'&&<button className="crm-topbar-primary marketing-new" type="button" onClick={()=>setCampaignModal({mode:'create'})}>+ Nova Campanha</button>}
    {section==='calendar'&&<button className="crm-topbar-primary marketing-new" type="button" onClick={()=>setContentModal({mode:'create'})}>+ Novo Conteúdo</button>}
-   <div className="marketing-menu"><button className="marketing-bell" type="button" aria-label="Alertas" aria-expanded={notificationsOpen} onClick={()=>{setNotificationsOpen(value=>!value);setUserOpen(false)}}><BellIcon/></button>{notificationsOpen&&<div className="marketing-dropdown"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div>
-   <div className="marketing-menu"><button className="crm-user" type="button" onClick={()=>{setUserOpen(value=>!value);setNotificationsOpen(false)}}><span>VF</span><div><strong>Administrador</strong><small>Protótipo frontend</small></div><span className="crm-user-caret">⌄</span></button>{userOpen&&<div className="marketing-dropdown marketing-user"><button type="button">Perfil</button><a href={href('/crm/configuracoes')}>Configurações</a><button className="is-danger" type="button">Logout</button></div>}</div>
+   <div className="marketing-menu"><button className="marketing-bell" type="button" aria-label="Alertas" aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(value=>!value)}><BellIcon/></button>{notificationsOpen&&<div className="marketing-dropdown"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div>
+   <a className="crm-user" href={href('/crm/configuracoes')} aria-label="Abrir configurações"><span>VF</span><div><strong>Administrador</strong><small>Ambiente interno</small></div></a>
   </div></header>
   <main className="marketing-content">
    {section==='overview'&&<Overview campaigns={campaigns} contents={contents} totals={totals}/>} 
