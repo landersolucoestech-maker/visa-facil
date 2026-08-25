@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { getAuthSession, isInternalPath } from './modules/auth/auth';
+import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
@@ -98,14 +98,15 @@ function withSharedSidebar(page: ReactNode) {
 
 export function RootApplication() {
   let path = normalizePath(window.location.pathname);
-  const session=getAuthSession();
+  const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
 
   if(path==='/login'){
+    if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>)}
     if(session){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>)}
     return internal(<LoginApp/>);
   }
 
-  if(isInternalPath(path)&&!session){replacePath('/login');return internal(<LoginApp/>)}
+  if(AUTHENTICATION_ENABLED&&isInternalPath(path)&&!session){replacePath('/login');return internal(<LoginApp/>)}
   if(path==='/workspaces')return internal(<WorkspaceSelectorApp/>);
   if(path==='/site-admin'||path.startsWith('/site-admin/'))return internal(<SiteCmsApp/>);
   if(path==='/preview')return <PublicSitePage preview/>;
