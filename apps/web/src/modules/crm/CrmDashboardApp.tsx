@@ -5,16 +5,16 @@ import { getFinanceInitialRecords } from '../finance/mocks/financeMockProvider';
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const RECENT_ACTIVITIES = [
-  { name: 'André', activity: 'Novo lead via WhatsApp', time: 'há 8 min', initials: 'AN', tone: 'red' },
-  { name: 'Juliana', activity: 'Alterada para qualificado', time: 'há 24 min', initials: 'JU', tone: 'blue' },
-  { name: 'Camila', activity: 'Follow-up realizado', time: 'há 1 h', initials: 'CA', tone: 'navy' },
-  { name: 'Mariana', activity: 'Contato atualizado', time: 'há 2 h', initials: 'MA', tone: 'blue' },
+  { name: 'André', activity: 'Novo lead via WhatsApp', time: 'há 8 min' },
+  { name: 'Juliana', activity: 'Alterada para qualificado', time: 'há 24 min' },
+  { name: 'Camila', activity: 'Follow-up realizado', time: 'há 1 h' },
+  { name: 'Mariana', activity: 'Contato atualizado', time: 'há 2 h' },
 ];
 
 const TODAY_AGENDA = [
-  { time: '09:30', label: 'Entrevista', meta: 'Cliente · Confirmado', status: 'done' },
-  { time: '14:00', label: 'Reunião', meta: 'Lead · Pendente', status: 'next' },
-  { time: '16:30', label: 'Follow-up', meta: 'Cliente · Confirmado', status: 'later' },
+  { time: '09:30', label: 'Entrevista', meta: 'Cliente · Confirmado' },
+  { time: '14:00', label: 'Reunião', meta: 'Lead · Pendente' },
+  { time: '16:30', label: 'Follow-up', meta: 'Cliente · Confirmado' },
 ];
 
 const LEAD_ORIGINS = [
@@ -25,10 +25,10 @@ const LEAD_ORIGINS = [
 ];
 
 const PENDING_ITEMS = [
-  { count: 2, label: 'Follow-ups', detail: 'para concluir hoje', tone: 'red' },
-  { count: 1, label: 'Lead aguardando resposta', detail: 'sem retorno', tone: 'amber' },
-  { count: 3, label: 'Tarefas', detail: 'em aberto', tone: 'blue' },
-  { count: 1, label: 'Atendimento não lido', detail: 'requer atenção', tone: 'navy' },
+  { count: 2, label: 'Follow-ups', detail: 'para concluir hoje', priority: 'Alta' },
+  { count: 1, label: 'Lead aguardando resposta', detail: 'sem retorno', priority: 'Média' },
+  { count: 3, label: 'Tarefas', detail: 'em aberto', priority: 'Normal' },
+  { count: 1, label: 'Atendimento não lido', detail: 'requer atenção', priority: 'Alta' },
 ];
 
 function basePath() {
@@ -41,8 +41,7 @@ function href(path: string) {
 
 function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
   return (
-    <article className="crm-kpi-card" data-dashboard-kpi={label}>
-      <span className={`crm-kpi-card__icon crm-kpi-card__icon--${tone}`}>●</span>
+    <article className={`crm-kpi-card crm-dashboard-kpi crm-dashboard-kpi--${tone}`} data-dashboard-kpi={label}>
       <div>
         <small>{label}</small>
         <strong>{value}</strong>
@@ -111,12 +110,12 @@ export function CrmDashboardApp() {
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-activity-card">
               <div className="crm-dashboard-card-heading">
                 <div><h2>ATIVIDADES RECENTES</h2><p>Movimentações mais recentes do CRM</p></div>
-                <a href={href('/crm/relacionamento')}>Ver CRM</a>
+                <a href={href('/crm/relacionamento')}>Ver todas</a>
               </div>
               <ul className="crm-dashboard-activity-list">
                 {RECENT_ACTIVITIES.map((item) => (
                   <li key={item.name}>
-                    <span className={`crm-dashboard-avatar crm-dashboard-avatar--${item.tone}`}>{item.initials}</span>
+                    <span className="crm-dashboard-activity-marker" aria-hidden="true" />
                     <div className="crm-dashboard-activity-copy">
                       <strong>{item.name}</strong>
                       <span>{item.activity}</span>
@@ -130,17 +129,16 @@ export function CrmDashboardApp() {
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-agenda-card">
               <div className="crm-dashboard-card-heading">
                 <div><h2>AGENDA</h2><p>Compromissos de hoje</p></div>
-                <a href={href('/crm/agenda')}>Ver agenda</a>
+                <a href={href('/crm/agenda')}>Abrir agenda</a>
               </div>
-              <div className="crm-dashboard-agenda-header">
-                <span>HOJE</span>
+              <div className="crm-dashboard-section-meta">
+                <span>Hoje</span>
                 <strong>{TODAY_AGENDA.length} compromissos</strong>
               </div>
-              <div className="crm-dashboard-agenda-timeline">
+              <div className="crm-dashboard-agenda-list">
                 {TODAY_AGENDA.map((item) => (
-                  <div className={`crm-dashboard-agenda-row is-${item.status}`} key={`${item.time}-${item.label}`}>
+                  <div className="crm-dashboard-agenda-row" key={`${item.time}-${item.label}`}>
                     <time>{item.time}</time>
-                    <span className="crm-dashboard-agenda-marker" aria-hidden="true" />
                     <div>
                       <strong>{item.label}</strong>
                       <small>{item.meta}</small>
@@ -155,7 +153,7 @@ export function CrmDashboardApp() {
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-origin-card">
               <div className="crm-dashboard-card-heading">
                 <div><h2>ORIGEM DOS LEADS</h2><p>Distribuição por canal de aquisição</p></div>
-                <span className="crm-dashboard-heading-metric"><strong>{originTotal}</strong> leads</span>
+                <span className="crm-dashboard-card-total">{originTotal} leads</span>
               </div>
               <div className="crm-dashboard-origin-chart" role="img" aria-label="Gráfico horizontal de origem dos leads">
                 {LEAD_ORIGINS.map((item) => (
@@ -172,14 +170,14 @@ export function CrmDashboardApp() {
             <article className="crm-panel crm-dashboard-summary-card crm-dashboard-pending-card">
               <div className="crm-dashboard-card-heading">
                 <div><h2>PENDÊNCIAS</h2><p>Itens que precisam de atenção</p></div>
-                <span className="crm-dashboard-heading-metric crm-dashboard-heading-metric--danger"><strong>{pendingTotal}</strong> abertas</span>
+                <span className="crm-dashboard-card-total">{pendingTotal} abertas</span>
               </div>
               <div className="crm-dashboard-pending-list">
                 {PENDING_ITEMS.map((item) => (
                   <div className="crm-dashboard-pending-item" key={item.label}>
-                    <span className={`crm-dashboard-pending-count is-${item.tone}`}>{item.count}</span>
+                    <strong className="crm-dashboard-pending-number">{item.count}</strong>
                     <div><strong>{item.label}</strong><small>{item.detail}</small></div>
-                    <span className="crm-dashboard-pending-chevron" aria-hidden="true">›</span>
+                    <span className={`crm-dashboard-priority is-${item.priority.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`}>{item.priority}</span>
                   </div>
                 ))}
               </div>
