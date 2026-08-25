@@ -1,4 +1,4 @@
-/* Restore the VISA FÁCIL navy tone and keep all sidebar text white. */
+/* Restore the VISA FÁCIL navy tone and force every sidebar text element to white. */
 :root{
   --vf-sidebar-bg:#102a59;
   --vf-sidebar-surface:#17366b;
@@ -14,51 +14,32 @@
   color:#fff!important;
 }
 
-/* All textual content in both authenticated sidebars is white. */
-.crm-sidebar--shared :is(
-  .crm-brand strong,
-  .crm-brand small,
-  .crm-workspace-switch>span,
-  .crm-workspace-switch select,
-  .crm-sidebar-label,
-  .crm-sidebar-body nav>a,
-  .crm-sidebar-group__trigger,
-  .crm-sidebar-subnav a,
-  .crm-sidebar-footer-link,
-  .crm-sidebar-logout
-),
-.site-cms-sidebar :is(
-  .site-cms-brand strong,
-  .site-cms-brand small,
-  .site-cms-workspace-switch>span,
-  .site-cms-workspace-switch select,
-  .site-cms-nav-label,
-  .site-cms-sidebar-body nav>a,
-  .site-cms-public-link,
-  .site-cms-user strong,
-  .site-cms-user small,
-  .site-cms-sidebar-footer>button
-){
+/* No exceptions: every descendant inherits/uses white foreground. */
+.crm-sidebar--shared *,
+.site-cms-sidebar *{
   color:#fff!important;
 }
 
-.crm-sidebar--shared :is(
-  .crm-sidebar-body nav>a:hover,
-  .crm-sidebar-body nav>a.is-active,
-  .crm-sidebar-group__trigger:hover,
-  .crm-sidebar-group__trigger.is-active,
-  .crm-sidebar-subnav a:hover,
-  .crm-sidebar-subnav a.is-active,
-  .crm-sidebar-footer-link:hover,
-  .crm-sidebar-logout:hover
-),
-.site-cms-sidebar :is(
-  .site-cms-sidebar-body nav>a:hover,
-  .site-cms-sidebar-body nav>a.is-active,
-  .site-cms-public-link:hover,
-  .site-cms-sidebar-footer>button:hover
-){
+.crm-sidebar--shared :is(a,button,span,strong,small,b,label,select,option),
+.site-cms-sidebar :is(a,button,span,strong,small,b,label,select,option){
   color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+
+/* Keep native select menus readable when opened. */
+.crm-sidebar--shared select,
+.site-cms-sidebar select,
+.crm-sidebar--shared option,
+.site-cms-sidebar option{
+  background:#17366b!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+
+/* Remove the obsolete navigation heading from both sidebars. */
+.crm-sidebar-label,
+.site-cms-nav-label{
+  display:none!important;
 }
 
 .crm-sidebar-footer,
