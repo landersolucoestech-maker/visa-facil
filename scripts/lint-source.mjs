@@ -85,6 +85,7 @@ for(const removed of [
   'apps/web/src/modules/finance/FinanceApp.tsx',
   'apps/web/src/styles/crm-dashboard-kpis.css',
   'apps/web/src/styles/crm-dashboard-relationship-bell-fix.css',
+  'apps/web/src/styles/invoices-header-actions-fix.css',
   'apps/web/src/styles/settings-header-actions-fix.css',
 ])if(existsSync(resolve(root,removed)))fail(`Obsolete duplicate file must stay removed: ${removed}`);
 
@@ -96,6 +97,7 @@ if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be
 if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
 if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings-header-actions-fix'))fail('Module-specific bell overrides must not return.');
 if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correction layer must not return; the base contract owns the six-card grid.');
+if(rootApplication.includes('invoices-header-actions-fix.css')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
 if(failures.length){
