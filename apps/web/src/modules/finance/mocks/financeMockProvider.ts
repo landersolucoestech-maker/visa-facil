@@ -16,7 +16,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function isText(value: unknown): value is string { return typeof value === 'string'; }
 function isFinanceType(value: unknown): value is FinanceType { return value === 'Receita' || value === 'Despesa'; }
 function isFinanceStatus(value: unknown): value is FinanceStatus { return value === 'Recebido' || value === 'A receber' || value === 'Pago' || value === 'A pagar'; }
-function isFinanceRecord(value: unknown): value is FinanceRecord {
+export function isFinanceRecord(value: unknown): value is FinanceRecord {
   if (!isObject(value) || !isFinanceType(value.type) || !isFinanceStatus(value.status) || !STATUS_BY_TYPE[value.type].has(value.status)) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.description === 'string' && value.description.trim().length > 0
