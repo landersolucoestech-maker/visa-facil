@@ -20,7 +20,6 @@ import './styles/crm-relationship-refinement.css';
 import './styles/visachat-refinement.css';
 import './styles/tasks-refinement.css';
 import './styles/agenda-refinement.css';
-// Module refinement layers stay last so legacy module CSS cannot override them.
 import './styles/finance-transactions-refinement.css';
 import './styles/invoices-refinement.css';
 import './styles/invoices-header-actions-fix.css';
@@ -30,12 +29,9 @@ import './styles/marketing-overview-refinement.css';
 import './styles/marketing-campaigns-refinement.css';
 import './styles/reports-refinement.css';
 import './styles/settings-refinement.css';
-// Canonical topbar contract must be the final CRM override across every module.
+import './styles/settings-tabs-refinement.css';
+// Single canonical topbar contract; no module-specific bell overrides are loaded after it.
 import './styles/crm-header-actions-unified.css';
-// Dashboard/CRM still use a legacy text glyph; force the real visible bell last.
-import './styles/crm-dashboard-relationship-bell-fix.css';
-// Configurações uses the same real SVG bell as Tarefas and must override legacy/global hiding.
-import './styles/settings-header-actions-fix.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
