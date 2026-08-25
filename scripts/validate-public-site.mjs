@@ -21,12 +21,13 @@ const schemaGlobal = read('apps/web/src/modules/site-cms/siteSchemaGlobal.ts');
 const schemaConversion = read('apps/web/src/modules/site-cms/siteSchemaConversion.ts');
 const schemaEditorial = read('apps/web/src/modules/site-cms/siteSchemaEditorial.ts');
 const store = read('apps/web/src/modules/site-cms/siteStore.ts');
+const cmsDocumentContract = read('apps/web/src/modules/site-cms/cmsDocumentContract.ts');
 const crm = read('apps/web/src/modules/crm/CrmApp.tsx');
 const crmTypes = read('apps/web/src/modules/crm/types.ts');
 const crmSidebar = read('apps/web/src/components/CrmSidebar.tsx');
 const crmMockProvider = read('apps/web/src/modules/crm/mocks/mockDataProvider.ts');
 const crmMockData = read('apps/web/src/modules/crm/mocks/crm-records.dev.json');
-const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store].join('\n');
+const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store, cmsDocumentContract].join('\n');
 const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
 
 assert(rootApp.includes('<PublicSitePage/>') || rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
@@ -52,7 +53,8 @@ assert(contact.includes('data-form') && containsAll(schemaEditorial, ['Nome comp
 assert(containsAll(schemaGlobal, ['Instagram', 'Facebook', 'TikTok', '© 2026 VISA FÁCIL']), 'CMS footer/social defaults changed unexpectedly');
 assert(!schemaGlobal.toLowerCase().includes('youtube'), 'YouTube must remain removed');
 assert(containsAll(publicPage, ['SiteContentProvider', 'resolvePublicDocument', 'page.sections.filter', 'page.seo.title', "ensureMeta('description')", "ensureMeta('og:image',true)"]), 'Public page must consume the CMS document and page SEO');
-assert(containsAll(store, ['DRAFT_KEY', 'PUBLISHED_KEY', 'loadDraft', 'loadPublished', 'publishDraft', 'isDocument']), 'Draft/published CMS storage contract is incomplete');
+assert(containsAll(store, ['DRAFT_KEY', 'PUBLISHED_KEY', 'loadDraft', 'loadPublished', 'publishDraft', 'parseCmsDocument', 'normalizeCmsPath']), 'Draft/published CMS storage contract is incomplete');
+assert(containsAll(cmsDocumentContract, ['isCmsDocument', 'parseCmsDocument', 'normalizeCmsPath', 'VALID_PAGE_STATUSES', 'VALID_MEDIA_KINDS', 'hasUniqueIds']), 'Persisted CMS document validation contract is incomplete');
 assert(containsAll(schema, ['PAGE_SECTION_TYPES', 'GLOBAL_SECTION_TYPES', 'createInitialCmsDocument', 'createSectionFromType']), 'Dynamic CMS schema contract is incomplete');
 
 assert(containsAll(crmSidebar, ['Dashboard', 'CRM', 'VisaChat', 'Tarefas', 'Agenda', 'Financeiro', 'Marketing', 'Relatórios', 'Configurações']), 'Shared CRM sidebar is incomplete');
