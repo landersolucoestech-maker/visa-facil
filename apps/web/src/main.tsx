@@ -24,6 +24,7 @@ import './styles/agenda-refinement.css';
 import './styles/finance-transactions-refinement.css';
 import './styles/invoices-refinement.css';
 import './styles/invoices-header-actions-fix.css';
+import './styles/accounting-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
