@@ -30,13 +30,13 @@ Principais domínios:
 
 ### Estado operacional da sessão
 
-`shared/operationalSessionStore.ts` é a fonte de sessão compartilhada entre rotas para os domínios operacionais que alimentam o Dashboard: Relacionamento, Tarefas, Agenda, Transações e VisaChat. Cada domínio é persistido em `sessionStorage` somente durante a sessão atual do navegador.
+`shared/sessionRecords.ts` é a infraestrutura genérica de registros persistidos apenas durante a sessão atual do navegador. Toda leitura valida os registros em runtime e exige IDs únicos. JSON corrompido, registros incompatíveis ou IDs duplicados são rejeitados como conjunto e substituídos pelo fallback validado do domínio. Toda gravação passa pela mesma validação antes de atingir `sessionStorage`.
 
-`shared/sessionRecords.ts` implementa o contrato genérico dessa camada. Toda leitura valida os registros em runtime e exige IDs únicos. JSON corrompido, registros incompatíveis ou IDs duplicados são rejeitados como conjunto e substituídos pelo fallback validado do domínio. Toda gravação também passa pela mesma validação antes de atingir `sessionStorage`.
+`shared/operationalSessionStore.ts` centraliza os domínios que alimentam diretamente o Dashboard: Relacionamento, Tarefas, Agenda, Transações e VisaChat. Invoices utiliza `modules/finance/invoiceSessionStore.ts`, pois precisa validar também total, ledger de pagamentos e estados de liquidação. Marketing utiliza `modules/marketing/marketingSessionStore.ts`, que valida os modelos ricos de campanhas e conteúdos e converte fixtures apenas na fronteira de seed.
 
-Os providers `*.dev.json` continuam sendo apenas fontes de seed para desenvolvimento. Componentes operacionais e Dashboard não devem lê-los diretamente: eles consomem a fonte canônica da sessão. Isso evita que alterações desapareçam ao trocar de rota ou que o Dashboard exiba um snapshot independente dos módulos operacionais.
+Os providers `*.dev.json` continuam sendo apenas fontes de seed para desenvolvimento. Componentes mutáveis não devem lê-los diretamente: eles consomem a fonte canônica de sessão do respectivo domínio. Isso evita que alterações desapareçam ao trocar de rota e evita que Dashboard, Invoices ou subrotas de Marketing trabalhem sobre snapshots independentes.
 
-Essa camada **não é persistência remota**. Recarregar em uma nova sessão do navegador ou usar outro dispositivo não compartilha dados.
+Essa camada **não é persistência remota**. Uma nova sessão do navegador ou outro dispositivo não compartilha dados.
 
 ### Relacionamento
 
@@ -50,7 +50,13 @@ Essa camada **não é persistência remota**. Recarregar em uma nova sessão do 
 
 Transações são mantidas na fonte operacional compartilhada da sessão. A tela consulta categorias ativas no momento do uso, em vez de congelar uma lista no carregamento do módulo.
 
-Invoices representam documentos de faturamento/fiscais. Elas podem referenciar valores e pagamentos, mas não constituem uma segunda fonte de receita para Contabilidade; isso evita dupla contagem. Somente pagamentos com liquidação `Liquidado` alteram o valor recebido e o status financeiro da invoice.
+Invoices representam documentos de faturamento/fiscais. Elas podem referenciar valores e pagamentos, mas não constituem uma segunda fonte de receita para Contabilidade; isso evita dupla contagem. Somente pagamentos com liquidação `Liquidado` alteram `paid`. `Pago` e `Parcialmente pago` são derivados do total e do ledger; `Vencida` é derivado do vencimento. O formulário não pode reduzir o total para abaixo do valor já liquidado. O store de sessão rejeita pagamentos duplicados, ledger incompatível, `paid` superior ao total e estados financeiros incoerentes.
+
+### Marketing
+
+Campanhas e conteúdos persistem durante a sessão por `marketingSessionStore.ts`. Os modelos ricos usados pela UI são validados em runtime antes da gravação e após a leitura. Fixtures são convertidos uma única vez por funções tipadas; a UI não recria contratos `Raw*`, não fabrica IDs para seeds inválidos e não depende de casts permissivos.
+
+Rascunhos de campanha podem permanecer incompletos no nível comercial, mas precisam preservar integridade estrutural de datas e valores. Uma campanha finalizada exige nome, orçamento positivo e ao menos uma plataforma de mídia paga. Finalizar uma campanha local não simula ativação em plataforma externa: um novo rascunho finalizado passa a `Agendada`, não a `Ativa`.
 
 ### Fixtures de desenvolvimento
 
@@ -111,7 +117,7 @@ Não implementar fallbacks que simulem sucesso de integração.
 
 Templates CSV e validação estrutural de CSV são funcionalidades reais do frontend. A validação verifica formato, tamanho, cabeçalho e campos esperados.
 
-Importação persistente e exportação dos dados operacionais permanecem desabilitadas enquanto os domínios não possuírem uma fonte compartilhada persistente adequada para integração de arquivos. A fonte operacional em `sessionStorage` resolve continuidade entre rotas, mas não é banco de dados nem contrato de importação/exportação durável.
+Importação persistente e exportação dos dados operacionais permanecem desabilitadas enquanto os domínios não possuírem uma fonte compartilhada persistente adequada para integração de arquivos. A continuidade em `sessionStorage` resolve navegação durante a sessão, mas não é banco de dados nem contrato de importação/exportação durável.
 
 Uma ação chamada XLSX não pode gerar TXT/CSV. Importações devem validar e realmente processar os dados ou permanecer indisponíveis com explicação clara.
 
@@ -136,7 +142,7 @@ O workflow CI acrescenta smoke runtime após o build. O deploy do Pages repete o
 
 ### Lint estrutural
 
-`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes, estilos corretivos obsoletos e bypass da fonte operacional compartilhada da sessão.
+`scripts/lint-source.mjs` protege decisões arquiteturais que não são cobertas pelo compilador, incluindo `any` explícito, imports diretos de fixtures, casts não validados de fixtures, sidebars concorrentes, mocks de produção, regressão do gate de dependências, controles de cabeçalho inertes, estilos corretivos obsoletos e bypass das fontes canônicas de sessão de Relacionamento, Tarefas, Agenda, Transações, VisaChat, Invoices e Marketing.
 
 ### Testes
 
