@@ -1,0 +1,26 @@
+.crm-global-page .crm-dashboard-grid--top{grid-template-columns:1fr 1fr 1fr}
+.crm-global-page .crm-dashboard-grid--top>.crm-panel{min-width:0}
+.crm-global-page .crm-panel__heading>a{display:inline-flex;align-items:center;min-height:34px;padding:0 10px;border:1px solid var(--crm-border);border-radius:8px;background:#fff;color:var(--crm-navy);font-size:11px;font-weight:800;text-decoration:none;white-space:nowrap}
+.crm-global-page .crm-panel__heading>a:hover{background:#f5f8fc;border-color:#b8c6da}
+.crm-dashboard-activity-list,.crm-dashboard-agenda-list{display:grid;margin-top:16px}
+.crm-dashboard-activity-item{min-width:0;display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--crm-border-soft)}
+.crm-dashboard-activity-item:last-child{border-bottom:0}
+.crm-dashboard-activity-dot{width:8px;height:8px;border-radius:50%;background:var(--crm-blue)}
+.crm-dashboard-activity-dot.is-lead{background:var(--crm-red)}
+.crm-dashboard-activity-item>div{min-width:0}
+.crm-dashboard-activity-item strong,.crm-dashboard-activity-item small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crm-dashboard-activity-item strong{color:var(--crm-navy);font-size:12px}
+.crm-dashboard-activity-item small{margin-top:3px;color:var(--crm-muted);font-size:10px}
+.crm-dashboard-activity-item time{color:var(--crm-muted);font-size:10px;font-weight:800}
+.crm-dashboard-agenda-item{min-width:0;display:grid;grid-template-columns:62px minmax(0,1fr);align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--crm-border-soft)}
+.crm-dashboard-agenda-item:last-child{border-bottom:0}
+.crm-dashboard-agenda-date{display:grid;place-items:center;min-height:52px;padding:7px;border:1px solid #dfe7f3;border-radius:10px;background:#f5f8fd;text-align:center}
+.crm-dashboard-agenda-date strong{color:var(--crm-navy);font-size:12px}
+.crm-dashboard-agenda-date small{margin-top:3px;color:var(--crm-blue);font-size:10px;font-weight:800}
+.crm-dashboard-agenda-item>div:last-child{min-width:0}
+.crm-dashboard-agenda-item>div:last-child strong,.crm-dashboard-agenda-item>div:last-child small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crm-dashboard-agenda-item>div:last-child strong{color:var(--crm-navy);font-size:12px}
+.crm-dashboard-agenda-item>div:last-child small{margin-top:4px;color:var(--crm-muted);font-size:10px}
+.crm-dashboard-card-empty{min-height:155px;display:grid;place-items:center;margin:0;color:var(--crm-muted);font-size:12px;text-align:center}
+@media(max-width:1380px){.crm-global-page .crm-dashboard-grid--top{grid-template-columns:1fr 1fr}.crm-global-page .crm-dashboard-grid--top>.crm-panel:last-child{grid-column:1/-1}}
+@media(max-width:900px){.crm-global-page .crm-dashboard-grid--top{grid-template-columns:1fr}.crm-global-page .crm-dashboard-grid--top>.crm-panel:last-child{grid-column:auto}}
