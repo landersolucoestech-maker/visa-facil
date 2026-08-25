@@ -6,7 +6,7 @@ import { getAttendanceInitialConversations, type AttendanceConversation } from '
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/crm', icon: '⌂' },
   { label: 'CRM', href: '/crm/relacionamento', icon: '◎' },
-  { label: 'Atendimentos', href: '/crm/atendimentos', icon: '◌' },
+  { label: 'VisaChat', href: '/crm/atendimentos', icon: '◌' },
   { label: 'Tarefas', href: '/crm/tarefas', icon: '✓' },
   { label: 'Agenda', href: '/crm/agenda', icon: '□' },
   { label: 'Financeiro', href: '/crm/financeiro', icon: '$' },
@@ -72,7 +72,7 @@ export function AttendanceApp() {
 
     <div className="crm-workspace">
       <header className="crm-topbar">
-        <div><small>VISA FÁCIL · CRM</small><h1>Atendimentos</h1><p>Central de conversas e relacionamento com clientes e leads.</p></div>
+        <div><small>VISA FÁCIL · CRM</small><h1>VisaChat</h1><p>Central de conversas e relacionamento com clientes e leads.</p></div>
         <div className="crm-topbar-actions" onClick={(event) => event.stopPropagation()}>
           <button className="crm-topbar-primary" type="button" onClick={() => setNewConversationOpen(true)}>+ Nova conversa</button>
           <div className="attendance-topbar-menu">
