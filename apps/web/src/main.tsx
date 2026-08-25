@@ -16,6 +16,7 @@ import './styles/ui-system.css';
 import './styles/crm-dashboard-kpis.css';
 import './styles/crm-dashboard-cards.css';
 import './styles/product-refinement.css';
+import './styles/sidebar-v2.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
