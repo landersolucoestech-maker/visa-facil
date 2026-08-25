@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import './finance.css';
 import { getFinanceInitialRecords, type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
+import { OfxImportModal } from './OfxImportModal';
 
 type Mode = 'create' | 'view' | 'edit';
 type Draft = Omit<FinanceRecord, 'id'>;
@@ -204,16 +205,14 @@ export function FinanceTransactionsApp() {
     </div>
 
     {modal && <TransactionModal mode={modal.mode} record={modal.record} close={() => setModal(undefined)} save={save} />}
-    {ofx && <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && setOfx(false)}>
-      <div className="finance-ofx-modal finance-transaction-ofx-modal">
-        <header><div><span>IMPORTAR OFX</span><h2>Importar extrato bancário</h2><p>Selecione o arquivo e defina como as regras financeiras serão aplicadas.</p></div><button type="button" onClick={() => setOfx(false)} aria-label="Fechar">×</button></header>
-        <div className="finance-ofx-body">
-          <label className="finance-ofx-drop"><input type="file" accept=".ofx,application/x-ofx" /><UploadIcon /><strong>Selecionar arquivo OFX</strong><span>Arquivos .OFX exportados pelo banco</span></label>
-          <label><span>Aplicar regras financeiras</span><select defaultValue="Sim"><option>Sim</option><option>Não</option></select><small>As regras podem categorizar automaticamente as movimentações importadas.</small></label>
-        </div>
-        <footer><button className="crm-btn-secondary" type="button" onClick={() => setOfx(false)}>Cancelar</button><button className="crm-btn-primary" type="button" onClick={() => setOfx(false)}>Importar</button></footer>
-      </div>
-    </div>}
+    {ofx && <OfxImportModal
+      existingIds={records.map((record) => record.id)}
+      close={() => setOfx(false)}
+      imported={(incoming) => {
+        setRecords((current) => [...incoming, ...current]);
+        setOfx(false);
+      }}
+    />}
   </div>;
 }
 
