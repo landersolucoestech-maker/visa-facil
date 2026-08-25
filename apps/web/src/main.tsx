@@ -19,6 +19,7 @@ import './styles/product-refinement.css';
 import './styles/sidebar-v2.css';
 import './styles/sidebar-color-fix.css';
 import './styles/crm-relationship-refinement.css';
+import './styles/visachat-refinement.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
