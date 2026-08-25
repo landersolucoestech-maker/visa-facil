@@ -1,4 +1,5 @@
 import taskFixtures from './tasks.dev.json';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type TaskStatus = 'Pendente' | 'Em andamento' | 'Concluída';
 export type TaskPriority = 'Baixa' | 'Média' | 'Alta';
@@ -20,9 +21,7 @@ export type TaskRecord = {
   updatedAt: string;
 };
 
-const devMocksEnabled = import.meta.env.VITE_CRM_MOCKS === 'true';
-
 export function getTaskInitialRecords(): TaskRecord[] {
-  if (!devMocksEnabled) return [];
+  if (!isMockDataEnabled()) return [];
   return structuredClone(taskFixtures) as TaskRecord[];
 }
