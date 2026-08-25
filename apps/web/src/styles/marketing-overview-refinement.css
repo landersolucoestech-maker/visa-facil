@@ -71,12 +71,14 @@
   min-width:0!important;
   display:grid!important;
   grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;
-  align-items:start!important;
+  align-items:stretch!important;
   gap:10px!important;
   margin:0!important;
 }
 .crm-global-page .marketing-content>.marketing-grid>.marketing-panel{
   min-width:0!important;
+  height:100%!important;
+  align-self:stretch!important;
   overflow:hidden!important;
   padding:0!important;
   border:1px solid var(--product-border,#dfe3e8)!important;
@@ -248,9 +250,77 @@
   white-space:nowrap!important;
 }
 
+/* Visual QA correction: the generic Marketing refinement changed the bell to
+   a white surface while the shared CRM bell glyph is also white. Keep this
+   overview control aligned with the canonical dark CRM notification button. */
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell{
+  position:relative!important;
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid var(--product-navy,#0d1b3d)!important;
+  border-radius:5px!important;
+  background:var(--product-navy,#0d1b3d)!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+}
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell::before{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:14px!important;
+  height:14px!important;
+  display:block!important;
+  border:2px solid #fff!important;
+  border-bottom-width:3px!important;
+  border-radius:8px 8px 5px 5px!important;
+  background:transparent!important;
+  box-sizing:border-box!important;
+  transform:translate(-50%,-56%)!important;
+}
+.crm-global-page .marketing-shell .crm-topbar .marketing-bell::after{
+  content:""!important;
+  position:absolute!important;
+  left:50%!important;
+  top:calc(50% + 8px)!important;
+  width:4px!important;
+  height:2px!important;
+  display:block!important;
+  border:0!important;
+  border-radius:0 0 4px 4px!important;
+  background:#fff!important;
+  transform:translateX(-50%)!important;
+}
+
+/* Keep both Overview panels exactly the same outer height on desktop even
+   when one dataset contains more rows than the other. */
+@media(min-width:1101px){
+  .crm-global-page .marketing-content>.marketing-grid{
+    align-items:stretch!important;
+  }
+  .crm-global-page .marketing-content>.marketing-grid>.marketing-panel{
+    height:auto!important;
+    min-height:310px!important;
+    align-self:stretch!important;
+  }
+}
+
 @media(max-width:1100px){
   .crm-global-page .marketing-content>.marketing-grid{
     grid-template-columns:1fr!important;
+    align-items:start!important;
+  }
+  .crm-global-page .marketing-content>.marketing-grid>.marketing-panel{
+    height:auto!important;
+    min-height:0!important;
   }
 }
 
