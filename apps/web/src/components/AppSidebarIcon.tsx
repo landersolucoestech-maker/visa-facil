@@ -4,6 +4,7 @@ export type AppSidebarIconName =
   | 'support'
   | 'tasks'
   | 'calendar'
+  | 'contracts'
   | 'finance'
   | 'marketing'
   | 'reports'
@@ -25,6 +26,7 @@ export function AppSidebarIcon({name,className=''}:{name:AppSidebarIconName;clas
       case 'support': return <><path d="M5 5.5h14v10H9l-4 3v-13Z"/><path d="M8 9h8M8 12h5"/></>;
       case 'tasks': return <><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12 2.5 2.5L16.5 8.5"/></>;
       case 'calendar': return <><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M8 3.5v4M16 3.5v4M4 9.5h16"/><path d="M8 13h3M13 13h3M8 16h3"/></>;
+      case 'contracts': return <><path d="M6 3.5h9l3 3V20.5H6Z"/><path d="M15 3.5V7h3M9 11h6M9 14h6M9 17h4"/></>;
       case 'finance': return <><rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M3.5 10h17"/><path d="M7 14h3"/></>;
       case 'marketing': return <><path d="M5 10.5v3h4l6 4V6l-6 4.5H5Z"/><path d="M9 13.5 10.5 19"/><path d="M18 9v6"/></>;
       case 'reports': return <><path d="M5 20V10M12 20V4M19 20v-7"/><path d="M3 20h18"/></>;
