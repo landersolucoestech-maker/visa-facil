@@ -23,7 +23,6 @@ export function AttendanceApp() {
   const [statusFilter, setStatusFilter] = useState('Todos');
   const [message, setMessage] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [userOpen, setUserOpen] = useState(false);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newConversation, setNewConversation] = useState<NewConversationDraft>(EMPTY_NEW_CONVERSATION);
   const [newConversationError, setNewConversationError] = useState('');
@@ -89,14 +88,13 @@ export function AttendanceApp() {
     setNewConversationError('');
   };
 
-  return <div className="attendance-shell" onClick={() => { setNotificationsOpen(false); setUserOpen(false); }}>
+  return <div className="attendance-shell" onClick={() => setNotificationsOpen(false)}>
     <div className="crm-workspace attendance-workspace">
       <header className="crm-topbar attendance-topbar">
         <div><small>VISA FÁCIL · CRM</small><h1>VisaChat</h1><p>Central de conversas com clientes e leads.</p></div>
         <div className="crm-topbar-actions attendance-topbar-actions" onClick={(event) => event.stopPropagation()}>
           <button className="crm-topbar-primary attendance-new-conversation" type="button" onClick={openNewConversation}><PlusIcon/><span>Nova conversa</span></button>
-          <div className="attendance-topbar-menu"><button className="attendance-notification-button" type="button" aria-label="Notificações" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen((value) => !value); setUserOpen(false); }}><BellIcon />{unreadCount > 0 && <span className="attendance-notification-dot" aria-label={`${unreadCount} mensagens não lidas`}>{unreadCount}</span>}</button>{notificationsOpen && <div className="attendance-dropdown attendance-notifications"><strong>Notificações</strong><p>{unreadCount > 0 ? `${unreadCount} mensagem${unreadCount === 1 ? '' : 's'} não lida${unreadCount === 1 ? '' : 's'} no VisaChat.` : 'Nenhuma notificação no momento.'}</p></div>}</div>
-          <div className="attendance-topbar-menu"><button className="crm-user" type="button" aria-expanded={userOpen} onClick={() => { setUserOpen((value) => !value); setNotificationsOpen(false); }}><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret" aria-hidden="true">⌄</span></button>{userOpen && <div className="attendance-dropdown attendance-user-dropdown"><a href={browserHref('/crm/configuracoes')}>Configurações</a></div>}</div>
+          <div className="attendance-topbar-menu"><button className="attendance-notification-button" type="button" aria-label="Notificações" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((value) => !value)}><BellIcon />{unreadCount > 0 && <span className="attendance-notification-dot" aria-label={`${unreadCount} mensagens não lidas`}>{unreadCount}</span>}</button>{notificationsOpen && <div className="attendance-dropdown attendance-notifications"><strong>Notificações</strong><p>{unreadCount > 0 ? `${unreadCount} mensagem${unreadCount === 1 ? '' : 's'} não lida${unreadCount === 1 ? '' : 's'} no VisaChat.` : 'Nenhuma notificação no momento.'}</p></div>}</div>
         </div>
       </header>
 
