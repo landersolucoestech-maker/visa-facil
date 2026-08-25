@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { getCrmInitialRecords } from './mocks/mockDataProvider';
 import { getFinanceInitialRecords } from '../finance/mocks/financeMockProvider';
+import { getAgendaInitialEvents } from '../agenda/mocks/agendaMockProvider';
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -10,6 +11,12 @@ function basePath() {
 
 function href(path: string) {
   return `${basePath()}${path}` || path;
+}
+
+function formatShortDate(value: string) {
+  if (!value) return '—';
+  const date = new Date(`${value}T12:00:00`);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
 function KpiCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: 'blue' | 'red' | 'navy' }) {
@@ -28,6 +35,7 @@ function KpiCard({ label, value, detail, tone }: { label: string; value: string;
 export function CrmDashboardApp() {
   const crmRecords = useMemo(() => getCrmInitialRecords(), []);
   const financeRecords = useMemo(() => getFinanceInitialRecords(), []);
+  const agendaEvents = useMemo(() => getAgendaInitialEvents(), []);
 
   const contacts = crmRecords.filter((record) => record.kind === 'contact').length;
   const leads = crmRecords.filter((record) => record.kind === 'lead').length;
@@ -41,12 +49,14 @@ export function CrmDashboardApp() {
     .reduce((total, record) => total + record.amount, 0);
   const result = revenue - expenses;
 
-  const leadCounts = {
-    Novo: crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus === 'Novo').length,
-    'Em contato': crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus === 'Em contato').length,
-    Qualificado: crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus === 'Qualificado').length,
-    Convertido: crmRecords.filter((record) => record.kind === 'lead' && record.leadStatus === 'Convertido').length,
-  };
+  const recentActivities = [...crmRecords]
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime())
+    .slice(0, 4);
+
+  const upcomingAgenda = [...agendaEvents]
+    .filter((event) => event.status !== 'Cancelado' && event.status !== 'Realizado')
+    .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`))
+    .slice(0, 3);
 
   const leadOrigins = ['Website', 'WhatsApp', 'Instagram', 'Facebook'].map((source) => ({
     source,
@@ -90,16 +100,43 @@ export function CrmDashboardApp() {
           </section>
 
           <section className="crm-dashboard-grid crm-dashboard-grid--top">
-            <article className="crm-panel">
-              <div className="crm-panel__heading"><h2>Leads por status</h2></div>
-              <div className="crm-donut-wrap">
-                <div className="crm-donut">{leads}</div>
-                <ul>
-                  <li><span className="dot dot--blue" />Novo <b>{leadCounts.Novo}</b></li>
-                  <li><span className="dot dot--red" />Em contato <b>{leadCounts['Em contato']}</b></li>
-                  <li><span className="dot dot--navy" />Qualificado <b>{leadCounts.Qualificado}</b></li>
-                  <li><span className="dot dot--soft" />Convertido <b>{leadCounts.Convertido}</b></li>
-                </ul>
+            <article className="crm-panel crm-dashboard-activity-card">
+              <div className="crm-panel__heading">
+                <h2>Atividades recentes</h2>
+                <a href={href('/crm/relacionamento')}>Ver CRM</a>
+              </div>
+              <div className="crm-dashboard-activity-list">
+                {recentActivities.length ? recentActivities.map((record) => (
+                  <div className="crm-dashboard-activity-item" key={record.id}>
+                    <span className={`crm-dashboard-activity-dot is-${record.kind}`} aria-hidden="true" />
+                    <div>
+                      <strong>{record.fullName || 'Contato sem nome'}</strong>
+                      <small>{record.kind === 'lead' ? 'Lead atualizado' : 'Contato atualizado'} · {record.source || 'CRM'}</small>
+                    </div>
+                    <time>{new Date(record.updatedAt || record.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</time>
+                  </div>
+                )) : <p className="crm-dashboard-card-empty">Nenhuma atividade registrada.</p>}
+              </div>
+            </article>
+
+            <article className="crm-panel crm-dashboard-agenda-card">
+              <div className="crm-panel__heading">
+                <h2>Agenda</h2>
+                <a href={href('/crm/agenda')}>Abrir agenda</a>
+              </div>
+              <div className="crm-dashboard-agenda-list">
+                {upcomingAgenda.length ? upcomingAgenda.map((event) => (
+                  <div className="crm-dashboard-agenda-item" key={event.id}>
+                    <div className="crm-dashboard-agenda-date">
+                      <strong>{formatShortDate(event.date)}</strong>
+                      <small>{event.startTime}</small>
+                    </div>
+                    <div>
+                      <strong>{event.title}</strong>
+                      <small>{event.location || event.type} · {event.status}</small>
+                    </div>
+                  </div>
+                )) : <p className="crm-dashboard-card-empty">Nenhum compromisso agendado.</p>}
               </div>
             </article>
 
