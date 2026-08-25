@@ -24,6 +24,7 @@ for(const path of sourceFiles){
   if(/\bas\s+any\b/.test(source)||/:\s*any\b/.test(source))fail(`${path}: explicit any is forbidden; model the contract instead.`);
   if(source.includes('dangerouslySetInnerHTML'))fail(`${path}: dangerouslySetInnerHTML is forbidden.`);
   if(source.includes('<iframe'))fail(`${path}: iframe embedding is forbidden.`);
+  if(/VITE_[A-Z0-9_]*(?:SECRET|TOKEN|API_KEY|PASSWORD)/.test(source))fail(`${path}: private credential names must not be exposed through VITE_* browser variables.`);
   if(source.includes('.dev.json')){
     if(!path.includes('/mocks/'))fail(`${path}: development fixtures may only be imported by canonical mock providers under /mocks/.`);
     else{
@@ -39,6 +40,10 @@ for(const path of sourceFiles){
     }
   }
 }
+
+const envExample=read('.env.example');
+if(!envExample.includes('VITE_API_BASE_URL='))fail('.env.example must expose the public backend base URL contract.');
+if(/VITE_[A-Z0-9_]*(?:SECRET|TOKEN|API_KEY|PASSWORD)\s*=/.test(envExample))fail('.env.example must never define browser-visible provider secrets.');
 
 const sidebarOwners=sourceFiles.filter((path)=>read(path).includes('<aside className="crm-sidebar'));
 if(sidebarOwners.length!==1||sidebarOwners[0]!=='apps/web/src/components/CrmSidebar.tsx')fail(`CRM sidebar must have one canonical owner; found: ${sidebarOwners.join(', ')||'none'}.`);
@@ -84,6 +89,25 @@ for(const token of ['getMarketingSessionCampaigns','saveMarketingSessionCampaign
 if(marketing.includes('getMarketingMockFixture')||marketing.includes('RawContent')||marketing.includes('RawCampaign')||marketing.includes('MarketingFixture'))fail('Marketing UI must not bypass the validated session source with permissive raw fixture contracts.');
 if(!marketingSessionStore.includes('readSessionRecords')||!marketingSessionStore.includes('writeSessionRecords')||!marketingSessionStore.includes('isMarketingContent')||!marketingSessionStore.includes('isMarketingCampaign'))fail('Marketing session storage must runtime-validate rich campaign/content records.');
 
+const integrationContract=read('apps/web/src/modules/integrations/integrationContract.ts');
+const integrationApi=read('apps/web/src/modules/integrations/integrationApi.ts');
+const integrationsUi=read('apps/web/src/modules/settings/SecurityIntegrationTabs.tsx');
+const settingsShared=read('apps/web/src/modules/settings/settingsShared.tsx');
+const apiClient=read('apps/web/src/shared/apiClient.ts');
+for(const provider of ['whatsapp','resend','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'])if(!integrationContract.includes(`'${provider}'`))fail(`Canonical integration registry is missing ${provider}.`);
+for(const token of ['IntegrationRuntimeStatus','serverOnlySecrets','externalRequirements','isIntegrationRuntimeStatus'])if(!integrationContract.includes(token))fail(`Integration contract is incomplete: missing ${token}.`);
+for(const token of ['/v1/integrations','connectIntegration','disconnectIntegration','syncIntegration','apiRequest'])if(!integrationApi.includes(token))fail(`Integration API facade is incomplete: missing ${token}.`);
+for(const token of ['INTEGRATION_REGISTRY','getIntegrationStatuses','connectIntegration','disconnectIntegration','syncIntegration','isBackendConfigured'])if(!integrationsUi.includes(token))fail(`Settings integration UI must use the real backend contract: missing ${token}.`);
+if(integrationsUi.includes('INITIAL_INTEGRATIONS')||settingsShared.includes('INITIAL_INTEGRATIONS'))fail('Parallel/static integration registries must not return.');
+if(!apiClient.includes('VITE_API_BASE_URL')||!apiClient.includes("credentials:'include'")||!apiClient.includes('INVALID_API_RESPONSE'))fail('Frontend API boundary must remain configured, session-aware and runtime-validated.');
+
+const contactSection=read('apps/web/src/modules/public-site/components/ContactSection.tsx');
+const publicInteractions=read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
+const publicLeadService=read('apps/web/src/modules/public-site/services/publicLeadService.ts');
+for(const token of ['submitPublicLead','createPublicLeadPayload','isBackendConfigured'])if(!contactSection.includes(token))fail(`Public lead form must use the backend-ready contract: missing ${token}.`);
+if(publicInteractions.includes('Formulário demonstrativo')||contactSection.includes('Formulário demonstrativo'))fail('Public lead capture must not simulate a successful submission.');
+if(!publicLeadService.includes("'/v1/public/leads'")||!publicLeadService.includes('apiRequest'))fail('Public lead service must target the canonical backend endpoint.');
+
 const packageJson=read('package.json');
 if(!packageJson.includes('npm run audit'))fail('Root quality gate must include dependency audit.');
 const ci=read('.github/workflows/frontend-ci.yml');
@@ -103,6 +127,7 @@ for(const removed of[
 const main=read('apps/web/src/main.tsx');
 const crmSidebar=read('apps/web/src/components/CrmSidebar.tsx');
 const rootApplication=read('apps/web/src/RootApplication.tsx');
+const contractsApp=read('apps/web/src/modules/contracts/ContractsApp.tsx');
 const accountMenu=read('apps/web/src/components/AccountMenu.tsx');
 const accountMenuCss=read('apps/web/src/components/account-menu.css');
 const profileApp=read('apps/web/src/modules/settings/ProfileApp.tsx');
@@ -117,9 +142,9 @@ if(rootApplication.includes('invoices-header-actions-fix')||!rootApplication.inc
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
 const mainNavBlock=crmSidebar.match(/const MAIN_ITEMS:[\s\S]*?\];/)?.[0]??'';
-const expectedMainNav=['Dashboard','CRM','Agenda','Tarefas','VisaChat'];
+const expectedMainNav=['Dashboard','CRM','Agenda','Tarefas','VisaChat','Contratos'];
 let previousMainIndex=-1;
-for(const label of expectedMainNav){const index=mainNavBlock.indexOf(`label: '${label}'`);if(index<0||index<=previousMainIndex)fail(`CRM sidebar primary order must be Dashboard → CRM → Agenda → Tarefas → VisaChat; invalid position for ${label}.`);previousMainIndex=index;}
+for(const label of expectedMainNav){const index=mainNavBlock.indexOf(`label: '${label}'`);if(index<0||index<=previousMainIndex)fail(`CRM sidebar primary order must be Dashboard → CRM → Agenda → Tarefas → VisaChat → Contratos; invalid position for ${label}.`);previousMainIndex=index;}
 const mainRenderIndex=crmSidebar.indexOf('{MAIN_ITEMS.map');
 const financeRenderIndex=crmSidebar.indexOf('<span>Financeiro</span>');
 const marketingRenderIndex=crmSidebar.indexOf('<span>Marketing</span>');
@@ -127,6 +152,8 @@ const afterRenderIndex=crmSidebar.indexOf('{AFTER_ITEMS.map');
 if(!(mainRenderIndex>=0&&mainRenderIndex<financeRenderIndex&&financeRenderIndex<marketingRenderIndex&&marketingRenderIndex<afterRenderIndex))fail('CRM sidebar group order must be primary navigation → Financeiro → Marketing → Relatórios/Configurações.');
 const afterNavBlock=crmSidebar.match(/const AFTER_ITEMS:[\s\S]*?\];/)?.[0]??'';
 if(!(afterNavBlock.indexOf("label: 'Relatórios'")>=0&&afterNavBlock.indexOf("label: 'Relatórios'")<afterNavBlock.indexOf("label: 'Configurações'")))fail('CRM sidebar must end with Relatórios → Configurações.');
+if(!rootApplication.includes("path==='/crm/contratos'")||!rootApplication.includes('withSharedSidebar(<ContractsApp/>)'))fail('Contracts module must remain a lazy shared-shell route.');
+for(const token of ['A lógica definitiva depende do arquivo de referência','Sem operação fictícia','Autentique'])if(!contractsApp.includes(token))fail(`Contracts readiness shell is incomplete: missing ${token}.`);
 
 if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
