@@ -1,12 +1,44 @@
 import { useEffect, useState } from 'react';
-import { INITIAL_COMPANY, INITIAL_AUTOMATIONS, type AutomationKey, Card, Field, Toggle, SettingRow, SettingsGroup, base } from './settingsShared';
+import { INITIAL_COMPANY, INITIAL_AUTOMATIONS, type AutomationKey, type Company, Card, Field, Toggle, SettingRow, SettingsGroup, base } from './settingsShared';
 
 const MAX_LOGO_BYTES=5*1024*1024;
 const ALLOWED_LOGO_TYPES=new Set(['image/png','image/jpeg','image/webp']);
+const COMPANY_KEY='visa-facil.settings.company.v1';
+const AUTOMATIONS_KEY='visa-facil.settings.automations.v1';
+const FREQUENCIES=['Imediato','Diário (resumo)','Semanal','Por evento/gatilho'] as const;
+const TIMES=['08:00','09:00','10:00','12:00','14:00','18:00'] as const;
+type AutomationSession={values:Record<AutomationKey,boolean>;frequency:string;time:string};
+
+function storage(){return typeof sessionStorage==='undefined'?null:sessionStorage}
+function isObject(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
+function readCompany():Company{
+ const store=storage();if(!store)return structuredClone(INITIAL_COMPANY);
+ try{
+  const raw=store.getItem(COMPANY_KEY);if(!raw)return structuredClone(INITIAL_COMPANY);
+  const value:unknown=JSON.parse(raw);if(!isObject(value))return structuredClone(INITIAL_COMPANY);
+  const keys:Array<keyof Company>=['companyName','fantasyName','cnpj','address','phone','responsible','slug'];
+  return keys.every(key=>typeof value[key]==='string')?Object.fromEntries(keys.map(key=>[key,value[key]])) as Company:structuredClone(INITIAL_COMPANY);
+ }catch{return structuredClone(INITIAL_COMPANY)}
+}
+function writeCompany(value:Company){storage()?.setItem(COMPANY_KEY,JSON.stringify(value))}
+function validAutomationValues(value:unknown):value is Record<AutomationKey,boolean>{
+ if(!isObject(value))return false;
+ return (Object.keys(INITIAL_AUTOMATIONS) as AutomationKey[]).every(key=>typeof value[key]==='boolean')&&value.backup===false;
+}
+function readAutomationSession():AutomationSession{
+ const fallback={values:structuredClone(INITIAL_AUTOMATIONS),frequency:'Imediato',time:'09:00'};
+ const store=storage();if(!store)return fallback;
+ try{
+  const raw=store.getItem(AUTOMATIONS_KEY);if(!raw)return fallback;
+  const value:unknown=JSON.parse(raw);if(!isObject(value)||!validAutomationValues(value.values)||typeof value.frequency!=='string'||typeof value.time!=='string'||!FREQUENCIES.includes(value.frequency as typeof FREQUENCIES[number])||!TIMES.includes(value.time as typeof TIMES[number]))return fallback;
+  return {values:{...value.values,backup:false},frequency:value.frequency,time:value.time};
+ }catch{return fallback}
+}
+function writeAutomationSession(value:AutomationSession){storage()?.setItem(AUTOMATIONS_KEY,JSON.stringify({...value,values:{...value.values,backup:false}}))}
 
 export function CompanyTab(){
- const [company,setCompany]=useState(INITIAL_COMPANY);
- const [snapshot,setSnapshot]=useState(INITIAL_COMPANY);
+ const [company,setCompany]=useState<Company>(()=>readCompany());
+ const [snapshot,setSnapshot]=useState<Company>(()=>readCompany());
  const [editing,setEditing]=useState(false);
  const [logo,setLogo]=useState<string>();
  const [logoError,setLogoError]=useState('');
@@ -22,9 +54,9 @@ export function CompanyTab(){
  };
  const begin=()=>{setSnapshot(company);setEditing(true);setSaved(false)};
  const cancel=()=>{setCompany(snapshot);setEditing(false)};
- const save=()=>{setEditing(false);setSaved(true)};
+ const save=()=>{writeCompany(company);setSnapshot(company);setEditing(false);setSaved(true)};
  return <div className="settings-company-grid">
-  <Card title="Identidade Visual" description="Prévia da identidade usada nesta sessão do protótipo" icon="◐" className="settings-identity-card">
+  <Card title="Identidade Visual" description="Dados da empresa nesta sessão; a prévia de logo permanece apenas nesta aba" icon="◐" className="settings-identity-card">
    <div className="settings-identity">
     <label className="settings-logo-picker" title="Alterar logo"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={event=>chooseLogo(event.target.files?.[0])}/>{logo?<img src={logo} alt="Logo da empresa"/>:<span>VF</span>}<i>⌁</i></label>
     <button type="button" className="settings-btn settings-btn-outline" onClick={()=>document.querySelector<HTMLInputElement>('.settings-logo-picker input')?.click()}>Alterar foto</button>
@@ -44,17 +76,19 @@ export function CompanyTab(){
     <Field label="Slug da organização" help={`Link de cadastro: ${window.location.origin}${base()}/cadastro/${company.slug||'seu-slug'}`}><input disabled={!editing} value={company.slug} onChange={event=>setCompany(current=>({...current,slug:event.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-')}))}/></Field>
    </div>
    {editing&&<div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={save}>Aplicar nesta sessão</button><button className="settings-btn settings-btn-outline" onClick={cancel}>Cancelar</button></div>}
-   {saved&&<div className="settings-inline-success">✓ Alterações aplicadas apenas nesta sessão do frontend; não há persistência de empresa conectada.</div>}
+   {saved&&<div className="settings-inline-success">✓ Dados preservados no sessionStorage deste navegador. Não há persistência remota de empresa.</div>}
   </Card>
  </div>;
 }
 
 export function AutomationsTab(){
- const [values,setValues]=useState(INITIAL_AUTOMATIONS);
- const [frequency,setFrequency]=useState('Imediato');
- const [time,setTime]=useState('09:00');
+ const initial=readAutomationSession();
+ const [values,setValues]=useState(initial.values);
+ const [frequency,setFrequency]=useState(initial.frequency);
+ const [time,setTime]=useState(initial.time);
  const [saved,setSaved]=useState(false);
- const set=(key:AutomationKey,value:boolean)=>{setValues(current=>({...current,[key]:value}));setSaved(false)};
+ const set=(key:AutomationKey,value:boolean)=>{if(key==='backup')return;setValues(current=>({...current,[key]:value,backup:false}));setSaved(false)};
+ const apply=()=>{writeAutomationSession({values:{...values,backup:false},frequency,time});setSaved(true)};
  return <Card title="Automações & Notificações" description="Preferências de interface; nenhum executor de automações está conectado" icon="⚡">
   <div className="settings-info-box">As opções abaixo não disparam e-mails, push, backups ou jobs. Elas servem apenas para modelar preferências enquanto não existe backend/worker responsável pela execução.</div>
   <div className="settings-section-block"><div className="settings-section-title"><span>◌</span><div><h3>Canais de Notificação</h3><p>Preferências previstas para futura integração</p></div></div><div className="settings-channel-grid"><div><span>✉</span><strong>E-mail</strong><Toggle checked={values.email} onChange={value=>set('email',value)}/></div><div className="is-disabled"><span>▯</span><strong>SMS</strong><Toggle checked={false} onChange={()=>{}} disabled/></div><div><span>◌</span><strong>Push/In-App</strong><Toggle checked={values.push} onChange={value=>set('push',value)}/></div></div></div>
@@ -67,7 +101,7 @@ export function AutomationsTab(){
   <div className="settings-divider"/>
   <SettingsGroup title="Sistema" icon="↻"><SettingRow title="Alertas críticos do sistema" description="Preferência para futuros eventos de erro" checked={values.criticalAlerts} onChange={value=>set('criticalAlerts',value)}/><SettingRow title="Notificações operacionais" description="Preferência para futuras notificações in-app" checked={values.operational} onChange={value=>set('operational',value)}/><SettingRow title="Backup automático" description="Indisponível: não existe banco de dados ou rotina de backup neste repositório" checked={false} onChange={()=>{}} disabled/></SettingsGroup>
   <div className="settings-divider"/>
-  <div className="settings-section-block"><div className="settings-section-title"><span>◷</span><div><h3>Frequência & Preferências</h3></div></div><div className="settings-form-grid"><Field label="Frequência de envio"><select value={frequency} onChange={event=>setFrequency(event.target.value)}><option>Imediato</option><option>Diário (resumo)</option><option>Semanal</option><option>Por evento/gatilho</option></select></Field><Field label="Horário preferido"><select value={time} onChange={event=>setTime(event.target.value)}>{['08:00','09:00','10:00','12:00','14:00','18:00'].map(value=><option key={value}>{value}</option>)}</select></Field></div></div>
-  <div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={()=>setSaved(true)}>Aplicar nesta sessão</button>{saved&&<span className="settings-saved-text">✓ Preferências aplicadas localmente</span>}</div>
+  <div className="settings-section-block"><div className="settings-section-title"><span>◷</span><div><h3>Frequência & Preferências</h3></div></div><div className="settings-form-grid"><Field label="Frequência de envio"><select value={frequency} onChange={event=>{setFrequency(event.target.value);setSaved(false)}}>{FREQUENCIES.map(value=><option key={value}>{value}</option>)}</select></Field><Field label="Horário preferido"><select value={time} onChange={event=>{setTime(event.target.value);setSaved(false)}}>{TIMES.map(value=><option key={value}>{value}</option>)}</select></Field></div></div>
+  <div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={apply}>Aplicar nesta sessão</button>{saved&&<span className="settings-saved-text">✓ Preferências preservadas nesta sessão do navegador</span>}</div>
  </Card>;
 }
