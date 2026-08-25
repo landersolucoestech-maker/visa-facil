@@ -16,7 +16,7 @@ export type MarketingMockContent = {
 export type MarketingMockCampaign = {
   id: string;
   name: string;
-  channel: 'Meta Ads' | 'Google Ads' | 'YouTube' | 'TikTok' | 'Instagram';
+  channel: 'Meta Ads' | 'Google Ads' | 'YouTube' | 'TikTok';
   objective: string;
   status: string;
   budget: number;
@@ -33,7 +33,7 @@ export type MarketingMockFixture = {
 };
 
 const CONTENT_CHANNELS = new Set<MarketingMockContent['channel']>(['Instagram', 'Facebook', 'TikTok', 'YouTube', 'X', 'Threads']);
-const CAMPAIGN_CHANNELS = new Set<MarketingMockCampaign['channel']>(['Meta Ads', 'Google Ads', 'YouTube', 'TikTok', 'Instagram']);
+const CAMPAIGN_CHANNELS = new Set<MarketingMockCampaign['channel']>(['Meta Ads', 'Google Ads', 'YouTube', 'TikTok']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -56,7 +56,7 @@ function isContent(value: unknown): value is MarketingMockContent {
 }
 function isCampaign(value: unknown): value is MarketingMockCampaign {
   if (!isObject(value)) return false;
-  if (!isNonNegative(value.budget) || !isNonNegative(value.spent) || value.spent > value.budget || !isNonNegative(value.leads) || !Number.isInteger(value.leads) || !isNonNegative(value.conversions) || !Number.isInteger(value.conversions) || value.conversions > value.leads) return false;
+  if (!isNonNegative(value.budget) || value.budget <= 0 || !isNonNegative(value.spent) || value.spent > value.budget || !isNonNegative(value.leads) || !Number.isInteger(value.leads) || !isNonNegative(value.conversions) || !Number.isInteger(value.conversions) || value.conversions > value.leads) return false;
   if (typeof value.startDate !== 'string' || typeof value.endDate !== 'string' || !DATE_RE.test(value.startDate) || !DATE_RE.test(value.endDate) || value.endDate < value.startDate) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.name === 'string' && value.name.trim().length > 0
