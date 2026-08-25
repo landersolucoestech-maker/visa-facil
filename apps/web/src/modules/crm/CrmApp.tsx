@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './crm-relationship-layout.css';
 import './crm-record-modals.css';
-import { getCrmInitialRecords } from './mocks/mockDataProvider';
+import { getCrmSessionRecords, saveCrmSessionRecords } from '../../shared/operationalSessionStore';
 import type { CrmRecord, CrmRecordDraft, CrmTab, ModalMode, RecordKind } from './types';
 
 const SERVICE_OPTIONS = ['Assessoria para visto de turismo', 'Renovação de visto', 'Visto de estudante', 'Visto de trabalho', 'Visto de negócios', 'Outro'];
@@ -106,8 +106,9 @@ function RelationshipCrm({ tab, setTab, records, openModal, onDelete }: { tab: C
 
 export function CrmApp() {
   const [tab, setTab] = useState<CrmTab>('contacts');
-  const [records, setRecords] = useState<CrmRecord[]>(() => getCrmInitialRecords());
+  const [records, setRecords] = useState<CrmRecord[]>(() => getCrmSessionRecords());
   const [modal, setModal] = useState<{ mode: ModalMode; kind: RecordKind; record?: CrmRecord }>();
+  useEffect(() => { saveCrmSessionRecords(records); }, [records]);
   const openModal = (mode: ModalMode, kind: RecordKind, record?: CrmRecord) => setModal({ mode, kind, record });
   const saveRecord = (draft: CrmRecordDraft) => { const now = new Date().toISOString(); if (modal?.record) setRecords((current) => current.map((record) => record.id === modal.record?.id ? { ...record, ...draft, updatedAt: now } : record)); else if (modal) setRecords((current) => [...current, { ...draft, id: crypto.randomUUID(), kind: modal.kind, createdAt: now, updatedAt: now }]); setModal(undefined); };
   const deleteRecord = (record: CrmRecord) => { if (!window.confirm(`Excluir ${record.kind === 'contact' ? 'o contato' : 'o lead'} ${displayName(record)}?`)) return; setRecords((current) => current.filter((item) => item.id !== record.id)); };
