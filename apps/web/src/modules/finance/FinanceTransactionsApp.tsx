@@ -108,7 +108,6 @@ export function FinanceTransactionsApp() {
   const [menu, setMenu] = useState<string>();
   const [ofx, setOfx] = useState(false);
   const [notifications, setNotifications] = useState(false);
-  const [user, setUser] = useState(false);
   useEffect(() => { saveFinanceSessionRecords(records); }, [records]);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -147,7 +146,7 @@ export function FinanceTransactionsApp() {
   const clearFilters = () => { setQuery(''); setType('Todos'); setStatus('Todos'); setCategory('Todas'); setStart(''); setEnd(''); };
   const hasFilters = Boolean(query || type !== 'Todos' || status !== 'Todos' || category !== 'Todas' || start || end);
 
-  return <div className="crm-shell finance-shell finance-transactions-shell" onClick={() => { setMenu(undefined); setNotifications(false); setUser(false); }}>
+  return <div className="crm-shell finance-shell finance-transactions-shell" onClick={() => { setMenu(undefined); setNotifications(false); }}>
     <div className="crm-workspace finance-transactions-workspace">
       <header className="crm-topbar finance-transactions-topbar">
         <div><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Transações</h1><p>Receitas, despesas, contas a pagar e contas a receber.</p></div>
@@ -156,8 +155,7 @@ export function FinanceTransactionsApp() {
           <a className="finance-ofx-button finance-header-nav-button" href={href('/crm/regras-financeiras')}>Regras</a>
           <button className="finance-ofx-button" type="button" onClick={() => setOfx(true)}><UploadIcon />Importar OFX</button>
           <button className="crm-topbar-primary finance-new-transaction" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon />Nova transação</button>
-          <div className="finance-topbar-menu"><button className="finance-notification-button" type="button" aria-label="Alertas" aria-expanded={notifications} onClick={() => { setNotifications((value) => !value); setUser(false); }}><BellIcon />{alertRecords.length > 0 && <span className="finance-notification-count">{alertRecords.length}</span>}</button>{notifications && <div className="finance-dropdown finance-notifications"><header><strong>Notificações</strong><span>{alertRecords.length}</span></header>{alertRecords.length ? <div>{alertRecords.map((record) => <button key={record.id} type="button" onClick={() => { setNotifications(false); setModal({ mode: 'view', record }); }}><strong>{record.description}</strong><small>{record.dueDate < today ? 'Vencida' : 'Vence hoje'} · {record.status} · {money(record.amount)}</small></button>)}</div> : <p>Nenhuma pendência financeira para hoje.</p>}</div>}</div>
-          <div className="finance-topbar-menu"><button className="crm-user" type="button" aria-expanded={user} onClick={() => { setUser((value) => !value); setNotifications(false); }}><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret">⌄</span></button>{user && <div className="finance-dropdown finance-user-dropdown"><a href={href('/crm/configuracoes')}>Configurações</a></div>}</div>
+          <div className="finance-topbar-menu"><button className="finance-notification-button" type="button" aria-label="Alertas" aria-expanded={notifications} onClick={() => setNotifications((value) => !value)}><BellIcon />{alertRecords.length > 0 && <span className="finance-notification-count">{alertRecords.length}</span>}</button>{notifications && <div className="finance-dropdown finance-notifications"><header><strong>Notificações</strong><span>{alertRecords.length}</span></header>{alertRecords.length ? <div>{alertRecords.map((record) => <button key={record.id} type="button" onClick={() => { setNotifications(false); setModal({ mode: 'view', record }); }}><strong>{record.description}</strong><small>{record.dueDate < today ? 'Vencida' : 'Vence hoje'} · {record.status} · {money(record.amount)}</small></button>)}</div> : <p>Nenhuma pendência financeira para hoje.</p>}</div>}</div>
         </div>
       </header>
 
