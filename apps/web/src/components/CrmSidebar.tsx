@@ -40,7 +40,6 @@ function marketingSection(path:string):MarketingSection{if(path.endsWith('/campa
 function financeSection(path:string):FinanceSection{if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
 function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path==='/crm';return path===itemHref||path.startsWith(`${itemHref}/`)}
 function BrandMark(){return <span className="crm-brand-mark" aria-hidden="true"><i/><b/></span>}
-function FlagCard(){return <div className="crm-flag" aria-hidden="true"><span className="crm-flag__blue">✦ ✦ ✦<br/> ✦ ✦</span><span className="crm-flag__stripes"/></div>}
 
 export function CrmSidebar(){
  const path=currentPath();
@@ -54,6 +53,6 @@ export function CrmSidebar(){
   <div className={`crm-sidebar-marketing ${isFinance?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isFinance?'is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><span>$</span><b>Financeiro</b><i>{financeOpen?'⌃':'⌄'}</i></button>{financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   <div className={`crm-sidebar-marketing ${isMarketing?'is-active':''}`}><button type="button" className={`crm-sidebar-marketing__parent ${isMarketing?'is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><span>◈</span><b>Marketing</b><i>{marketingOpen?'⌃':'⌄'}</i></button>{marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}>{item.label}</a>)}</div>}</div>
   {AFTER_ITEMS.map(item=><a key={item.href} className={isActive(path,item.href)?'is-active':''} href={href(item.href)}><span>{item.icon}</span>{item.label}</a>)}
- </nav><div className="crm-sidebar-footer"><FlagCard/><a href={href('/')}>← Voltar ao site</a><button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}>Sair da conta</button><small>Protótipo · branch dev</small></div></aside>
+ </nav><div className="crm-sidebar-footer"><a href={href('/')}>← Voltar ao site</a><button className="crm-sidebar-logout" onClick={()=>{signOut();go('/login')}}>Sair da conta</button><small>Protótipo · branch dev</small></div></aside>
 }
 export default CrmSidebar;
