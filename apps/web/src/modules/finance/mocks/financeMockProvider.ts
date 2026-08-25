@@ -1,12 +1,10 @@
 import records from './finance.dev.json';
+import type { FinanceRecord, FinanceStatus, FinanceType } from '../types';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
-export type FinanceType = 'Receita' | 'Despesa';
-export type FinanceStatus = 'Recebido' | 'A receber' | 'Pago' | 'A pagar';
-export type FinanceRecord = {
-  id:string; description:string; type:FinanceType; category:string; amount:number; date:string; dueDate:string;
-  status:FinanceStatus; paymentMethod:string; relatedName:string; notes:string;
-};
+export type { FinanceRecord, FinanceStatus, FinanceType } from '../types';
 
 export function getFinanceInitialRecords(): FinanceRecord[] {
-  return JSON.parse(JSON.stringify(records)) as FinanceRecord[];
+  if (!isMockDataEnabled()) return [];
+  return structuredClone(records) as FinanceRecord[];
 }
