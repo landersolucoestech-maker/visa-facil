@@ -1,43 +1,45 @@
 import records from './crm-records.dev.json';
-import type { CrmRecord } from '../types';
+import type { CrmRecord, RecordKind } from '../types';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
-type RawMockRecord = Partial<CrmRecord>;
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+function isText(value: unknown): value is string { return typeof value === 'string'; }
+function isOptionalText(value: unknown) { return value === undefined || typeof value === 'string'; }
+function isKind(value: unknown): value is RecordKind { return value === 'contact' || value === 'lead'; }
+function isCrmRecord(value: unknown): value is CrmRecord {
+  if (!isObject(value) || !isKind(value.kind)) return false;
+  const validBase = typeof value.id === 'string' && value.id.trim().length > 0
+    && typeof value.fullName === 'string' && value.fullName.trim().length > 0
+    && isText(value.cpf)
+    && isText(value.rg)
+    && isText(value.passportNumber)
+    && typeof value.email === 'string' && value.email.trim().length > 0
+    && isText(value.phone)
+    && isText(value.whatsapp)
+    && isText(value.city)
+    && isText(value.state)
+    && isText(value.country)
+    && isText(value.notes)
+    && typeof value.createdAt === 'string' && Number.isFinite(Date.parse(value.createdAt))
+    && typeof value.updatedAt === 'string' && Number.isFinite(Date.parse(value.updatedAt));
+  if (!validBase) return false;
+  for (const field of ['relationship', 'contactStatus', 'source', 'owner', 'interest', 'destination', 'visaType', 'leadStatus', 'temperature', 'nextAction', 'nextActionDate'] as const) {
+    if (!isOptionalText(value[field])) return false;
+  }
+  if (value.kind === 'contact') return typeof value.relationship === 'string' && typeof value.contactStatus === 'string';
+  return typeof value.leadStatus === 'string' && typeof value.temperature === 'string';
+}
 
 export function getCrmInitialRecords(): CrmRecord[] {
   if (!isMockDataEnabled()) return [];
-
-  return structuredClone(records).map((record) => {
-    const raw = record as RawMockRecord;
-    const now = new Date().toISOString();
-
-    return {
-      id: raw.id ?? crypto.randomUUID(),
-      kind: raw.kind ?? 'contact',
-      fullName: raw.fullName ?? '',
-      cpf: raw.cpf ?? '',
-      rg: raw.rg ?? '',
-      passportNumber: raw.passportNumber ?? '',
-      email: raw.email ?? '',
-      phone: raw.phone ?? '',
-      whatsapp: raw.whatsapp ?? '',
-      city: raw.city ?? '',
-      state: raw.state ?? '',
-      country: raw.country ?? 'Brasil',
-      notes: raw.notes ?? '',
-      createdAt: raw.createdAt ?? now,
-      updatedAt: raw.updatedAt ?? now,
-      relationship: raw.relationship,
-      contactStatus: raw.contactStatus,
-      source: raw.source,
-      owner: raw.owner,
-      interest: raw.interest,
-      destination: raw.destination,
-      visaType: raw.visaType,
-      leadStatus: raw.leadStatus,
-      temperature: raw.temperature,
-      nextAction: raw.nextAction,
-      nextActionDate: raw.nextActionDate,
-    } satisfies CrmRecord;
+  const clone: unknown = structuredClone(records);
+  if (!Array.isArray(clone)) return [];
+  const seen = new Set<string>();
+  return clone.filter(isCrmRecord).filter((record) => {
+    if (seen.has(record.id)) return false;
+    seen.add(record.id);
+    return true;
   });
 }
