@@ -3,6 +3,7 @@ import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type InvoiceSeedStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';
 export type InvoiceSeedDirection = 'Entrada' | 'Saída';
+export type InvoiceSeedSettlementStatus = 'Liquidado' | 'Pendente';
 
 export type InvoiceSeedPayment = {
   id: string;
@@ -10,7 +11,7 @@ export type InvoiceSeedPayment = {
   method: string;
   amount: number;
   processingFee: number;
-  settlementStatus: string;
+  settlementStatus: InvoiceSeedSettlementStatus;
   notes: string;
 };
 
@@ -51,6 +52,7 @@ export type InvoiceSeed = {
 
 const VALID_STATUSES = new Set<InvoiceSeedStatus>(['Rascunho', 'Pronta', 'Enviada', 'Em aberto', 'Parcialmente pago', 'Pago', 'Vencida', 'Cancelada']);
 const VALID_DIRECTIONS = new Set<InvoiceSeedDirection>(['Entrada', 'Saída']);
+const VALID_SETTLEMENT_STATUSES = new Set<InvoiceSeedSettlementStatus>(['Liquidado', 'Pendente']);
 const FINANCIAL_FIELDS = ['serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'paid', 'unitValue'] as const;
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -64,11 +66,16 @@ function isFiniteNumber(value: unknown): value is number {
 function isPayment(value: unknown): value is InvoiceSeedPayment {
   if (!isObject(value)) return false;
   return typeof value.id === 'string'
+    && value.id.trim().length > 0
     && typeof value.date === 'string'
     && typeof value.method === 'string'
+    && value.method.trim().length > 0
     && isFiniteNumber(value.amount)
+    && value.amount > 0
     && isFiniteNumber(value.processingFee)
+    && value.processingFee >= 0
     && typeof value.settlementStatus === 'string'
+    && VALID_SETTLEMENT_STATUSES.has(value.settlementStatus as InvoiceSeedSettlementStatus)
     && typeof value.notes === 'string';
 }
 
@@ -78,7 +85,7 @@ function isInvoiceSeed(value: unknown): value is InvoiceSeed {
   if (value.noteDirection !== undefined && (typeof value.noteDirection !== 'string' || !VALID_DIRECTIONS.has(value.noteDirection as InvoiceSeedDirection))) return false;
   for (const field of FINANCIAL_FIELDS) {
     const candidate = value[field];
-    if (candidate !== undefined && !isFiniteNumber(candidate)) return false;
+    if (candidate !== undefined && (!isFiniteNumber(candidate) || candidate < 0)) return false;
   }
   if (value.payments !== undefined && (!Array.isArray(value.payments) || !value.payments.every(isPayment))) return false;
   return true;
