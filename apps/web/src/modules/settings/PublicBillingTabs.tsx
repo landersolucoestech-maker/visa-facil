@@ -1,16 +1,4 @@
-import { useState } from 'react';
-import { Card, Field, Toggle, base, StatusBadge } from './settingsShared';
-
-export function PublicRegistrationTab(){
- const [enabled,setEnabled]=useState(true);const [slug,setSlug]=useState('visa-facil');const link=`${window.location.origin}${base()}/cadastro/${slug}`;const [copied,setCopied]=useState(false);
- const copy=async()=>{try{await navigator.clipboard.writeText(link);setCopied(true)}catch{setCopied(false)}};
- return <Card title="Cadastro Público" description="Gere e compartilhe o link público de cadastro de clientes vinculado a este workspace." icon="◎">
-  <div className="settings-setting-row settings-public-toggle"><div><strong>Cadastro público ativo</strong><p>Quando desativado, o link público fica indisponível.</p></div><Toggle checked={enabled} onChange={setEnabled}/></div>
-  <div className="settings-public-link"><Field label="Link público"><div className="settings-inline-input"><input readOnly value={link}/><button className="settings-btn settings-btn-outline" onClick={copy}>⧉ {copied?'Copiado':'Copiar'}</button></div></Field></div>
-  <div className="settings-public-metrics">{[['Acessos','0'],['Conversões','0'],['Cadastros recebidos','0']].map(([l,v])=><article key={l}><span>{l}</span><strong>{v}</strong></article>)}</div>
-  <div className="settings-public-actions"><button className="settings-btn settings-btn-outline" onClick={()=>setSlug('visa-facil')}>↻ Gerar link</button><button className="settings-btn settings-btn-outline" onClick={()=>setSlug(`visa-facil-${Math.floor(Math.random()*900+100)}`)}>⟳ Regenerar slug</button>{enabled&&<button className="settings-btn settings-btn-danger" onClick={()=>setEnabled(false)}>▰ Revogar link</button>}</div>
- </Card>;
-}
+import { Card, StatusBadge } from './settingsShared';
 
 export function BillingTab(){
  const invoices=[{id:'VF-2026-008',date:'10/08/2026',amount:'R$ 249,00',status:'Pago'},{id:'VF-2026-007',date:'10/07/2026',amount:'R$ 249,00',status:'Pago'},{id:'VF-2026-006',date:'10/06/2026',amount:'R$ 249,00',status:'Pago'}];
@@ -22,4 +10,3 @@ export function BillingTab(){
   <Card title="Planos Disponíveis" description="Compare os planos e faça upgrade quando estiver pronto" icon="↗"><div className="settings-plans-grid">{plans.map(plan=><article className={plan.current?'is-current':''} key={plan.name}>{plan.current&&<span className="settings-current-plan">Plano Atual</span>}<h3>{plan.name}</h3><strong>{plan.price}</strong><ul>{plan.features.map(f=><li key={f}>✓ {f}</li>)}</ul><button disabled={plan.current} className={`settings-btn ${plan.current?'settings-btn-outline':'settings-btn-primary'} settings-full`}>{plan.current?'Plano Atual':'Fazer Upgrade'}</button></article>)}</div></Card>
  </div>;
 }
-
