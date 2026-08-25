@@ -1,4 +1,5 @@
 import data from './agenda.dev.json';
+import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type AgendaStatus = 'Confirmado' | 'Pendente' | 'Realizado' | 'Cancelado';
 export type AgendaViewMode = 'dia' | 'semana' | 'mes' | 'ano';
@@ -19,5 +20,6 @@ export type AgendaEvent = {
 };
 
 export function getAgendaInitialEvents(): AgendaEvent[] {
-  return (data as AgendaEvent[]).map((item) => ({ ...item }));
+  if (!isMockDataEnabled()) return [];
+  return structuredClone(data) as AgendaEvent[];
 }
