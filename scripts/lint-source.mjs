@@ -23,7 +23,11 @@ for(const path of sourceFiles){
   if(source.includes('<iframe'))fail(`${path}: iframe embedding is forbidden.`);
   if(source.includes('.dev.json')){
     if(!path.includes('/mocks/'))fail(`${path}: development fixtures may only be imported by canonical mock providers under /mocks/.`);
-    else if(!source.includes('isMockDataEnabled'))fail(`${path}: mock provider imports a development fixture without centralized runtime mock policy.`);
+    else{
+      if(!source.includes('isMockDataEnabled'))fail(`${path}: mock provider imports a development fixture without centralized runtime mock policy.`);
+      if(/structuredClone\([^;\n]+\)\s+as\s+/m.test(source))fail(`${path}: development fixture must be runtime-validated; unchecked structuredClone casts are forbidden.`);
+      if(/return\s+structuredClone\([^;\n]+\)\s+as\s+/m.test(source))fail(`${path}: development fixture must not be returned through an unchecked type assertion.`);
+    }
   }
 }
 
@@ -38,10 +42,16 @@ if(authenticationDisabled){
   for(const path of sourceFiles){
     const source=read(path);
     if(/>\s*Logout\s*</i.test(source))fail(`${path}: fake Logout action is forbidden while authentication is disabled.`);
+    if(/>\s*Perfil\s*</i.test(source))fail(`${path}: fake profile action is forbidden while authentication is disabled.`);
   }
 }
 
+const packageJson=read('package.json');
+if(!packageJson.includes('npm run audit'))fail('Root quality gate must include dependency audit.');
+const ci=read('.github/workflows/frontend-ci.yml');
 const pages=read('.github/workflows/pages.yml');
+if(!ci.includes('npm run audit'))fail('Website CI must keep dependency audit as a required gate.');
+if(!pages.includes('npm run audit'))fail('Pages deployment must keep dependency audit as a required gate.');
 if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not enable CRM mocks.');
 
 for(const removed of [
