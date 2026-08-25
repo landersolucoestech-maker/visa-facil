@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import './finance-accounting.css';
-import { getFinanceInitialRecords, type FinanceRecord } from './mocks/financeMockProvider';
+import type { FinanceRecord } from './mocks/financeMockProvider';
+import { getFinanceSessionRecords } from '../../shared/operationalSessionStore';
 
 type Entry = { id: string; kind: 'Receita' | 'Despesa'; category: string; description: string; amount: number; date: string };
 type AccountingAlert = { id: string; title: string; detail: string; tone: 'danger' | 'neutral' };
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const compactDate = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR') : '—';
-function basePath(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
-function href(path:string){return `${basePath()}${path}`||path}
 
 function BellIcon() {
   return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 21h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>;
@@ -18,14 +17,13 @@ function SearchIcon() {
 }
 
 export function FinancePLApp() {
-  const records = useMemo<FinanceRecord[]>(() => getFinanceInitialRecords(), []);
+  const records = useMemo<FinanceRecord[]>(() => getFinanceSessionRecords(), []);
   const today = new Date().toISOString().slice(0, 10);
   const [start, setStart] = useState(`${today.slice(0, 7)}-01`);
   const [end, setEnd] = useState(today);
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('Todos');
   const [notifications, setNotifications] = useState(false);
-  const [user, setUser] = useState(false);
 
   const entries = useMemo<Entry[]>(() => records
     .filter((record) => (record.type === 'Receita' && record.status === 'Recebido') || (record.type === 'Despesa' && record.status === 'Pago'))
@@ -74,13 +72,12 @@ export function FinancePLApp() {
 
   const clearFilters = () => { setQuery(''); setKind('Todos'); };
 
-  return <div className="crm-shell finance-accounting-shell accounting-workspace" onClick={() => { setNotifications(false); setUser(false); }}>
+  return <div className="crm-shell finance-accounting-shell accounting-workspace" onClick={() => setNotifications(false)}>
     <div className="crm-workspace accounting-workspace-main">
       <header className="crm-topbar accounting-topbar">
         <div className="accounting-topbar-copy"><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Contabilidade</h1><p>Receitas, despesas e resultado derivados das Transações.</p></div>
         <div className="crm-topbar-actions accounting-topbar-actions" onClick={(event) => event.stopPropagation()}>
-          <div className="accounting-topbar-menu"><button className="accounting-notification-button" type="button" aria-label="Notificações da contabilidade" aria-expanded={notifications} onClick={() => { setNotifications((current) => !current); setUser(false); }}><BellIcon />{alerts.length > 0 && <span>{alerts.length}</span>}</button>{notifications && <div className="accounting-dropdown accounting-notification-menu"><header><strong>Notificações</strong><span>{alerts.length}</span></header>{alerts.length ? <div>{alerts.map((alert) => <article className={alert.tone === 'danger' ? 'is-danger' : ''} key={alert.id}><strong>{alert.title}</strong><small>{alert.detail}</small></article>)}</div> : <p>Nenhum alerta contábil no período.</p>}</div>}</div>
-          <div className="accounting-topbar-menu"><button className="crm-user accounting-user" type="button" aria-expanded={user} onClick={() => { setUser((current) => !current); setNotifications(false); }}><span>VF</span><div><strong>Administrador</strong><small>Autenticação desativada</small></div><span className="crm-user-caret">⌄</span></button>{user && <div className="accounting-dropdown accounting-user-dropdown"><a href={href('/crm/configuracoes')}>Configurações</a></div>}</div>
+          <div className="accounting-topbar-menu"><button className="accounting-notification-button" type="button" aria-label="Notificações da contabilidade" aria-expanded={notifications} onClick={() => setNotifications((current) => !current)}><BellIcon />{alerts.length > 0 && <span>{alerts.length}</span>}</button>{notifications && <div className="accounting-dropdown accounting-notification-menu"><header><strong>Notificações</strong><span>{alerts.length}</span></header>{alerts.length ? <div>{alerts.map((alert) => <article className={alert.tone === 'danger' ? 'is-danger' : ''} key={alert.id}><strong>{alert.title}</strong><small>{alert.detail}</small></article>)}</div> : <p>Nenhum alerta contábil no período.</p>}</div>}</div>
         </div>
       </header>
 
