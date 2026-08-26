@@ -3,7 +3,7 @@ import type { CrmRecord } from '../modules/crm/types';
 import { isTaskRecord, getTaskInitialRecords, type TaskRecord } from '../modules/tasks/mocks/tasksMockProvider';
 import { isAgendaEvent, getAgendaInitialEvents, type AgendaEvent } from '../modules/agenda/mocks/agendaMockProvider';
 import { isFinanceRecord, getFinanceInitialRecords, type FinanceRecord } from '../modules/finance/mocks/financeMockProvider';
-import { isAttendanceConversation, getAttendanceInitialConversations, type AttendanceConversation } from '../modules/attendance/mocks/attendanceMockProvider';
+import { getAttendanceConversationKind, isAttendanceConversation, getAttendanceInitialConversations, type AttendanceConversation } from '../modules/attendance/mocks/attendanceMockProvider';
 import { readSessionRecords, writeSessionRecords } from './sessionRecords';
 
 const KEYS={
@@ -26,5 +26,10 @@ export function saveAgendaSessionEvents(records:AgendaEvent[]){return writeSessi
 export function getFinanceSessionRecords(){return readSessionRecords<FinanceRecord>(KEYS.finance,getFinanceInitialRecords,isFinanceRecord)}
 export function saveFinanceSessionRecords(records:FinanceRecord[]){return writeSessionRecords(KEYS.finance,records,isFinanceRecord)}
 
-export function getAttendanceSessionConversations(){return readSessionRecords<AttendanceConversation>(KEYS.attendance,getAttendanceInitialConversations,isAttendanceConversation)}
+export function getAttendanceSessionConversations(){
+ const records=readSessionRecords<AttendanceConversation>(KEYS.attendance,getAttendanceInitialConversations,isAttendanceConversation);
+ const teamSeeds=getAttendanceInitialConversations().filter(item=>getAttendanceConversationKind(item)==='team');
+ const knownIds=new Set(records.map(item=>item.id));
+ return [...records,...teamSeeds.filter(item=>!knownIds.has(item.id))];
+}
 export function saveAttendanceSessionConversations(records:AttendanceConversation[]){return writeSessionRecords(KEYS.attendance,records,isAttendanceConversation)}
