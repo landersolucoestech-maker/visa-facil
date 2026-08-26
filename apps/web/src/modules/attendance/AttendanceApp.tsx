@@ -26,7 +26,6 @@ import { getVisaChatSettings } from './attendanceSettings';
 import { AttendanceSettingsPanel } from './AttendanceSettingsPanel';
 
 type ChatMode = 'customer' | 'team';
-type ComposerMode = 'reply' | 'note';
 type TeamTypeFilter = 'all' | AttendanceTeamType;
 type NewConversationDraft = {
   customer: string;
@@ -59,7 +58,6 @@ export function AttendanceApp() {
   const [queueFilter, setQueueFilter] = useState('Todos');
   const [teamTypeFilter, setTeamTypeFilter] = useState<TeamTypeFilter>('all');
   const [message, setMessage] = useState('');
-  const [composerMode, setComposerMode] = useState<ComposerMode>('reply');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [newConversationOpen, setNewConversationOpen] = useState(false);
   const [newConversationKind, setNewConversationKind] = useState<ChatMode>('customer');
@@ -123,14 +121,13 @@ export function AttendanceApp() {
   const sendMessage = () => {
     if (!selected || !message.trim() || !canSendAttendanceMessage(selected)) return;
     const body = message.trim();
-    const isInternalNote = selectedKind === 'customer' && composerMode === 'note';
     const nextMessage: AttendanceMessage = {
       id: crypto.randomUUID(),
       sender: 'agent',
       author: currentAuthor,
       body,
       time: timeNow(),
-      ...(selectedKind === 'customer' ? { visibility: isInternalNote ? 'internal' as const : 'external' as const, deliveryStatus: 'local' as const } : { visibility: 'internal' as const }),
+      ...(selectedKind === 'customer' ? { visibility: 'external' as const, deliveryStatus: 'local' as const } : { visibility: 'internal' as const }),
     };
     const updatedAt = new Date().toISOString();
     setConversations((current) => current.map((item) => {
@@ -141,23 +138,21 @@ export function AttendanceApp() {
       return {
         ...item,
         messages: [...item.messages, nextMessage],
-        lastMessage: isInternalNote ? `Nota interna: ${body}` : body,
+        lastMessage: body,
         lastMessageAt: nextMessage.time,
         updatedAt,
-        status: !isInternalNote && item.status === 'Aguardando atendimento' ? 'Em atendimento' : item.status,
+        status: item.status === 'Aguardando atendimento' ? 'Em atendimento' : item.status,
       };
     }));
     setMessage('');
   };
 
   const applyTemplate = (body: string) => {
-    setComposerMode('reply');
     setMessage(body);
   };
 
   const selectConversation = (conversation: AttendanceConversation) => {
     setSelectedId(conversation.id);
-    setComposerMode('reply');
     setMessage('');
     setConversations((current) => current.map((item) => item.id === conversation.id ? { ...item, unread: 0 } : item));
   };
@@ -169,7 +164,6 @@ export function AttendanceApp() {
     setStatusFilter('Todos');
     setQueueFilter('Todos');
     setTeamTypeFilter('all');
-    setComposerMode('reply');
     setMessage('');
     const first = sortAttendanceConversations(conversations.filter((item) => getAttendanceConversationKind(item) === nextMode))[0];
     if (first) selectConversation(first); else setSelectedId('');
@@ -318,8 +312,8 @@ export function AttendanceApp() {
         <section className="attendance-chat-panel">{!selected ? <div className="attendance-no-selection"><strong>{mode === 'team' ? 'Nenhum chat interno selecionado' : 'Nenhuma conversa selecionada'}</strong><p>{mode === 'team' ? 'Selecione uma conversa, grupo ou canal da equipe.' : 'Selecione uma conversa ou inicie um novo atendimento.'}</p></div> : <>
           <header className="attendance-chat-header"><div className={`attendance-chat-person ${selectedKind === 'team' ? 'is-team' : ''}`}><span className="attendance-avatar attendance-avatar--large">{selected.customer.replace(/^#/, '').slice(0, 2).toUpperCase()}</span><div><h2>{selected.customer}</h2><p>{selectedKind === 'team' ? selectedParticipants : selected.handle} <span>·</span> {selectedKind === 'team' ? teamTypeLabel(selectedTeamType ?? 'group') : selected.channel}</p></div></div><div className="attendance-chat-actions">{selected.kind === 'team' ? <><select value={selected.status} onChange={(event) => updateSelectedTeamStatus(event.target.value as TeamConversationStatus)} aria-label="Status do chat interno">{TEAM_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedTeamStatus(selected.status === 'Arquivada' ? 'Ativo' : 'Arquivada')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Arquivar'}</button></> : <><select value={selected.status} onChange={(event) => updateSelectedCustomerStatus(event.target.value as CustomerConversationStatus)} aria-label="Status da conversa">{CUSTOMER_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedCustomerStatus(selected.status === 'Arquivada' ? 'Em atendimento' : 'Resolvida')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Finalizar'}</button></>}</div></header>
           <div className="attendance-chat-context">{selectedKind === 'team' ? <><span>Tipo <strong>{teamTypeLabel(selectedTeamType ?? 'group')}</strong></span><span>Participantes <strong>{selectedParticipants}</strong></span><span>Criado por <strong>{selected.assignee}</strong></span></> : <><span>Protocolo <strong>{selected.protocol}</strong></span><span>Fila <strong>{selected.queue}</strong></span><span>Responsável <strong>{selected.assignee}</strong></span></>}</div>
-          <div className="attendance-messages">{selected.messages.length ? selected.messages.map((item) => <div key={item.id} className={`attendance-message attendance-message--${item.visibility === 'internal' && selectedKind === 'customer' ? 'internal' : item.sender}`}><div><small>{item.visibility === 'internal' && selectedKind === 'customer' ? `Nota interna · ${item.author}` : item.author}</small><p>{item.body}</p><time>{item.time}{item.deliveryStatus === 'local' && item.visibility === 'external' ? ' · somente local' : ''}</time></div></div>) : <p className="attendance-empty">{selectedKind === 'team' ? 'Chat interno criado. Envie a primeira mensagem para a equipe.' : 'Conversa iniciada. Envie a primeira mensagem.'}</p>}</div>
-          <footer className={`attendance-composer ${selectedArchived ? 'is-archived' : ''} ${composerMode === 'note' ? 'is-note' : ''}`}><div className="attendance-composer-tools"><button type="button" disabled title="Anexos indisponíveis sem armazenamento compartilhado" aria-label="Anexos indisponíveis"><PaperclipIcon/></button>{selectedArchived ? <span className="attendance-archived-composer-label">Chat arquivado</span> : selectedKind === 'team' ? <span className="attendance-internal-composer-label">Mensagem interna</span> : <><button type="button" className={composerMode === 'note' ? 'is-active' : ''} onClick={() => setComposerMode((value) => value === 'note' ? 'reply' : 'note')}>{composerMode === 'note' ? 'Responder cliente' : 'Nota interna'}</button><select className="attendance-template-select" aria-label="Inserir resposta rápida" value="" onChange={(event) => { const template = activeTemplates.find((item) => item.id === event.target.value); if (template) applyTemplate(template.body); }}><option value="">Resposta rápida</option>{activeTemplates.map((template) => <option key={template.id} value={template.id}>{template.shortcut} · {template.name}</option>)}</select></>}</div><div className="attendance-composer-field"><textarea value={message} disabled={selectedArchived} aria-label={selectedKind === 'team' ? 'Mensagem interna para a equipe' : composerMode === 'note' ? 'Nota interna do atendimento' : 'Mensagem para o contato'} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} placeholder={selectedArchived ? 'Reabra a conversa para enviar mensagens.' : selectedKind === 'team' ? 'Escreva uma mensagem para a equipe...' : composerMode === 'note' ? 'Escreva uma nota visível somente para a equipe...' : 'Digite uma mensagem...'} /><small>{selectedArchived ? 'Conversa arquivada · reabra para continuar' : composerMode === 'note' && selectedKind === 'customer' ? 'Nota interna · não é enviada ao cliente' : selectedKind === 'customer' ? 'Entrega externa ainda não configurada · mensagem fica local no protótipo' : 'Enter para enviar · Shift + Enter para quebrar linha'}</small></div><button className="attendance-send" type="button" onClick={sendMessage} disabled={selectedArchived || !message.trim()}>{composerMode === 'note' && selectedKind === 'customer' ? 'Salvar nota' : 'Enviar'}</button></footer>
+          <div className="attendance-messages">{selected.messages.length ? selected.messages.map((item) => <div key={item.id} className={`attendance-message attendance-message--${item.sender}`}><div><small>{item.author}</small><p>{item.body}</p><time>{item.time}{item.deliveryStatus === 'local' && item.visibility === 'external' ? ' · somente local' : ''}</time></div></div>) : <p className="attendance-empty">{selectedKind === 'team' ? 'Chat interno criado. Envie a primeira mensagem para a equipe.' : 'Conversa iniciada. Envie a primeira mensagem.'}</p>}</div>
+          <footer className={`attendance-composer ${selectedArchived ? 'is-archived' : ''}`}><div className="attendance-composer-tools"><button type="button" disabled title="Anexos indisponíveis sem armazenamento compartilhado" aria-label="Anexos indisponíveis"><PaperclipIcon/></button>{selectedArchived ? <span className="attendance-archived-composer-label">Chat arquivado</span> : selectedKind === 'team' ? <span className="attendance-internal-composer-label">Mensagem interna</span> : <select className="attendance-template-select" aria-label="Inserir resposta rápida" value="" onChange={(event) => { const template = activeTemplates.find((item) => item.id === event.target.value); if (template) applyTemplate(template.body); }}><option value="">Resposta rápida</option>{activeTemplates.map((template) => <option key={template.id} value={template.id}>{template.shortcut} · {template.name}</option>)}</select>}</div><div className="attendance-composer-field"><textarea value={message} disabled={selectedArchived} aria-label={selectedKind === 'team' ? 'Mensagem interna para a equipe' : 'Mensagem para o contato'} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} placeholder={selectedArchived ? 'Reabra a conversa para enviar mensagens.' : selectedKind === 'team' ? 'Escreva uma mensagem para a equipe...' : 'Digite uma mensagem...'} /><small>{selectedArchived ? 'Conversa arquivada · reabra para continuar' : selectedKind === 'customer' ? 'Entrega externa ainda não configurada · mensagem fica local no protótipo' : 'Enter para enviar · Shift + Enter para quebrar linha'}</small></div><button className="attendance-send" type="button" onClick={sendMessage} disabled={selectedArchived || !message.trim()}>Enviar</button></footer>
         </>}</section>
 
         <aside className="attendance-details-panel">{!selected ? null : selected.kind === 'team' ? <><div className="attendance-details-hero attendance-details-hero--team"><div className="attendance-details-person is-team"><span className="attendance-avatar attendance-avatar--large">{selected.customer.replace(/^#/, '').slice(0, 2).toUpperCase()}</span><div><h3>{selected.customer}</h3><p>{teamTypeLabel(selectedTeamType ?? 'group')} interno</p></div></div></div><section><header><span>Equipe</span></header><dl><div><dt>Participantes</dt><dd>{selectedParticipants}</dd></div><div><dt>Status</dt><dd>{selected.status}</dd></div><div><dt>Tipo</dt><dd>{teamTypeLabel(selectedTeamType ?? 'group')}</dd></div><div><dt>Criado por</dt><dd>{selected.assignee}</dd></div></dl></section><section><header><span>Infraestrutura</span></header><p className="attendance-team-note">Identidade por usuário, sem número telefônico. A sessão local preserva o protótipo; presença, entrega simultânea, leitura e sincronização entre usuários ficam preparadas para backend/realtime compartilhado.</p></section><section><header><span>Tags</span></header><div className="attendance-tags">{selected.tags.length ? selected.tags.map((tag) => <b key={tag}>{tag}</b>) : <span>Sem tags</span>}</div></section></> : <><div className="attendance-details-hero"><div className="attendance-details-person"><span className="attendance-avatar attendance-avatar--large">{selected.customer.slice(0, 2).toUpperCase()}</span><div><h3>{selected.customer}</h3><p>{selected.crmType} de referência</p></div></div><a href={browserHref('/crm/relacionamento')}>Abrir CRM</a></div><section><header><span>Contato</span></header><dl><div><dt>E-mail</dt><dd>{selected.email || '—'}</dd></div><div><dt>Telefone / usuário</dt><dd>{selected.handle || '—'}</dd></div><div><dt>Serviço</dt><dd>{selected.service || '—'}</dd></div><div><dt>Destino</dt><dd>{selected.destination || '—'}</dd></div><div><dt>Tipo de visto</dt><dd>{selected.visaType || '—'}</dd></div></dl></section><section><header><span>Atendimento</span></header><dl><div><dt>Canal</dt><dd>{selected.channel}</dd></div><div><dt>Protocolo</dt><dd>{selected.protocol}</dd></div><div><dt>Fila</dt><dd>{selected.queue}</dd></div><div><dt>Responsável</dt><dd>{selected.assignee}</dd></div><div><dt>Prioridade</dt><dd>{selected.priority ?? 'Normal'}</dd></div><div><dt>SLA</dt><dd>{selected.slaDueAt ? 'Rastreado' : 'Não rastreado sem backend'}</dd></div></dl></section><section><header><span>Tags</span></header><div className="attendance-tags">{selected.tags.length ? selected.tags.map((tag) => <b key={tag}>{tag}</b>) : <span>Sem tags</span>}</div></section></>}</aside>
