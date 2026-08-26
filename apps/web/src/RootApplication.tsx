@@ -47,7 +47,6 @@ const FinanceInvoicesApp = lazy(async () => {
   const module = await import('./modules/finance/FinanceInvoicesApp');
   await import('./modules/finance/invoice-document.css');
   await import('./modules/finance/finance-fiscal-invoice.css');
-  await import('./styles/invoices-refinement.css');
   await import('./styles/invoices-chrome.css');
   return { default: module.default };
 });
