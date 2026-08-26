@@ -17,7 +17,10 @@ Principais áreas:
 - `/crm/agenda` — agenda;
 - `/crm/tarefas` — tarefas;
 - `/crm/atendimentos` — VisaChat;
-- `/crm/contratos` — shell arquitetural do futuro módulo Contratos; lógica definitiva aguarda arquivo de referência;
+- `/crm/contratos` — gestão contratual frontend com contratos, templates, variáveis, categorias, versões e histórico da sessão;
+- `/crm/contratos/templates` — templates de contrato;
+- `/crm/contratos/variaveis` — registro canônico de placeholders;
+- `/crm/contratos/categorias` — categorias contratuais;
 - `/crm/financeiro/*` — transações, invoices e contabilidade;
 - `/crm/categorias-financeiras` — categorias financeiras da sessão;
 - `/crm/regras-financeiras` — regras de classificação financeira da sessão;
@@ -36,7 +39,9 @@ O frontend possui uma fronteira única em `shared/apiClient.ts`. A configuraçã
 
 O formulário público usa `POST /v1/public/leads` quando `VITE_API_BASE_URL` está configurado. Sem backend, o envio fica explicitamente indisponível e não simula sucesso.
 
-A implementação server-side, OAuth, tokens, webhooks, workers e credenciais ainda não existe neste repositório. Consulte `docs/INTEGRATIONS.md` e `docs/PRODUCTION_READINESS.md`.
+Contratos possui fluxo funcional de frontend, templates e versionamento local, mas **não simula assinatura eletrônica**. Autentique é o único provedor de assinatura previsto; o envio real só poderá ser habilitado quando o contrato estiver persistido no backend e a integração estiver realmente conectada.
+
+A implementação server-side, OAuth, tokens, webhooks, workers e credenciais ainda não existe neste repositório. Consulte `docs/INTEGRATIONS.md`, `docs/CONTRACTS.md` e `docs/PRODUCTION_READINESS.md`.
 
 ## Autenticação e dados
 
@@ -44,7 +49,7 @@ A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = fals
 
 Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
 
-Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Todas essas fontes usam `sessionStorage`: preservam alterações entre rotas na sessão atual, mas não constituem banco de dados ou sincronização remota.
+Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates, variáveis e categorias. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
 
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
@@ -57,6 +62,9 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 - estado operacional de CRM/Tarefas/Agenda/Transações/VisaChat: `shared/operationalSessionStore.ts`;
 - invoices da sessão: `modules/finance/invoiceSessionStore.ts`;
 - campanhas e conteúdos de Marketing: `modules/marketing/marketingSessionStore.ts`;
+- contratos: `modules/contracts/contractTypes.ts`;
+- estado contratual da sessão: `modules/contracts/contractSessionStore.ts`;
+- templates/variáveis de Contratos: `modules/contracts/contractTemplateEngine.ts`;
 - transações financeiras: `modules/finance/types.ts`;
 - categorias e regras financeiras da sessão: `modules/finance/financeConfigStore.ts`;
 - integrações: `modules/integrations/integrationContract.ts`;
@@ -65,6 +73,8 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 - fixtures: providers em `mocks/*Provider.ts`, usados apenas como seeds validados e nunca importados diretamente pela UI mutável.
 
 Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos `Liquidado` entram em `paid`; `Pago` e `Parcialmente pago` são derivados do ledger, e o total não pode ser reduzido abaixo do valor já liquidado.
+
+Contratos operacionais iniciam vazios, sem registros fictícios. Templates, variáveis e categorias possuem apenas configuração inicial validada para suportar o fluxo do frontend. O wizard canônico segue `Template → Partes → Variáveis → Documento → Signatários → Revisão`; contratos vinculados ao CRM preservam um snapshot dos dados usados no documento, e alterações no template não reescrevem silenciosamente versões existentes.
 
 ## Desenvolvimento
 
@@ -96,4 +106,4 @@ npm run check
 
 O CI executa contrato arquitetural, lint estrutural, testes, auditoria de dependências, TypeScript, build de produção e smoke runtime. O deploy do GitHub Pages repete os gates relevantes antes de publicar.
 
-Consulte `docs/ARCHITECTURE.md`, `docs/INTEGRATIONS.md` e `docs/PRODUCTION_READINESS.md` para limites de responsabilidade, contratos e critérios de evolução.
+Consulte `docs/ARCHITECTURE.md`, `docs/INTEGRATIONS.md`, `docs/CONTRACTS.md` e `docs/PRODUCTION_READINESS.md` para limites de responsabilidade, contratos e critérios de evolução.
