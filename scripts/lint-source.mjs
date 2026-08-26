@@ -101,6 +101,23 @@ for(const token of ['INTEGRATION_REGISTRY','getIntegrationStatuses','connectInte
 if(integrationsUi.includes('INITIAL_INTEGRATIONS')||settingsShared.includes('INITIAL_INTEGRATIONS'))fail('Parallel/static integration registries must not return.');
 if(!apiClient.includes('VITE_API_BASE_URL')||!apiClient.includes("credentials:'include'")||!apiClient.includes('INVALID_API_RESPONSE'))fail('Frontend API boundary must remain configured, session-aware and runtime-validated.');
 
+const contractsApp=read('apps/web/src/modules/contracts/ContractsApp.tsx');
+const contractTypes=read('apps/web/src/modules/contracts/contractTypes.ts');
+const contractStore=read('apps/web/src/modules/contracts/contractSessionStore.ts');
+const contractEngine=read('apps/web/src/modules/contracts/contractTemplateEngine.ts');
+const contractEditor=read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
+const contractView=read('apps/web/src/modules/contracts/ContractViewModal.tsx');
+const contractsSources=sourceFiles.filter(path=>path.includes('/modules/contracts/')).map(read).join('\n').toLowerCase();
+for(const token of ['ContractRecord','ContractTemplate','ContractVariableDefinition','ContractCategory','ContractSigner','ContractVersion','ContractAuditEvent'])if(!contractTypes.includes(token))fail(`Canonical contracts domain is incomplete: missing ${token}.`);
+for(const token of ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','isContractCategory','visa-facil.session.contracts.v2'])if(!contractStore.includes(token))fail(`Contracts session store is incomplete: missing ${token}.`);
+if(!contractStore.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"))fail('Contracts must not seed fake operational records.');
+for(const token of ['makePlaceholder','extractTemplatePlaceholders','resolveTemplateContent','mergedVariableValues','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}'])if(!contractEngine.includes(token)&&!contractStore.includes(token))fail(`Contracts template engine is incomplete: missing ${token}.`);
+for(const token of ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão'])if(!contractEditor.includes(token))fail(`Contract wizard is incomplete: missing ${token}.`);
+for(const token of ['getCrmSessionRecords','getIntegrationStatuses','isBackendConfigured','TemplatesWorkspace','VariablesWorkspace','CategoriesWorkspace'])if(!contractsApp.includes(token))fail(`Contracts workspace is incomplete: missing ${token}.`);
+if(!contractView.includes('Autentique')||!contractView.includes('Enviar para assinatura')||!contractView.includes('disabled'))fail('Contracts signing UI must expose Autentique truthfully without simulating delivery.');
+for(const forbidden of ['clicksign','docusign','obra musical','lançamento musical','gravadora','produtor musical'])if(contractsSources.includes(forbidden))fail(`Contracts module must not retain reference-only/music-specific concept: ${forbidden}.`);
+if(contractsSources.includes('localstorage'))fail('Contracts must use the validated session store instead of a competing localStorage persistence layer.');
+
 const contactSection=read('apps/web/src/modules/public-site/components/ContactSection.tsx');
 const publicInteractions=read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
 const publicLeadService=read('apps/web/src/modules/public-site/services/publicLeadService.ts');
@@ -127,7 +144,6 @@ for(const removed of[
 const main=read('apps/web/src/main.tsx');
 const crmSidebar=read('apps/web/src/components/CrmSidebar.tsx');
 const rootApplication=read('apps/web/src/RootApplication.tsx');
-const contractsApp=read('apps/web/src/modules/contracts/ContractsApp.tsx');
 const accountMenu=read('apps/web/src/components/AccountMenu.tsx');
 const accountMenuCss=read('apps/web/src/components/account-menu.css');
 const profileApp=read('apps/web/src/modules/settings/ProfileApp.tsx');
@@ -152,8 +168,7 @@ const afterRenderIndex=crmSidebar.indexOf('{AFTER_ITEMS.map');
 if(!(mainRenderIndex>=0&&mainRenderIndex<financeRenderIndex&&financeRenderIndex<marketingRenderIndex&&marketingRenderIndex<afterRenderIndex))fail('CRM sidebar group order must be primary navigation → Financeiro → Marketing → Relatórios/Configurações.');
 const afterNavBlock=crmSidebar.match(/const AFTER_ITEMS:[\s\S]*?\];/)?.[0]??'';
 if(!(afterNavBlock.indexOf("label: 'Relatórios'")>=0&&afterNavBlock.indexOf("label: 'Relatórios'")<afterNavBlock.indexOf("label: 'Configurações'")))fail('CRM sidebar must end with Relatórios → Configurações.');
-if(!rootApplication.includes("path==='/crm/contratos'")||!rootApplication.includes('withSharedSidebar(<ContractsApp/>)'))fail('Contracts module must remain a lazy shared-shell route.');
-for(const token of ['A lógica definitiva depende do arquivo de referência','Sem operação fictícia','Autentique'])if(!contractsApp.includes(token))fail(`Contracts readiness shell is incomplete: missing ${token}.`);
+if(!rootApplication.includes("path==='/crm/contratos'||path.startsWith('/crm/contratos/')")||!rootApplication.includes('withSharedSidebar(<ContractsApp/>)'))fail('Contracts module and its workspaces must remain a lazy shared-shell route.');
 
 if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
