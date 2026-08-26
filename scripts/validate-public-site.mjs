@@ -36,6 +36,10 @@ const contractEngine = read('apps/web/src/modules/contracts/contractTemplateEngi
 const contractMockProvider = read('apps/web/src/modules/contracts/mocks/contractsMockProvider.ts');
 const contractMockRecords = read('apps/web/src/mocks/contracts/contracts-records.dev.json');
 const financeConfigStore = read('apps/web/src/modules/finance/financeConfigStore.ts');
+const financeCategoriesApp = read('apps/web/src/modules/finance/FinancialCategoriesApp.tsx');
+const financeRulesApp = read('apps/web/src/modules/finance/FinancialRulesApp.tsx');
+const reportsApp = read('apps/web/src/modules/reports/ReportsApp.tsx');
+const reportsCss = read('apps/web/src/modules/reports/reports.css');
 const settingsShared = read('apps/web/src/modules/settings/settingsShared.tsx');
 const settingsMockProvider = read('apps/web/src/modules/settings/mocks/settingsMockProvider.ts');
 const uiStandard = read('apps/web/src/styles/crm-ui-standard.css');
@@ -55,7 +59,10 @@ assert(!main.includes('01-base.css') && !main.includes('02-sections-responsive.c
 assert(!main.includes('/crm/') && !main.includes('styles/finance') && !main.includes('styles/marketing') && !main.includes('styles/settings'), 'Public entrypoint must not eagerly load internal workspace styles');
 assert(!crmSidebar.includes('../modules/crm/crm.css') && containsAll(crmSidebar, ["../styles/sidebar-v2.css"]) && !crmSidebar.includes('../styles/sidebar-color-fix.css') && !crmSidebar.includes('../styles/ui-system.css') && !crmSidebar.includes('../styles/product-refinement.css') && !crmSidebar.includes('../styles/crm-header-actions-unified.css') && containsAll(rootApp, ["./styles/crm-content-layout.css", "./styles/crm-ui-standard.css", "./styles/crm-ui-enforcement.css", "./styles/tableview-surface.css", "await import('./modules/crm/crm.css')"]), 'Shared CRM chrome must be root-owned while legacy CRM CSS stays local to CRM pages and sidebar theme stays canonical');
 assert(!existsSync(resolve(root,'apps/web/src/styles/sidebar-color-fix.css')), 'Duplicate sidebar color override must stay removed');
-assert(containsAll(rootApp, ['agenda-refinement.css', 'visachat-refinement.css', 'tasks-refinement.css', 'finance-transactions-refinement.css', 'invoices-refinement.css', 'accounting-refinement.css', 'marketing-refinement.css', 'reports-refinement.css', 'settings-refinement.css']), 'Module refinement styles must remain route-lazy instead of returning to the public entrypoint');
+assert(containsAll(rootApp, ['agenda-refinement.css', 'visachat-refinement.css', 'tasks-refinement.css', 'finance-transactions-refinement.css', 'invoices-refinement.css', 'accounting-refinement.css', 'marketing-refinement.css', 'settings-refinement.css']) && !rootApp.includes('reports-refinement.css'), 'Only modules that still require a dedicated refinement layer may load one from the CRM route shell');
+assert(!existsSync(resolve(root,'apps/web/src/styles/reports-refinement.css')) && reportsApp.includes("import './reports.css'") && containsAll(reportsCss, ['--vf-control-height', '--vf-radius-card', '--vf-radius-modal']), 'Reports must own one canonical module stylesheet instead of base plus refinement layers');
+assert(rootApp.includes("./styles/invoices-chrome.css") && !rootApp.includes('invoices-kpi-cards.css') && !rootApp.includes('invoices-header-layout.css') && !existsSync(resolve(root,'apps/web/src/styles/invoices-kpi-cards.css')) && !existsSync(resolve(root,'apps/web/src/styles/invoices-header-layout.css')), 'Invoice header/KPI chrome must remain consolidated in one stylesheet');
+assert(financeCategoriesApp.includes("import './finance-config.css'") && financeRulesApp.includes("import './finance-config.css'") && !financeCategoriesApp.includes("import './finance.css'") && !financeRulesApp.includes("import './finance.css'"), 'Finance categories and rules must not load transaction/OFX presentation styles');
 assert(rootApp.includes("./styles/crm-ui-standard.css"), 'Canonical CRM visual contract must remain loaded by the shared internal shell');
 
 assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D']), 'Official metadata changed unexpectedly');
@@ -104,7 +111,7 @@ for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'lega
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
 }
 
-for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css','apps/web/src/styles/crm-ui-standard.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
+for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css','apps/web/src/modules/finance/finance-config.css','apps/web/src/modules/reports/reports.css','apps/web/src/styles/invoices-chrome.css','apps/web/src/styles/crm-ui-standard.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
 for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx','apps/web/src/mocks/contracts/contracts-records.dev.json','apps/web/src/mocks/finance/config.dev.json','apps/web/src/mocks/settings/settings.dev.json','apps/web/src/modules/settings/mocks/settingsMockProvider.ts']) assert(existsSync(resolve(root,file)),`Missing canonical implementation/mock file: ${file}`);
 
 if (failures.length) {
