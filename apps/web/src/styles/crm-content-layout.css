@@ -172,6 +172,86 @@
   max-width:100%!important;
 }
 
+/* Canonical TableView surface.
+   The operational list/table card is always white, regardless of the page
+   background or historical module-specific refinement layers. Agenda and all
+   calendar views are intentionally absent from these selectors. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-relationship-card,
+  .tasks-card,
+  .contracts-panel,
+  .finance-card,
+  .finance-config-card,
+  .finance-transactions-card,
+  .invoice-list-card,
+  .accounting-report-card,
+  .marketing-table-card,
+  .reports-card
+){
+  background:#fff!important;
+  background-color:#fff!important;
+  background-image:none!important;
+}
+
+/* Keep the table/list body itself white too, so transparent rows/wrappers do
+   not expose the page gray underneath the canonical surface. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-directory-table,
+  .tasks-table,
+  .contracts-table-wrap,
+  .contracts-table,
+  .finance-table,
+  .finance-simple-table,
+  .finance-rules-table,
+  .finance-rules-list--actions,
+  .finance-transactions-table,
+  .invoice-table-scroll,
+  .invoice-table,
+  .accounting-table,
+  .marketing-table-card,
+  .reports-entity-list
+){
+  background:#fff!important;
+  background-color:#fff!important;
+}
+
+/* Operational rows remain white. Header rows may keep their canonical subtle
+   gray treatment, preserving hierarchy while the complete TableView card stays
+   visibly white. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-directory-row,
+  .tasks-row,
+  .finance-row,
+  .finance-simple-row,
+  .finance-rule-row,
+  .finance-rules-list--actions article,
+  .finance-transactions-table .finance-row,
+  .invoice-table-row,
+  .accounting-table-row,
+  .marketing-table-row,
+  .reports-entity-row
+){
+  background:#fff!important;
+  background-color:#fff!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-table tbody,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-table td{
+  background:#fff!important;
+  background-color:#fff!important;
+}
+
+/* Settings contains list-like operational cards rather than a dedicated
+   TableView component; keep those surfaces white without changing their form
+   or tab structure. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .settings-user-list,
+  .settings-role-list
+){
+  background:#fff!important;
+  background-color:#fff!important;
+}
+
 @media(max-width:900px){
   .crm-global-shell.crm-global-shell{
     --crm-page-gutter:16px;
