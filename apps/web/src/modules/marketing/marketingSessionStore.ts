@@ -35,8 +35,8 @@ export type Campaign={
  bidStrategy:string;
 };
 
-const CONTENT_KEY='visa-facil.session.marketing.contents.v1';
-const CAMPAIGN_KEY='visa-facil.session.marketing.campaigns.v1';
+const CONTENT_KEY='visa-facil.session.marketing.contents.v2';
+const CAMPAIGN_KEY='visa-facil.session.marketing.campaigns.v2';
 const PUBLISH_PLATFORMS=new Set<Platform>(['Instagram','Facebook','TikTok','YouTube','X','Threads']);
 const PAID_PLATFORMS=new Set<PaidPlatform>(['Meta Ads','Google Ads','YouTube Ads','TikTok Ads']);
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
