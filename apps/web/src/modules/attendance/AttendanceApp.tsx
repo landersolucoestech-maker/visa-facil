@@ -44,7 +44,7 @@ function BellIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="n
 function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>; }
 function PaperclipIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 1 1-2.8-2.8l8.9-8.9"/></svg>; }
 function PlusIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>; }
-function SettingsIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.36.34.7.6 1 .3.3.7.4 1.1.4H21v4h-.09a1.7 1.7 0 0 0-1.51.6Z"/></svg>; }
+function SettingsIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.4 4a1.7 1.7 0 0 0 1.87-.34l.06-.06 2.83 2.83-.06-.06A1.7 1.7 0 0 0 19.4 9c.13.36.34.7.6 1 .3.3.7.4 1.1.4H21v4h-.09a1.7 1.7 0 0 0-1.51.6Z"/></svg>; }
 function timeNow() { return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
 function teamTypeLabel(type: AttendanceTeamType) { return type === 'direct' ? 'Conversa' : type === 'group' ? 'Grupo' : 'Canal'; }
 function normalizeChannelSlug(value: string) { return value.trim().toLowerCase().replace(/^#+/, '').replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, ''); }
@@ -71,6 +71,18 @@ export function AttendanceApp() {
   const currentAuthor = currentMember?.name ?? 'Administrador';
   const selectableTeamMembers = teamMembers.filter((member) => member.id !== currentMember?.id);
   const activeTemplates = useMemo(() => getVisaChatSettings().templates.filter((template) => template.active), [settingsRevision]);
+  const transferOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return getVisaChatSettings().menu_options
+      .filter((option) => option.active && option.queue.trim().length > 0)
+      .sort((left, right) => left.order - right.order)
+      .filter((option) => {
+        const key = option.queue.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [settingsRevision]);
 
   useEffect(() => { saveAttendanceSessionConversations(conversations); }, [conversations]);
 
@@ -110,6 +122,24 @@ export function AttendanceApp() {
     if (!selected || selected.kind === 'team') return;
     const updatedAt = new Date().toISOString();
     setConversations((current) => current.map((item) => item.id === selected.id && item.kind !== 'team' ? { ...item, status, updatedAt } : item));
+  };
+
+  const transferSelectedCustomer = (queue: string) => {
+    if (!selected || selected.kind === 'team' || selected.status === 'Arquivada') return;
+    const option = transferOptions.find((item) => item.queue === queue);
+    if (!option || option.queue === selected.queue) return;
+    const priority = option.priority === 'baixa' ? 'Baixa' : option.priority === 'alta' ? 'Alta' : option.priority === 'critica' ? 'Urgente' : 'Normal';
+    const updatedAt = new Date().toISOString();
+    setConversations((current) => current.map((item) => item.id === selected.id && item.kind !== 'team' ? {
+      ...item,
+      queue: option.queue,
+      assignee: option.defaultAssignee?.trim() || 'Não atribuído',
+      priority,
+      tags: [...new Set([...item.tags, ...option.tags])],
+      status: 'Aguardando atendimento',
+      updatedAt,
+    } : item));
+    setQueueFilter('Todos');
   };
 
   const updateSelectedTeamStatus = (status: TeamConversationStatus) => {
@@ -310,7 +340,7 @@ export function AttendanceApp() {
         </aside>
 
         <section className="attendance-chat-panel">{!selected ? <div className="attendance-no-selection"><strong>{mode === 'team' ? 'Nenhum chat interno selecionado' : 'Nenhuma conversa selecionada'}</strong><p>{mode === 'team' ? 'Selecione uma conversa, grupo ou canal da equipe.' : 'Selecione uma conversa ou inicie um novo atendimento.'}</p></div> : <>
-          <header className="attendance-chat-header"><div className={`attendance-chat-person ${selectedKind === 'team' ? 'is-team' : ''}`}><span className="attendance-avatar attendance-avatar--large">{selected.customer.replace(/^#/, '').slice(0, 2).toUpperCase()}</span><div><h2>{selected.customer}</h2><p>{selectedKind === 'team' ? selectedParticipants : selected.handle} <span>·</span> {selectedKind === 'team' ? teamTypeLabel(selectedTeamType ?? 'group') : selected.channel}</p></div></div><div className="attendance-chat-actions">{selected.kind === 'team' ? <><select value={selected.status} onChange={(event) => updateSelectedTeamStatus(event.target.value as TeamConversationStatus)} aria-label="Status do chat interno">{TEAM_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedTeamStatus(selected.status === 'Arquivada' ? 'Ativo' : 'Arquivada')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Arquivar'}</button></> : <><select value={selected.status} onChange={(event) => updateSelectedCustomerStatus(event.target.value as CustomerConversationStatus)} aria-label="Status da conversa">{CUSTOMER_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedCustomerStatus(selected.status === 'Arquivada' ? 'Em atendimento' : 'Resolvida')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Finalizar'}</button></>}</div></header>
+          <header className="attendance-chat-header"><div className={`attendance-chat-person ${selectedKind === 'team' ? 'is-team' : ''}`}><span className="attendance-avatar attendance-avatar--large">{selected.customer.replace(/^#/, '').slice(0, 2).toUpperCase()}</span><div><h2>{selected.customer}</h2><p>{selectedKind === 'team' ? selectedParticipants : selected.handle} <span>·</span> {selectedKind === 'team' ? teamTypeLabel(selectedTeamType ?? 'group') : selected.channel}</p></div></div><div className="attendance-chat-actions">{selected.kind === 'team' ? <><select value={selected.status} onChange={(event) => updateSelectedTeamStatus(event.target.value as TeamConversationStatus)} aria-label="Status do chat interno">{TEAM_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedTeamStatus(selected.status === 'Arquivada' ? 'Ativo' : 'Arquivada')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Arquivar'}</button></> : <><select value="" disabled={selectedArchived || transferOptions.every((option) => option.queue === selected.queue)} onChange={(event) => transferSelectedCustomer(event.target.value)} aria-label="Transferir atendimento para departamento"><option value="">Transferir</option>{transferOptions.filter((option) => option.queue !== selected.queue).map((option) => <option key={option.id} value={option.queue}>{option.sector && option.sector !== option.queue ? `${option.sector} · ${option.queue}` : option.sector || option.label}</option>)}</select><select value={selected.status} onChange={(event) => updateSelectedCustomerStatus(event.target.value as CustomerConversationStatus)} aria-label="Status da conversa">{CUSTOMER_STATUS_OPTIONS.map((status) => <option key={status}>{status}</option>)}</select><button type="button" onClick={() => updateSelectedCustomerStatus(selected.status === 'Arquivada' ? 'Em atendimento' : 'Resolvida')}>{selected.status === 'Arquivada' ? 'Reabrir' : 'Finalizar'}</button></>}</div></header>
           <div className="attendance-chat-context">{selectedKind === 'team' ? <><span>Tipo <strong>{teamTypeLabel(selectedTeamType ?? 'group')}</strong></span><span>Participantes <strong>{selectedParticipants}</strong></span><span>Criado por <strong>{selected.assignee}</strong></span></> : <><span>Protocolo <strong>{selected.protocol}</strong></span><span>Fila <strong>{selected.queue}</strong></span><span>Responsável <strong>{selected.assignee}</strong></span></>}</div>
           <div className="attendance-messages">{selected.messages.length ? selected.messages.map((item) => <div key={item.id} className={`attendance-message attendance-message--${item.sender}`}><div><small>{item.author}</small><p>{item.body}</p><time>{item.time}{item.deliveryStatus === 'local' && item.visibility === 'external' ? ' · somente local' : ''}</time></div></div>) : <p className="attendance-empty">{selectedKind === 'team' ? 'Chat interno criado. Envie a primeira mensagem para a equipe.' : 'Conversa iniciada. Envie a primeira mensagem.'}</p>}</div>
           <footer className={`attendance-composer ${selectedArchived ? 'is-archived' : ''}`}><div className="attendance-composer-tools"><button type="button" disabled title="Anexos indisponíveis sem armazenamento compartilhado" aria-label="Anexos indisponíveis"><PaperclipIcon/></button>{selectedArchived ? <span className="attendance-archived-composer-label">Chat arquivado</span> : selectedKind === 'team' ? <span className="attendance-internal-composer-label">Mensagem interna</span> : <select className="attendance-template-select" aria-label="Inserir resposta rápida" value="" onChange={(event) => { const template = activeTemplates.find((item) => item.id === event.target.value); if (template) applyTemplate(template.body); }}><option value="">Resposta rápida</option>{activeTemplates.map((template) => <option key={template.id} value={template.id}>{template.shortcut} · {template.name}</option>)}</select>}</div><div className="attendance-composer-field"><textarea value={message} disabled={selectedArchived} aria-label={selectedKind === 'team' ? 'Mensagem interna para a equipe' : 'Mensagem para o contato'} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} placeholder={selectedArchived ? 'Reabra a conversa para enviar mensagens.' : selectedKind === 'team' ? 'Escreva uma mensagem para a equipe...' : 'Digite uma mensagem...'} /><small>{selectedArchived ? 'Conversa arquivada · reabra para continuar' : selectedKind === 'customer' ? 'Entrega externa ainda não configurada · mensagem fica local no protótipo' : 'Enter para enviar · Shift + Enter para quebrar linha'}</small></div><button className="attendance-send" type="button" onClick={sendMessage} disabled={selectedArchived || !message.trim()}>Enviar</button></footer>
