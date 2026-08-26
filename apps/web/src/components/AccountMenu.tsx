@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AUTHENTICATION_ENABLED, getAuthSession, signOut } from '../modules/auth/auth';
 import './account-menu.css';
 
@@ -34,10 +35,35 @@ function LogoutIcon() {
 
 export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
   const [open, setOpen] = useState(false);
+  const [crmHost, setCrmHost] = useState<HTMLElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
   const name = session?.name || 'Administrador';
   const detail = AUTHENTICATION_ENABLED ? (session?.email || 'Conta interna') : 'Autenticação desativada';
+
+  useEffect(() => {
+    if (surface !== 'crm') {
+      setCrmHost(null);
+      return;
+    }
+
+    const findHost = () => document.querySelector<HTMLElement>('.crm-global-page .crm-topbar .crm-topbar-actions');
+    const existingHost = findHost();
+    if (existingHost) {
+      setCrmHost(existingHost);
+      return;
+    }
+
+    const root = document.getElementById('root') ?? document.body;
+    const observer = new MutationObserver(() => {
+      const host = findHost();
+      if (!host) return;
+      setCrmHost(host);
+      observer.disconnect();
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [surface]);
 
   useEffect(() => {
     const closeOutside = (event: PointerEvent) => {
@@ -61,7 +87,7 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
     go(AUTHENTICATION_ENABLED ? '/login' : '/workspaces');
   };
 
-  return <div className={`account-menu account-menu--${surface}`} ref={rootRef}>
+  const menu = <div className={`account-menu account-menu--${surface}`} ref={rootRef}>
     <button
       className="account-menu__trigger"
       type="button"
@@ -82,6 +108,9 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
       <button role="menuitem" type="button" onClick={logout}><LogoutIcon /><span>Logout</span></button>
     </div>}
   </div>;
+
+  if (surface === 'crm') return crmHost ? createPortal(menu, crmHost) : null;
+  return menu;
 }
 
 export default AccountMenu;
