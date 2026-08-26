@@ -17,6 +17,7 @@ const AgendaApp = lazy(async () => {
 const AttendanceApp = lazy(async () => {
   const module = await import('./modules/attendance/AttendanceApp');
   await import('./styles/visachat-refinement.css');
+  await import('./modules/attendance/attendanceTeamChat.css');
   return { default: module.AttendanceApp };
 });
 const ContractsApp = lazy(() => import('./modules/contracts/ContractsApp'));

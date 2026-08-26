@@ -2,6 +2,7 @@
   "conversations": [
     {
       "id": "att-001",
+      "kind": "customer",
       "customer": "Mariana Alves Costa",
       "handle": "+55 11 99876-1204",
       "email": "mariana.alves@example.com",
@@ -13,6 +14,7 @@
       "tags": ["B1/B2", "Prioridade normal"],
       "lastMessage": "Perfeito, vou separar os documentos que você pediu.",
       "lastMessageAt": "16:02",
+      "updatedAt": "2026-08-26T16:02:00-03:00",
       "unread": 2,
       "crmType": "Lead",
       "service": "Assessoria para visto de turismo",
@@ -28,6 +30,7 @@
     },
     {
       "id": "att-002",
+      "kind": "customer",
       "customer": "Juliana Ferreira Santos",
       "handle": "@juliana.ferreira",
       "email": "juliana.ferreira@example.com",
@@ -39,6 +42,7 @@
       "tags": ["F-1", "Lead quente"],
       "lastMessage": "Queria entender quanto custa a assessoria para visto de estudante.",
       "lastMessageAt": "15:37",
+      "updatedAt": "2026-08-26T15:37:00-03:00",
       "unread": 1,
       "crmType": "Lead",
       "service": "Visto de estudante",
@@ -51,6 +55,7 @@
     },
     {
       "id": "att-003",
+      "kind": "customer",
       "customer": "Camila Oliveira Reis",
       "handle": "+55 21 99714-8810",
       "email": "camila.reis@example.com",
@@ -62,6 +67,7 @@
       "tags": ["Renovação", "B1/B2"],
       "lastMessage": "Fico no aguardo da foto da página de dados do passaporte.",
       "lastMessageAt": "14:58",
+      "updatedAt": "2026-08-26T14:58:00-03:00",
       "unread": 0,
       "crmType": "Contato",
       "service": "Renovação de visto",
@@ -75,6 +81,7 @@
     },
     {
       "id": "att-004",
+      "kind": "customer",
       "customer": "Rafael Mendes Lima",
       "handle": "rafael.mendes@example.com",
       "email": "rafael.mendes@example.com",
@@ -86,6 +93,7 @@
       "tags": ["B1/B2", "Convertido"],
       "lastMessage": "Obrigado pelo atendimento!",
       "lastMessageAt": "Ontem",
+      "updatedAt": "2026-08-25T17:25:00-03:00",
       "unread": 0,
       "crmType": "Contato",
       "service": "Assessoria para visto de turismo",
@@ -100,7 +108,7 @@
       "id": "team-001",
       "kind": "team",
       "customer": "Equipe Geral",
-      "handle": "Administrador · Atendimento · Comercial",
+      "handle": "Administrador · Equipe Comercial",
       "email": "",
       "channel": "Equipe",
       "status": "Ativo",
@@ -110,22 +118,24 @@
       "tags": ["Interno", "Geral"],
       "lastMessage": "Fechado. Vou atualizar o acompanhamento ainda hoje.",
       "lastMessageAt": "16:18",
+      "updatedAt": "2026-08-26T16:18:00-03:00",
+      "participantIds": ["u-1", "u-2"],
       "unread": 1,
       "crmType": "Equipe",
       "service": "",
       "destination": "",
       "visaType": "",
       "messages": [
-        {"id":"tm1","sender":"team","author":"Atendimento","body":"Pessoal, a cliente Mariana já enviou a documentação inicial.","time":"16:05"},
+        {"id":"tm1","sender":"team","author":"Equipe Comercial","body":"Pessoal, a cliente Mariana já enviou a documentação inicial.","time":"16:05"},
         {"id":"tm2","sender":"agent","author":"Administrador","body":"Ótimo. Comercial, consegue acompanhar o próximo retorno e manter o status atualizado?","time":"16:11"},
-        {"id":"tm3","sender":"team","author":"Comercial","body":"Fechado. Vou atualizar o acompanhamento ainda hoje.","time":"16:18"}
+        {"id":"tm3","sender":"team","author":"Equipe Comercial","body":"Fechado. Vou atualizar o acompanhamento ainda hoje.","time":"16:18"}
       ]
     },
     {
       "id": "team-002",
       "kind": "team",
       "customer": "Comercial",
-      "handle": "Administrador · Comercial",
+      "handle": "Administrador · Equipe Comercial",
       "email": "",
       "channel": "Equipe",
       "status": "Ativo",
@@ -135,6 +145,8 @@
       "tags": ["Interno", "Comercial"],
       "lastMessage": "Vou revisar os leads qualificados antes da reunião.",
       "lastMessageAt": "15:42",
+      "updatedAt": "2026-08-26T15:42:00-03:00",
+      "participantIds": ["u-1", "u-2"],
       "unread": 0,
       "crmType": "Equipe",
       "service": "",
@@ -142,7 +154,7 @@
       "visaType": "",
       "messages": [
         {"id":"tm4","sender":"agent","author":"Administrador","body":"Precisamos revisar os leads qualificados antes da reunião de amanhã.","time":"15:36"},
-        {"id":"tm5","sender":"team","author":"Comercial","body":"Vou revisar os leads qualificados antes da reunião.","time":"15:42"}
+        {"id":"tm5","sender":"team","author":"Equipe Comercial","body":"Vou revisar os leads qualificados antes da reunião.","time":"15:42"}
       ]
     }
   ]

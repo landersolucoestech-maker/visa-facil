@@ -10,9 +10,9 @@ export function readSessionRecords<T extends SessionRecord>(key:string,fallback:
  if(!store)return initial();
  try{
   const raw=store.getItem(key);
-  if(!raw){const next=initial();store.setItem(key,JSON.stringify(next));return next}
+  if(!raw){const next=initial();try{store.setItem(key,JSON.stringify(next))}catch{}return next}
   const parsed:unknown=JSON.parse(raw);
-  if(!Array.isArray(parsed)||!parsed.every(validate)||!uniqueIds(parsed)){const next=initial();store.setItem(key,JSON.stringify(next));return next}
+  if(!Array.isArray(parsed)||!parsed.every(validate)||!uniqueIds(parsed)){const next=initial();try{store.setItem(key,JSON.stringify(next))}catch{}return next}
   return clone(parsed);
  }catch{
   const next=initial();
@@ -24,6 +24,7 @@ export function readSessionRecords<T extends SessionRecord>(key:string,fallback:
 export function writeSessionRecords<T extends SessionRecord>(key:string,records:T[],validate:(value:unknown)=>value is T):T[]{
  const next=clone(records);
  if(!next.every(validate)||!uniqueIds(next))throw new Error(`Invalid session record set for ${key}`);
- storage()?.setItem(key,JSON.stringify(next));
+ const store=storage();
+ if(store){try{store.setItem(key,JSON.stringify(next))}catch{}}
  return next;
 }
