@@ -42,11 +42,7 @@ const CrmDashboardApp = lazy(async () => {
   await import('./styles/crm-dashboard-cards.css');
   return { default: module.default };
 });
-const FinanceTransactionsApp = lazy(async () => {
-  const module = await import('./modules/finance/FinanceTransactionsApp');
-  await import('./styles/finance-transactions-refinement.css');
-  return { default: module.default };
-});
+const FinanceTransactionsApp = lazy(() => import('./modules/finance/FinanceTransactionsApp'));
 const FinanceInvoicesApp = lazy(async () => {
   const module = await import('./modules/finance/FinanceInvoicesApp');
   await import('./modules/finance/invoice-document.css');
