@@ -3,7 +3,6 @@ import { AccountMenu, type AccountMenuSurface } from './components/AccountMenu';
 import { GlobalNotificationFallback } from './components/GlobalNotificationFallback';
 import { GlobalRouteLoader } from './components/GlobalRouteLoader';
 import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
-import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import './styles/crm-content-layout.css';
 import './styles/crm-ui-standard.css';
 import './styles/crm-ui-enforcement.css';
@@ -11,6 +10,14 @@ import './styles/tableview-surface.css';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
 const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
+const PublicSitePage = lazy(async () => {
+  const module = await import('./modules/public-site/pages/PublicSitePage');
+  await import('./modules/public-site/styles/01-base.css');
+  await import('./modules/public-site/styles/02-sections-responsive.css');
+  await import('./modules/public-site/styles/03-hero-v3.css');
+  await import('./modules/public-site/content/cms-preview.css');
+  return { default: module.PublicSitePage };
+});
 const AgendaApp = lazy(async () => {
   const module = await import('./modules/agenda/AgendaApp');
   await import('./styles/agenda-refinement.css');
@@ -111,6 +118,9 @@ function internal(page:ReactNode, accountSurface?:AccountMenuSurface){
 function withSharedSidebar(page: ReactNode) {
   return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>,'crm');
 }
+function publicSite(preview=false){
+  return <Suspense fallback={<GlobalRouteLoader/>}><PublicSitePage preview={preview}/></Suspense>;
+}
 
 export function RootApplication() {
   let path = normalizePath(window.location.pathname);
@@ -125,7 +135,7 @@ export function RootApplication() {
   if(AUTHENTICATION_ENABLED&&isInternalPath(path)&&!session){replacePath('/login');return internal(<LoginApp/>)}
   if(path==='/workspaces')return internal(<WorkspaceSelectorApp/>,'workspace');
   if(path==='/site-admin'||path.startsWith('/site-admin/'))return internal(<SiteCmsApp/>,'cms');
-  if(path==='/preview')return <PublicSitePage preview/>;
+  if(path==='/preview')return publicSite(true);
 
   if(path==='/crm/contatos'||path==='/crm/leads'){
     replacePath('/crm/relacionamento');
@@ -161,5 +171,5 @@ export function RootApplication() {
     return withSharedSidebar(<CrmDashboardApp/>);
   }
 
-  return <PublicSitePage/>;
+  return publicSite();
 }
