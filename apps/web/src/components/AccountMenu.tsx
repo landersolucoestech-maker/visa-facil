@@ -48,19 +48,14 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
     }
 
     const findHost = () => document.querySelector<HTMLElement>('.crm-global-page .crm-topbar .crm-topbar-actions');
-    const existingHost = findHost();
-    if (existingHost) {
-      setCrmHost(existingHost);
-      return;
-    }
-
-    const root = document.getElementById('root') ?? document.body;
-    const observer = new MutationObserver(() => {
+    const syncHost = () => {
       const host = findHost();
-      if (!host) return;
-      setCrmHost(host);
-      observer.disconnect();
-    });
+      setCrmHost((current) => current === host ? current : host);
+    };
+
+    syncHost();
+    const root = document.getElementById('root') ?? document.body;
+    const observer = new MutationObserver(syncHost);
     observer.observe(root, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [surface]);
