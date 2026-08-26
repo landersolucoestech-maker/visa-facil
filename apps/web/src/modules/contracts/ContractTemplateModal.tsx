@@ -1,25 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ContractDocumentPreview } from './ContractDocumentPreview';
 import { extractTemplatePlaceholders } from './contractTemplateEngine';
-import type { ContractCategory, ContractTemplate, ContractVariableDefinition } from './contractTypes';
+import type { ContractTemplate, ContractVariableDefinition } from './contractTypes';
 
-export type ContractTemplateDraft={name:string;categoryId:string;description:string;content:string;active:boolean};
+export type ContractTemplateDraft={name:string;description:string;content:string;active:boolean};
 
-function initial(template?:ContractTemplate):ContractTemplateDraft{return template?{name:template.name,categoryId:template.categoryId,description:template.description,content:template.content,active:template.active}:{name:'',categoryId:'',description:'',content:'',active:true}}
+function initial(template?:ContractTemplate):ContractTemplateDraft{return template?{name:template.name,description:template.description,content:template.content,active:template.active}:{name:'',description:'',content:'',active:true}}
 
-export function ContractTemplateModal({template,categories,variables,onClose,onSave}:{template?:ContractTemplate;categories:ContractCategory[];variables:ContractVariableDefinition[];onClose:()=>void;onSave:(draft:ContractTemplateDraft)=>void}){
+export function ContractTemplateModal({template,variables,onClose,onSave}:{template?:ContractTemplate;variables:ContractVariableDefinition[];onClose:()=>void;onSave:(draft:ContractTemplateDraft)=>void}){
  const [draft,setDraft]=useState(()=>initial(template));
  const [query,setQuery]=useState('');
  useEffect(()=>setDraft(initial(template)),[template]);
  const visibleVariables=useMemo(()=>variables.filter(item=>`${item.label} ${item.placeholder}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0,80),[variables,query]);
  const placeholders=useMemo(()=>extractTemplatePlaceholders(draft.content),[draft.content]);
  const append=(placeholder:string)=>setDraft(current=>({...current,content:`${current.content}${current.content&&!current.content.endsWith('\n')?' ':''}${placeholder}`}));
- const valid=Boolean(draft.name.trim()&&draft.categoryId&&draft.content.trim());
+ const valid=Boolean(draft.name.trim()&&draft.content.trim());
  return <div className="contracts-modal-backdrop" role="presentation" onMouseDown={event=>event.currentTarget===event.target&&onClose()}>
   <section className="contracts-template-editor" role="dialog" aria-modal="true" aria-labelledby="template-editor-title">
    <header><div><span>TEMPLATES</span><h2 id="template-editor-title">{template?'Editar template':'Novo template'}</h2><p>Monte o documento com placeholders seguros. O conteúdo é tratado como texto, nunca como HTML executável.</p></div><button type="button" aria-label="Fechar" onClick={onClose}>×</button></header>
    <div className="contracts-template-editor-body">
-    <div className="contracts-template-form"><div className="contracts-form-grid"><label className="contracts-field"><span>Nome</span><input value={draft.name} onChange={event=>setDraft(current=>({...current,name:event.target.value}))} placeholder="Ex: Contrato de assessoria consular"/></label><label className="contracts-field"><span>Categoria</span><select value={draft.categoryId} onChange={event=>setDraft(current=>({...current,categoryId:event.target.value}))}><option value="">Selecionar…</option>{categories.filter(item=>item.active).map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label><label className="contracts-field contracts-field--wide"><span>Descrição</span><input value={draft.description} onChange={event=>setDraft(current=>({...current,description:event.target.value}))} placeholder="Objetivo e contexto de uso deste modelo"/></label></div><label className="contracts-field"><span>Conteúdo do documento</span><textarea className="contracts-template-textarea" rows={22} value={draft.content} onChange={event=>setDraft(current=>({...current,content:event.target.value}))} placeholder={'CONTRATO...\n\nCONTRATANTE: {{CLIENTE.NOME}}\n...'} /></label><label className="contracts-checkbox"><input type="checkbox" checked={draft.active} onChange={event=>setDraft(current=>({...current,active:event.target.checked}))}/><span>Template ativo e disponível no wizard</span></label></div>
+    <div className="contracts-template-form"><div className="contracts-form-grid"><label className="contracts-field"><span>Nome</span><input value={draft.name} onChange={event=>setDraft(current=>({...current,name:event.target.value}))} placeholder="Ex: Contrato de assessoria consular"/></label><label className="contracts-field contracts-field--wide"><span>Descrição</span><input value={draft.description} onChange={event=>setDraft(current=>({...current,description:event.target.value}))} placeholder="Objetivo e contexto de uso deste modelo"/></label></div><label className="contracts-field"><span>Conteúdo do documento</span><textarea className="contracts-template-textarea" rows={22} value={draft.content} onChange={event=>setDraft(current=>({...current,content:event.target.value}))} placeholder={'CONTRATO...\n\nCONTRATANTE: {{CLIENTE.NOME}}\n...'} /></label><label className="contracts-checkbox"><input type="checkbox" checked={draft.active} onChange={event=>setDraft(current=>({...current,active:event.target.checked}))}/><span>Template ativo e disponível no wizard</span></label></div>
     <aside className="contracts-variable-panel"><div><span>REGISTRO DE VARIÁVEIS</span><strong>{variables.length} cadastradas</strong></div><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Buscar variável…"/>
      <div className="contracts-variable-panel-list">{visibleVariables.map(variable=><button type="button" key={variable.id} onClick={()=>append(variable.placeholder)}><strong>{variable.label}</strong><code>{variable.placeholder}</code></button>)}</div>
      <div className="contracts-template-meta"><span>{placeholders.length} placeholder(s) detectado(s)</span><p>{placeholders.join(', ')||'Nenhum placeholder no conteúdo.'}</p></div>
