@@ -1,157 +1,118 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { OperationalTeamMember } from '../../shared/operationalSessionStore';
 import {
-  ROUTING_STRATEGIES,
+  VISACHAT_NOTIFICATION_CHANNELS,
   VISACHAT_PRIORITIES,
   getVisaChatSettings,
   saveVisaChatSettings,
   type EscalationRule,
   type ReplyTemplate,
-  type SlaPolicy,
-  type SupportQueue,
+  type VisaChatMenuOption,
+  type VisaChatNotificationChannel,
+  type VisaChatPriority,
   type VisaChatSettings,
 } from './attendanceSettings';
 import './attendanceSettings.css';
 
-type SettingsSection = 'general' | 'hours' | 'messages' | 'menu' | 'queues' | 'routing' | 'escalation' | 'templates' | 'notifications';
+type SettingsTab = 'messages' | 'menu' | 'escalation' | 'templates';
+type Props = { teamMembers: OperationalTeamMember[]; onClose: () => void };
 
-type Props = {
-  teamMembers: OperationalTeamMember[];
-  onClose: () => void;
-};
+const PRIORITY_LABELS: Record<VisaChatPriority, string> = { baixa: 'Baixa', media: 'Média', alta: 'Alta', critica: 'Crítica' };
+const CHANNEL_LABELS: Record<VisaChatNotificationChannel, string> = { in_app: 'Sistema', whatsapp: 'WhatsApp preparado', sms: 'SMS preparado' };
+const RECIPIENT_LABELS: Record<string, string> = { supervisor: 'Supervisor', manager: 'Gestor', custom: 'Usuário específico' };
 
-const SECTIONS: Array<{ id: SettingsSection; label: string; description: string }> = [
-  { id: 'general', label: 'Geral', description: 'Identidade e comportamento básico' },
-  { id: 'hours', label: 'Horários', description: 'Janelas de atendimento' },
-  { id: 'messages', label: 'Mensagens automáticas', description: 'Textos e gatilhos configuráveis' },
-  { id: 'menu', label: 'Menu inicial', description: 'Triagem e opções de entrada' },
-  { id: 'queues', label: 'Filas', description: 'Setores, membros e supervisores' },
-  { id: 'routing', label: 'Roteamento e SLA', description: 'Distribuição e metas de resposta' },
-  { id: 'escalation', label: 'Escalonamento', description: 'Regras preparadas para execução backend' },
-  { id: 'templates', label: 'Templates', description: 'Respostas rápidas dos atendentes' },
-  { id: 'notifications', label: 'Notificações', description: 'Alertas operacionais do VisaChat' },
-];
-
-const routingLabel: Record<(typeof ROUTING_STRATEGIES)[number], string> = {
-  manual: 'Manual',
-  'round-robin': 'Round-robin',
-  'least-loaded': 'Menor carga',
-};
-
-const escalationLabel: Record<EscalationRule['action'], string> = {
-  'notify-supervisor': 'Notificar supervisor',
-  'raise-priority': 'Elevar prioridade',
-  'transfer-supervisor': 'Transferir para supervisor',
-};
-
-function SettingsSwitch({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
-  return <label className="visachat-settings-switch"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span aria-hidden="true" /><b>{label}</b></label>;
+function Switch({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
+  return <label className="visachat-ref-switch"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span aria-hidden="true" /><b>{label}</b></label>;
+}
+function parseList(value: string) { return value.split(',').map((item) => item.trim()).filter(Boolean); }
+function uniqueCommands(commands: string[]) { return Array.from(new Set(commands.map((item) => item.trim()).filter(Boolean))); }
+function splitReturnCommands(commands: string[] = []) {
+  const normalized = uniqueCommands(commands);
+  const quickCommand = normalized.find((command) => /^\d+$/.test(command)) ?? '';
+  return { quickCommand, textCommands: normalized.filter((command) => command !== quickCommand) };
 }
 
-function SectionIntro({ title, description }: { title: string; description: string }) {
-  return <div className="visachat-settings-section-intro"><div><span>VISACHAT</span><h2>{title}</h2><p>{description}</p></div></div>;
-}
+export function AttendanceSettingsPanel({ teamMembers: _teamMembers, onClose }: Props) {
+  const [tab, setTab] = useState<SettingsTab>('messages');
+  const [draft, setDraft] = useState<VisaChatSettings>(() => getVisaChatSettings());
+  const [openMenuIds, setOpenMenuIds] = useState<Record<string, boolean>>({});
+  const [openEscalationIds, setOpenEscalationIds] = useState<Record<string, boolean>>({});
+  const [openQuestionnaireIds, setOpenQuestionnaireIds] = useState<Record<string, boolean>>(() => ({ [getVisaChatSettings().menu_options[0]?.id ?? 'commercial']: true }));
+  const [newFields, setNewFields] = useState<Record<string, string>>({});
 
-export function AttendanceSettingsPanel({ teamMembers, onClose }: Props) {
-  const [section, setSection] = useState<SettingsSection>('general');
-  const [settings, setSettings] = useState<VisaChatSettings>(() => getVisaChatSettings());
-  const [saveState, setSaveState] = useState<'saved' | 'invalid'>('saved');
+  const patch = (updates: Partial<VisaChatSettings>) => setDraft((current) => ({ ...current, ...updates }));
+  const previewMenu = useMemo(() => [...draft.menu_options].filter((option) => option.active).sort((a, b) => a.order - b.order).map((option) => `${option.order}. ${option.label}`).join('\n'), [draft.menu_options]);
+  const { quickCommand, textCommands } = splitReturnCommands(draft.return_to_menu_rule.commands);
 
-  const teamMemberById = useMemo(() => new Map(teamMembers.map((member) => [member.id, member])), [teamMembers]);
-  const queueById = useMemo(() => new Map(settings.queues.map((queue) => [queue.id, queue])), [settings.queues]);
+  const updateMenuOption = (id: string, optionPatch: Partial<VisaChatMenuOption>) => patch({ menu_options: draft.menu_options.map((option) => option.id === id ? { ...option, ...optionPatch } : option), main_menu_message: '' });
+  const addMenuOption = () => {
+    const order = Math.max(0, ...draft.menu_options.map((option) => option.order)) + 1;
+    const id = `opcao-${Date.now()}`;
+    patch({ menu_options: [...draft.menu_options, { id, order, label: 'Nova opção', responseTemplateId: draft.templates[0]?.id ?? '', queue: 'Atendimento', sector: 'Triagem', defaultAssignee: null, tags: [], priority: 'media', active: true }], main_menu_message: '' });
+    setOpenMenuIds((current) => ({ ...current, [id]: true }));
+  };
+  const removeMenuOption = (id: string) => {
+    patch({ menu_options: draft.menu_options.filter((item) => item.id !== id), main_menu_message: '' });
+    setOpenMenuIds((current) => { const next = { ...current }; delete next[id]; return next; });
+  };
+  const addServiceQuestionnaire = () => {
+    const id = `questionario-${Date.now()}`;
+    const order = Math.max(0, ...draft.menu_options.map((option) => option.order)) + 1;
+    const option: VisaChatMenuOption = { id, order, label: 'Novo questionário', responseTemplateId: id, queue: 'Atendimento', sector: 'Triagem', defaultAssignee: null, tags: [], priority: 'media', active: true, required_fields: [], optional_fields: [] };
+    const template: ReplyTemplate = { id, name: option.label, shortcut: `/${id}`, body: '', active: true };
+    patch({ menu_options: [...draft.menu_options, option], templates: [...draft.templates, template], main_menu_message: '' });
+    setOpenQuestionnaireIds((current) => ({ ...current, [id]: true }));
+  };
+  const removeServiceQuestionnaire = (id: string) => {
+    const option = draft.menu_options.find((item) => item.id === id);
+    if (!option) return;
+    patch({ menu_options: draft.menu_options.filter((item) => item.id !== id), templates: draft.templates.filter((template) => template.id !== option.responseTemplateId), main_menu_message: '' });
+    setOpenQuestionnaireIds((current) => { const next = { ...current }; delete next[id]; return next; });
+  };
+  const addEscalation = () => {
+    const id = `escalonamento-${Date.now()}`;
+    patch({ escalation_rules: [...draft.escalation_rules, { id, afterMinutes: 15, level: 'supervisor', recipientRole: 'supervisor', recipientUserId: null, channels: ['in_app'], active: true }] });
+    setOpenEscalationIds((current) => ({ ...current, [id]: true }));
+  };
+  const updateEscalation = (id: string, rulePatch: Partial<EscalationRule>) => patch({ escalation_rules: draft.escalation_rules.map((rule) => rule.id === id ? { ...rule, ...rulePatch } : rule) });
+  const toggleRuleChannel = (rule: EscalationRule, channel: VisaChatNotificationChannel, checked: boolean) => {
+    const channels = new Set(rule.channels); if (checked) channels.add(channel); else channels.delete(channel); updateEscalation(rule.id, { channels: Array.from(channels) });
+  };
+  const getTemplate = (option: VisaChatMenuOption) => draft.templates.find((template) => template.id === option.responseTemplateId) ?? { id: option.responseTemplateId, name: option.label, shortcut: `/${option.id}`, body: '', active: true };
+  const updateTemplateForOption = (option: VisaChatMenuOption, body: string) => {
+    const template = getTemplate(option); const next = { ...template, body, name: option.label };
+    patch({ templates: draft.templates.some((item) => item.id === template.id) ? draft.templates.map((item) => item.id === template.id ? next : item) : [...draft.templates, next] });
+  };
+  const updateRequiredFields = (optionId: string, fields: string[]) => updateMenuOption(optionId, { required_fields: fields });
+  const addField = (optionId: string, fields: string[]) => { const value = (newFields[optionId] ?? '').trim(); if (!value) return; updateRequiredFields(optionId, [...fields, value]); setNewFields((current) => ({ ...current, [optionId]: '' })); };
+  const save = () => { saveVisaChatSettings({ ...draft, main_menu_message: draft.main_menu_message || previewMenu, required_fields: draft.required_fields.map((field) => field.trim()).filter(Boolean), optional_fields: draft.optional_fields.map((field) => field.trim()).filter(Boolean), return_to_menu_rule: { ...draft.return_to_menu_rule, commands: uniqueCommands(draft.return_to_menu_rule.commands ?? []) } }); };
 
-  useEffect(() => {
-    try {
-      saveVisaChatSettings(settings);
-      setSaveState('saved');
-    } catch {
-      setSaveState('invalid');
-    }
-  }, [settings]);
-
-  const patchGeneral = (patch: Partial<VisaChatSettings['general']>) => setSettings((current) => ({ ...current, general: { ...current.general, ...patch } }));
-  const patchMenu = (patch: Partial<VisaChatSettings['menu']>) => setSettings((current) => ({ ...current, menu: { ...current.menu, ...patch } }));
-  const patchRouting = (patch: Partial<VisaChatSettings['routing']>) => setSettings((current) => ({ ...current, routing: { ...current.routing, ...patch } }));
-  const patchQueue = (id: string, patch: Partial<SupportQueue>) => setSettings((current) => ({ ...current, queues: current.queues.map((queue) => queue.id === id ? { ...queue, ...patch } : queue) }));
-  const patchSla = (id: string, patch: Partial<SlaPolicy>) => setSettings((current) => ({ ...current, slaPolicies: current.slaPolicies.map((policy) => policy.id === id ? { ...policy, ...patch } : policy) }));
-  const patchEscalation = (id: string, patch: Partial<EscalationRule>) => setSettings((current) => ({ ...current, escalationRules: current.escalationRules.map((rule) => rule.id === id ? { ...rule, ...patch } : rule) }));
-  const patchTemplate = (id: string, patch: Partial<ReplyTemplate>) => setSettings((current) => ({ ...current, templates: current.templates.map((template) => template.id === id ? { ...template, ...patch } : template) }));
-
-  return <section className="visachat-settings-page" aria-label="Configurações do VisaChat">
-    <header className="visachat-settings-header">
-      <div><small>VISA FÁCIL · CRM · VISACHAT</small><h1>Configurações</h1><p>Configure atendimento, triagem, filas, SLA e respostas do VisaChat.</p></div>
-      <div className="visachat-settings-header-actions"><span className={saveState === 'saved' ? 'is-saved' : 'is-invalid'}>{saveState === 'saved' ? 'Alterações salvas nesta sessão' : 'Revise os campos obrigatórios'}</span><button type="button" className="crm-btn-secondary" onClick={onClose}>Voltar ao VisaChat</button></div>
+  return <section className="visachat-ref-page" aria-label="Configuração de atendimento do VisaChat">
+    <header className="visachat-ref-header">
+      <div><h1>Automações do VisaChat</h1><p>Configure mensagens automáticas, triagem, campos coletados, filas, templates, notificações e escalonamentos.</p></div>
+      <div className="visachat-ref-actions"><button type="button" className="crm-btn-secondary" disabled title="Indisponível sem executor backend">⚡ Testar escalonamento</button><button type="button" className="crm-btn-primary" onClick={save}>Salvar configuração</button><button type="button" className="crm-btn-secondary" onClick={onClose}>Voltar ao VisaChat</button></div>
     </header>
 
-    <div className="visachat-settings-layout">
-      <nav className="visachat-settings-nav" aria-label="Seções das configurações">{SECTIONS.map((item) => <button key={item.id} type="button" className={section === item.id ? 'is-active' : ''} onClick={() => setSection(item.id)}><strong>{item.label}</strong><small>{item.description}</small></button>)}</nav>
+    <nav className="visachat-ref-tabs" aria-label="Configurações de atendimento">
+      {([['messages','Mensagens'],['menu','Menu e filas'],['escalation','Escalonamento'],['templates','Templates']] as const).map(([id,label]) => <button key={id} type="button" className={tab === id ? 'is-active' : ''} onClick={() => setTab(id)}>{label}</button>)}
+    </nav>
 
-      <div className="visachat-settings-content">
-        {section === 'general' && <>
-          <SectionIntro title="Configurações gerais" description="Defina a identidade do atendimento e os comportamentos gerais do VisaChat." />
-          <div className="visachat-settings-card visachat-settings-form-grid">
-            <label><span>Nome exibido</span><input value={settings.general.displayName} onChange={(event) => patchGeneral({ displayName: event.target.value })} /></label>
-            <label><span>Idioma</span><input value={settings.general.language} onChange={(event) => patchGeneral({ language: event.target.value })} /></label>
-            <label><span>Fuso horário</span><input value={settings.general.timezone} onChange={(event) => patchGeneral({ timezone: event.target.value })} /></label>
-            <label><span>Arquivar resolvidas após</span><div className="visachat-settings-number"><input type="number" min="0" value={settings.general.archiveAfterDays} onChange={(event) => patchGeneral({ archiveAfterDays: Math.max(0, Number(event.target.value) || 0) })} /><em>dias</em></div></label>
-            <div className="visachat-settings-wide"><SettingsSwitch checked={settings.general.reopenOnCustomerReply} onChange={(value) => patchGeneral({ reopenOnCustomerReply: value })} label="Reabrir conversa quando o cliente responder após resolução" /></div>
-          </div>
-          <div className="visachat-settings-notice"><strong>Fronteira atual</strong><p>As configurações são funcionais dentro do protótipo e persistem na sessão do navegador. Execução simultânea entre usuários e timers automáticos continuam dependentes de backend compartilhado.</p></div>
-        </>}
+    {tab === 'messages' && <div className="visachat-ref-stack">
+      <article className="visachat-ref-card"><header><h2>Fluxo inicial</h2><Switch checked={draft.enabled} onChange={(enabled) => patch({ enabled })} label="Automação ativa" /></header><div className="visachat-ref-fields"><label><span>Mensagem inicial de boas-vindas</span><textarea rows={4} value={draft.welcome_message} onChange={(e) => patch({ welcome_message: e.target.value })} /></label><label><span>Menu principal de triagem</span><textarea rows={8} value={draft.main_menu_message || previewMenu} onChange={(e) => patch({ main_menu_message: e.target.value })} /></label></div></article>
+      <article className="visachat-ref-card"><header><h2>Mensagens de exceção e encerramento</h2></header><div className="visachat-ref-grid2"><label><span>Opção inválida</span><textarea rows={3} value={draft.invalid_option_message} onChange={(e) => patch({ invalid_option_message: e.target.value })} /></label><label><span>Ausência de resposta</span><textarea rows={3} value={draft.absence_message} onChange={(e) => patch({ absence_message: e.target.value })} /></label><label><span>Fora do horário de atendimento</span><textarea rows={3} value={draft.out_of_hours_message} onChange={(e) => patch({ out_of_hours_message: e.target.value })} /></label><label><span>Encerramento</span><textarea rows={3} value={draft.closing_message} onChange={(e) => patch({ closing_message: e.target.value })} /></label></div></article>
+    </div>}
 
-        {section === 'hours' && <>
-          <SectionIntro title="Horários de atendimento" description="Esses horários alimentam as regras de fora do expediente quando houver executor backend." />
-          <div className="visachat-settings-card"><div className="visachat-hours-list">{settings.businessHours.map((hour) => <div key={hour.id} className="visachat-hours-row"><SettingsSwitch checked={hour.enabled} onChange={(enabled) => setSettings((current) => ({ ...current, businessHours: current.businessHours.map((item) => item.id === hour.id ? { ...item, enabled } : item) }))} label={hour.day} /><div className="visachat-hours-times"><input type="time" disabled={!hour.enabled} value={hour.start} onChange={(event) => setSettings((current) => ({ ...current, businessHours: current.businessHours.map((item) => item.id === hour.id ? { ...item, start: event.target.value } : item) }))} /><span>até</span><input type="time" disabled={!hour.enabled} value={hour.end} onChange={(event) => setSettings((current) => ({ ...current, businessHours: current.businessHours.map((item) => item.id === hour.id ? { ...item, end: event.target.value } : item) }))} /></div></div>)}</div></div>
-        </>}
+    {tab === 'menu' && <div className="visachat-ref-stack">
+      <article className="visachat-ref-card"><header><div><h2>Menu principal de triagem</h2><p>Configure ordem, fila, setor, prioridade e template de cada opção.</p></div><button type="button" className="crm-btn-primary" onClick={addMenuOption}>+ Adicionar opção</button></header><div className="visachat-ref-accordion">{[...draft.menu_options].sort((a,b)=>a.order-b.order).map((option) => { const open = openMenuIds[option.id] ?? false; return <div key={option.id} className="visachat-ref-accordion-item"><button type="button" className="visachat-ref-accordion-trigger" onClick={() => setOpenMenuIds((current) => ({ ...current, [option.id]: !open }))}><span className="visachat-ref-number">{option.order}</span><strong>{option.label || 'Sem texto'}</strong><small>Fila {option.queue || '—'} · Setor {option.sector || '—'}</small><em>{PRIORITY_LABELS[option.priority]}</em><em>{option.active ? 'Ativa' : 'Inativa'}</em><b>{open ? '⌄' : '›'}</b></button>{open && <div className="visachat-ref-accordion-content"><div className="visachat-ref-menu-row"><label><span>Ordem</span><input type="number" min="1" value={option.order} onChange={(e)=>updateMenuOption(option.id,{order:Number(e.target.value)||1})}/></label><label><span>Texto da opção</span><input value={option.label} onChange={(e)=>updateMenuOption(option.id,{label:e.target.value})}/></label><label><span>Fila</span><input value={option.queue} onChange={(e)=>updateMenuOption(option.id,{queue:e.target.value})}/></label><label><span>Setor</span><input value={option.sector} onChange={(e)=>updateMenuOption(option.id,{sector:e.target.value})}/></label><div className="visachat-ref-inline-actions"><Switch checked={option.active} onChange={(active)=>updateMenuOption(option.id,{active})} label="Ativa"/><button type="button" className="visachat-ref-delete" onClick={()=>removeMenuOption(option.id)}>Excluir</button></div></div><div className="visachat-ref-grid4"><label><span>Template</span><select value={option.responseTemplateId} onChange={(e)=>updateMenuOption(option.id,{responseTemplateId:e.target.value})}>{draft.templates.map((template)=><option key={template.id} value={template.id}>{template.name}</option>)}</select></label><label><span>Responsável padrão</span><input value={option.defaultAssignee ?? ''} onChange={(e)=>updateMenuOption(option.id,{defaultAssignee:e.target.value||null})} placeholder="ID do usuário"/></label><label><span>Prioridade</span><select value={option.priority} onChange={(e)=>updateMenuOption(option.id,{priority:e.target.value as VisaChatPriority})}>{VISACHAT_PRIORITIES.map((priority)=><option key={priority} value={priority}>{PRIORITY_LABELS[priority]}</option>)}</select></label><label><span>Tags automáticas</span><input value={option.tags.join(', ')} onChange={(e)=>updateMenuOption(option.id,{tags:parseList(e.target.value)})}/></label></div></div>}</div>; })}</div></article>
+      <article className="visachat-ref-card"><header><h2>Retorno ao menu principal</h2></header><div className="visachat-ref-return-row"><label><span>Número</span><input inputMode="numeric" value={quickCommand} onChange={(e)=>patch({return_to_menu_rule:{...draft.return_to_menu_rule,commands:uniqueCommands([e.target.value,...textCommands])}})} placeholder="0"/></label><label><span>Comandos textuais aceitos</span><input value={textCommands.join(', ')} onChange={(e)=>patch({return_to_menu_rule:{...draft.return_to_menu_rule,commands:uniqueCommands([quickCommand,...parseList(e.target.value)])}})} placeholder="menu, voltar, inicio"/></label><Switch checked={draft.return_to_menu_rule.enabled !== false} onChange={(enabled)=>patch({return_to_menu_rule:{...draft.return_to_menu_rule,enabled}})} label="Ativo"/></div></article>
+    </div>}
 
-        {section === 'messages' && <>
-          <SectionIntro title="Mensagens automáticas" description="Configure o conteúdo e ative somente os gatilhos que deverão ser executados quando existir backend/worker." />
-          <div className="visachat-settings-stack">{settings.automaticMessages.map((message) => <article key={message.id} className="visachat-settings-card visachat-automation-card"><header><div><h3>{message.name}</h3><p>{message.trigger}</p></div><SettingsSwitch checked={message.enabled} onChange={(enabled) => setSettings((current) => ({ ...current, automaticMessages: current.automaticMessages.map((item) => item.id === message.id ? { ...item, enabled } : item) }))} label={message.enabled ? 'Ativa' : 'Inativa'} /></header><label><span>Mensagem</span><textarea rows={4} value={message.body} onChange={(event) => setSettings((current) => ({ ...current, automaticMessages: current.automaticMessages.map((item) => item.id === message.id ? { ...item, body: event.target.value } : item) }))} /></label><small>Variáveis: {'{{contact.first_name}}'} · {'{{agent.name}}'} · {'{{company.name}}'} · {'{{queue.name}}'}</small></article>)}</div>
-        </>}
+    {tab === 'escalation' && <div className="visachat-ref-stack">
+      <article className="visachat-ref-card"><header><h2>Responsáveis padrão</h2></header><div className="visachat-ref-grid2"><label><span>Supervisor padrão</span><input value={draft.supervisor_user_id ?? ''} onChange={(e)=>patch({supervisor_user_id:e.target.value||null})} placeholder="ID do usuário supervisor"/></label><label><span>Gestor padrão</span><input value={draft.manager_user_id ?? ''} onChange={(e)=>patch({manager_user_id:e.target.value||null})} placeholder="ID do usuário gestor"/></label></div></article>
+      <article className="visachat-ref-card"><header><div><h2>Regras de escalonamento</h2><p>Defina o tempo-limite e o destino de cada nível. Estas regras são avaliadas quando o escalonamento é executado manualmente; não há disparo automático por temporizador nesta versão.</p></div><button type="button" className="crm-btn-primary" onClick={addEscalation}>+ Adicionar regra</button></header><div className="visachat-ref-accordion">{[...draft.escalation_rules].sort((a,b)=>a.afterMinutes-b.afterMinutes).map((rule)=>{const open=openEscalationIds[rule.id]??false;return <div key={rule.id} className="visachat-ref-accordion-item"><button type="button" className="visachat-ref-accordion-trigger" onClick={()=>setOpenEscalationIds((current)=>({...current,[rule.id]:!open}))}><span className="visachat-ref-number">{rule.afterMinutes} min</span><strong>{rule.level||'Sem nível'}</strong><small>Destino: {RECIPIENT_LABELS[rule.recipientRole]??rule.recipientRole}</small><em>{rule.active?'Ativa':'Inativa'}</em><b>{open?'⌄':'›'}</b></button>{open&&<div className="visachat-ref-accordion-content"><div className="visachat-ref-escalation-row"><label><span>Minutos</span><input type="number" min="1" value={rule.afterMinutes} onChange={(e)=>updateEscalation(rule.id,{afterMinutes:Number(e.target.value)||1})}/></label><label><span>Nível</span><input value={rule.level} onChange={(e)=>updateEscalation(rule.id,{level:e.target.value})}/></label><label><span>Destino</span><select value={rule.recipientRole} onChange={(e)=>updateEscalation(rule.id,{recipientRole:e.target.value})}><option value="supervisor">Supervisor</option><option value="manager">Gestor</option><option value="custom">Usuário específico</option></select></label><label><span>Usuário específico opcional</span><input value={rule.recipientUserId??''} onChange={(e)=>updateEscalation(rule.id,{recipientUserId:e.target.value||null})} placeholder="ID do usuário"/></label><div className="visachat-ref-inline-actions"><Switch checked={rule.active} onChange={(active)=>updateEscalation(rule.id,{active})} label="Ativa"/><button type="button" className="visachat-ref-delete" onClick={()=>patch({escalation_rules:draft.escalation_rules.filter((item)=>item.id!==rule.id)})}>Excluir</button></div></div><div className="visachat-ref-channel-row">{VISACHAT_NOTIFICATION_CHANNELS.map((channel)=><label key={channel}><input type="checkbox" checked={rule.channels.includes(channel)} onChange={(e)=>toggleRuleChannel(rule,channel,e.target.checked)}/><span>{CHANNEL_LABELS[channel]}</span></label>)}</div></div>}</div>})}</div></article>
+    </div>}
 
-        {section === 'menu' && <>
-          <SectionIntro title="Menu inicial e triagem" description="Monte o menu recebido pelo cliente e direcione cada opção para uma fila configurada." />
-          <div className="visachat-settings-card visachat-settings-stack"><SettingsSwitch checked={settings.menu.enabled} onChange={(enabled) => patchMenu({ enabled })} label="Menu inicial ativo" /><label><span>Mensagem do menu</span><textarea rows={7} value={settings.menu.message} onChange={(event) => patchMenu({ message: event.target.value })} /></label><label><span>Mensagem de opção inválida</span><textarea rows={3} value={settings.menu.invalidOptionMessage} onChange={(event) => patchMenu({ invalidOptionMessage: event.target.value })} /></label><label className="visachat-settings-compact"><span>Tentativas inválidas antes do fallback</span><input type="number" min="0" max="10" value={settings.menu.maxInvalidAttempts} onChange={(event) => patchMenu({ maxInvalidAttempts: Math.max(0, Number(event.target.value) || 0) })} /></label></div>
-          <div className="visachat-settings-card"><h3>Opções do menu</h3><div className="visachat-menu-options">{settings.menu.options.map((option) => <div key={option.id}><input aria-label={`Tecla ${option.label}`} value={option.key} onChange={(event) => patchMenu({ options: settings.menu.options.map((item) => item.id === option.id ? { ...item, key: event.target.value } : item) })} /><input aria-label={`Rótulo ${option.key}`} value={option.label} onChange={(event) => patchMenu({ options: settings.menu.options.map((item) => item.id === option.id ? { ...item, label: event.target.value } : item) })} /><select aria-label={`Fila ${option.label}`} value={option.queueId} onChange={(event) => patchMenu({ options: settings.menu.options.map((item) => item.id === option.id ? { ...item, queueId: event.target.value } : item) })}>{settings.queues.filter((queue) => queue.active).map((queue) => <option key={queue.id} value={queue.id}>{queue.name}</option>)}</select></div>)}</div></div>
-        </>}
-
-        {section === 'queues' && <>
-          <SectionIntro title="Filas e setores" description="Os participantes são os mesmos usuários ativos cadastrados em Configurações → Usuários." />
-          <div className="visachat-settings-stack">{settings.queues.map((queue) => <article key={queue.id} className="visachat-settings-card visachat-queue-card"><header><div><h3>{queue.name}</h3><p>{queue.description}</p></div><SettingsSwitch checked={queue.active} onChange={(active) => patchQueue(queue.id, { active })} label={queue.active ? 'Ativa' : 'Inativa'} /></header><div className="visachat-settings-form-grid"><label><span>Nome</span><input value={queue.name} onChange={(event) => patchQueue(queue.id, { name: event.target.value })} /></label><label><span>Prioridade padrão</span><select value={queue.priority} onChange={(event) => patchQueue(queue.id, { priority: event.target.value as SupportQueue['priority'] })}>{VISACHAT_PRIORITIES.map((priority) => <option key={priority}>{priority}</option>)}</select></label><label><span>Supervisor</span><select value={queue.supervisorId} onChange={(event) => patchQueue(queue.id, { supervisorId: event.target.value })}><option value="">Sem supervisor</option>{teamMembers.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label></div><fieldset className="visachat-queue-members"><legend>Participantes</legend>{teamMembers.length ? teamMembers.map((member) => <label key={member.id}><input type="checkbox" checked={queue.memberIds.includes(member.id)} onChange={(event) => patchQueue(queue.id, { memberIds: event.target.checked ? [...queue.memberIds, member.id] : queue.memberIds.filter((id) => id !== member.id) })} /><span><strong>{member.name}</strong><small>{member.role}</small></span></label>) : <p>Nenhum usuário ativo disponível.</p>}</fieldset></article>)}</div>
-        </>}
-
-        {section === 'routing' && <>
-          <SectionIntro title="Roteamento e SLA" description="A configuração fica pronta no frontend; distribuição concorrente e relógio de SLA só devem ser executados por backend/worker." />
-          <div className="visachat-settings-card visachat-settings-form-grid"><label><span>Estratégia de distribuição</span><select value={settings.routing.strategy} onChange={(event) => patchRouting({ strategy: event.target.value as VisaChatSettings['routing']['strategy'] })}>{ROUTING_STRATEGIES.map((strategy) => <option key={strategy} value={strategy}>{routingLabel[strategy]}</option>)}</select></label><div className="visachat-settings-wide"><SettingsSwitch checked={settings.routing.keepPreviousAssignee} onChange={(keepPreviousAssignee) => patchRouting({ keepPreviousAssignee })} label="Preferir responsável anterior quando aplicável" /></div></div>
-          <div className="visachat-settings-stack">{settings.slaPolicies.map((policy) => <article key={policy.id} className="visachat-settings-card"><header><div><h3>{queueById.get(policy.queueId)?.name ?? policy.queueId}</h3><p>Metas de atendimento</p></div></header><div className="visachat-sla-grid"><label><span>Primeira resposta</span><div className="visachat-settings-number"><input type="number" min="0" value={policy.firstResponseMinutes} onChange={(event) => patchSla(policy.id, { firstResponseMinutes: Math.max(0, Number(event.target.value) || 0) })} /><em>min</em></div></label><label><span>Durante atendimento</span><div className="visachat-settings-number"><input type="number" min="0" value={policy.ongoingResponseMinutes} onChange={(event) => patchSla(policy.id, { ongoingResponseMinutes: Math.max(0, Number(event.target.value) || 0) })} /><em>min</em></div></label><label><span>Resolução</span><div className="visachat-settings-number"><input type="number" min="0" value={policy.resolutionMinutes} onChange={(event) => patchSla(policy.id, { resolutionMinutes: Math.max(0, Number(event.target.value) || 0) })} /><em>min</em></div></label></div></article>)}</div>
-        </>}
-
-        {section === 'escalation' && <>
-          <SectionIntro title="Escalonamento" description="Regras declarativas preparadas para futura execução automática. O frontend não dispara cronômetros sozinho." />
-          <div className="visachat-settings-stack">{settings.escalationRules.map((rule) => <article key={rule.id} className="visachat-settings-card visachat-escalation-card"><header><div><h3>{rule.name}</h3><p>{queueById.get(rule.queueId)?.name ?? rule.queueId}</p></div><SettingsSwitch checked={rule.enabled} onChange={(enabled) => patchEscalation(rule.id, { enabled })} label={rule.enabled ? 'Ativa' : 'Inativa'} /></header><div className="visachat-settings-form-grid"><label><span>Após</span><div className="visachat-settings-number"><input type="number" min="0" value={rule.afterMinutes} onChange={(event) => patchEscalation(rule.id, { afterMinutes: Math.max(0, Number(event.target.value) || 0) })} /><em>min</em></div></label><label><span>Fila</span><select value={rule.queueId} onChange={(event) => patchEscalation(rule.id, { queueId: event.target.value })}>{settings.queues.map((queue) => <option key={queue.id} value={queue.id}>{queue.name}</option>)}</select></label><label><span>Ação</span><select value={rule.action} onChange={(event) => patchEscalation(rule.id, { action: event.target.value as EscalationRule['action'] })}>{Object.entries(escalationLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div></article>)}</div>
-          <div className="visachat-settings-notice warning"><strong>Não simulado</strong><p>Estas regras não são apresentadas como automáticas enquanto não houver scheduler/worker compartilhado. A configuração já fica pronta para essa camada futura.</p></div>
-        </>}
-
-        {section === 'templates' && <>
-          <SectionIntro title="Templates e respostas rápidas" description="Atalhos ficam disponíveis para o atendimento sem misturar a configuração operacional do VisaChat com integrações externas." />
-          <div className="visachat-settings-stack">{settings.templates.map((template) => <article key={template.id} className="visachat-settings-card visachat-template-card"><header><div><h3>{template.name}</h3><p>{template.shortcut}</p></div><SettingsSwitch checked={template.active} onChange={(active) => patchTemplate(template.id, { active })} label={template.active ? 'Ativo' : 'Inativo'} /></header><div className="visachat-settings-form-grid"><label><span>Nome</span><input value={template.name} onChange={(event) => patchTemplate(template.id, { name: event.target.value })} /></label><label><span>Atalho</span><input value={template.shortcut} onChange={(event) => patchTemplate(template.id, { shortcut: event.target.value })} /></label><label className="visachat-settings-wide"><span>Mensagem</span><textarea rows={4} value={template.body} onChange={(event) => patchTemplate(template.id, { body: event.target.value })} /></label></div></article>)}</div>
-          <div className="visachat-settings-card"><h3>Tags e prioridades</h3><div className="visachat-taxonomy-grid"><div><strong>Tags</strong>{settings.tags.map((tag) => <SettingsSwitch key={tag.id} checked={tag.active} onChange={(active) => setSettings((current) => ({ ...current, tags: current.tags.map((item) => item.id === tag.id ? { ...item, active } : item) }))} label={tag.name} />)}</div><div><strong>Prioridades</strong>{settings.priorities.map((priority) => <span key={priority} className="visachat-priority-chip">{priority}</span>)}</div></div></div>
-        </>}
-
-        {section === 'notifications' && <>
-          <SectionIntro title="Notificações" description="Defina quais eventos internos devem gerar alertas na interface." />
-          <div className="visachat-settings-card visachat-notification-list">
-            <SettingsSwitch checked={settings.notifications.newInternalMessage} onChange={(newInternalMessage) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, newInternalMessage } }))} label="Nova mensagem interna" />
-            <SettingsSwitch checked={settings.notifications.mention} onChange={(mention) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, mention } }))} label="Nova @menção" />
-            <SettingsSwitch checked={settings.notifications.newAssignment} onChange={(newAssignment) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, newAssignment } }))} label="Nova atribuição de atendimento" />
-            <SettingsSwitch checked={settings.notifications.customerReply} onChange={(customerReply) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, customerReply } }))} label="Cliente respondeu" />
-            <SettingsSwitch checked={settings.notifications.slaWarning} onChange={(slaWarning) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, slaWarning } }))} label="SLA próximo do limite" />
-            <SettingsSwitch checked={settings.notifications.slaExpired} onChange={(slaExpired) => setSettings((current) => ({ ...current, notifications: { ...current.notifications, slaExpired } }))} label="SLA vencido" />
-          </div>
-          <div className="visachat-settings-notice"><strong>Usuários ativos</strong><p>{teamMembers.length ? teamMembers.map((member) => `${member.name} (${member.role})`).join(' · ') : 'Nenhum usuário ativo cadastrado.'}</p></div>
-        </>}
-      </div>
-    </div>
+    {tab === 'templates' && <article className="visachat-ref-card"><header><div><h2>Questionários por serviço</h2><p>Abra um serviço do menu e configure quais perguntas serão coletadas inicialmente para ele.</p></div><button type="button" className="crm-btn-primary" onClick={addServiceQuestionnaire}>+ Adicionar questionário</button></header><div className="visachat-ref-questionnaires">{[...draft.menu_options].sort((a,b)=>a.order-b.order).map((option)=>{const open=openQuestionnaireIds[option.id]??false;const fields=option.required_fields?.length?option.required_fields:draft.required_fields;const template=getTemplate(option);return <div key={option.id} className="visachat-ref-questionnaire"><button type="button" className="visachat-ref-questionnaire-trigger" onClick={()=>setOpenQuestionnaireIds((current)=>({...current,[option.id]:!open}))}><div><strong>{option.order}. {option.label}</strong><span>{fields.length} campo(s)</span>{!option.active&&<span>Inativa</span>}<small>Fila {option.queue} / Setor {option.sector}</small></div><b>{open?'⌄':'›'}</b></button>{open&&<div className="visachat-ref-questionnaire-content"><div className="visachat-ref-questionnaire-actions"><button type="button" className="visachat-ref-delete" onClick={()=>removeServiceQuestionnaire(option.id)}>Excluir questionário</button></div><section className="visachat-ref-inner-card"><h3>Campos obrigatórios</h3><p>Perguntas que precisam ser respondidas para este tipo de serviço.</p><div className="visachat-ref-field-list">{fields.length?fields.map((field,index)=><div key={`${field}-${index}`}><input value={field} onChange={(e)=>updateRequiredFields(option.id,fields.map((item,i)=>i===index?e.target.value:item))}/><button type="button" className="visachat-ref-delete" onClick={()=>updateRequiredFields(option.id,fields.filter((_,i)=>i!==index))}>Excluir</button></div>):<p>Nenhum campo obrigatório configurado para este serviço.</p>}</div><div className="visachat-ref-add-field"><input value={newFields[option.id]??''} onChange={(e)=>setNewFields((current)=>({...current,[option.id]:e.target.value}))} onKeyDown={(e)=>{if(e.key==='Enter'){e.preventDefault();addField(option.id,fields)}}} placeholder="Ex.: Nome completo"/><button type="button" className="crm-btn-primary" onClick={()=>addField(option.id,fields)}>+ Adicionar</button></div></section><section className="visachat-ref-inner-card"><h3>Mensagem Automática</h3><textarea rows={4} value={template.body} onChange={(e)=>updateTemplateForOption(option,e.target.value)}/></section></div>}</div>})}</div></article>}
   </section>;
 }
 

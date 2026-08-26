@@ -1,59 +1,23 @@
-export const VISACHAT_SETTINGS_STORAGE_KEY = 'visa-facil.session.visachat.settings.v1';
+export const VISACHAT_SETTINGS_STORAGE_KEY = 'visa-facil.session.visachat.settings.v2';
+export const VISACHAT_PRIORITIES = ['baixa', 'media', 'alta', 'critica'] as const;
+export const VISACHAT_NOTIFICATION_CHANNELS = ['in_app', 'whatsapp', 'sms'] as const;
 
-export const ROUTING_STRATEGIES = ['manual', 'round-robin', 'least-loaded'] as const;
-export const VISACHAT_PRIORITIES = ['Baixa', 'Normal', 'Alta', 'Urgente'] as const;
-
-export type RoutingStrategy = typeof ROUTING_STRATEGIES[number];
 export type VisaChatPriority = typeof VISACHAT_PRIORITIES[number];
+export type VisaChatNotificationChannel = typeof VISACHAT_NOTIFICATION_CHANNELS[number];
 
-export type BusinessHour = {
+export type VisaChatMenuOption = {
   id: string;
-  day: string;
-  enabled: boolean;
-  start: string;
-  end: string;
-};
-
-export type AutomaticMessage = {
-  id: string;
-  name: string;
-  trigger: string;
-  enabled: boolean;
-  body: string;
-};
-
-export type MenuOption = {
-  id: string;
-  key: string;
+  order: number;
   label: string;
-  queueId: string;
-};
-
-export type SupportQueue = {
-  id: string;
-  name: string;
-  description: string;
-  active: boolean;
-  memberIds: string[];
-  supervisorId: string;
+  responseTemplateId: string;
+  queue: string;
+  sector: string;
+  defaultAssignee?: string | null;
+  tags: string[];
   priority: VisaChatPriority;
-};
-
-export type SlaPolicy = {
-  id: string;
-  queueId: string;
-  firstResponseMinutes: number;
-  ongoingResponseMinutes: number;
-  resolutionMinutes: number;
-};
-
-export type EscalationRule = {
-  id: string;
-  name: string;
-  enabled: boolean;
-  afterMinutes: number;
-  queueId: string;
-  action: 'notify-supervisor' | 'raise-priority' | 'transfer-supervisor';
+  active: boolean;
+  required_fields?: string[];
+  optional_fields?: string[];
 };
 
 export type ReplyTemplate = {
@@ -64,184 +28,114 @@ export type ReplyTemplate = {
   active: boolean;
 };
 
-export type TagDefinition = {
+export type EscalationRule = {
   id: string;
-  name: string;
+  afterMinutes: number;
+  level: string;
+  recipientRole: 'supervisor' | 'manager' | 'custom' | string;
+  recipientUserId?: string | null;
+  channels: VisaChatNotificationChannel[];
   active: boolean;
 };
 
 export type VisaChatSettings = {
-  version: 1;
-  general: {
-    displayName: string;
-    language: string;
-    timezone: string;
-    reopenOnCustomerReply: boolean;
-    archiveAfterDays: number;
-  };
-  businessHours: BusinessHour[];
-  automaticMessages: AutomaticMessage[];
-  menu: {
-    enabled: boolean;
-    message: string;
-    invalidOptionMessage: string;
-    maxInvalidAttempts: number;
-    options: MenuOption[];
-  };
-  queues: SupportQueue[];
-  routing: {
-    strategy: RoutingStrategy;
-    keepPreviousAssignee: boolean;
-  };
-  slaPolicies: SlaPolicy[];
-  escalationRules: EscalationRule[];
+  version: 2;
+  enabled: boolean;
+  welcome_message: string;
+  main_menu_message: string;
+  menu_options: VisaChatMenuOption[];
   templates: ReplyTemplate[];
-  tags: TagDefinition[];
-  priorities: VisaChatPriority[];
-  notifications: {
-    newInternalMessage: boolean;
-    mention: boolean;
-    newAssignment: boolean;
-    customerReply: boolean;
-    slaWarning: boolean;
-    slaExpired: boolean;
+  required_fields: string[];
+  optional_fields: string[];
+  invalid_option_message: string;
+  absence_message: string;
+  out_of_hours_message: string;
+  closing_message: string;
+  return_to_menu_rule: {
+    enabled?: boolean;
+    commands?: string[];
   };
+  escalation_rules: EscalationRule[];
+  notification_channels: Record<string, unknown>;
+  supervisor_user_id?: string | null;
+  manager_user_id?: string | null;
 };
 
+const INITIAL_REQUIRED_FIELDS = [
+  'Nome completo',
+  'Telefone para contato',
+  'E-mail',
+  'Serviço de interesse',
+  'País de destino',
+  'Tipo de visto',
+];
+
 const DEFAULT_SETTINGS: VisaChatSettings = {
-  version: 1,
-  general: {
-    displayName: 'Visa Fácil',
-    language: 'Português (Brasil)',
-    timezone: 'America/Sao_Paulo',
-    reopenOnCustomerReply: true,
-    archiveAfterDays: 30,
-  },
-  businessHours: [
-    { id: 'mon', day: 'Segunda-feira', enabled: true, start: '08:00', end: '18:00' },
-    { id: 'tue', day: 'Terça-feira', enabled: true, start: '08:00', end: '18:00' },
-    { id: 'wed', day: 'Quarta-feira', enabled: true, start: '08:00', end: '18:00' },
-    { id: 'thu', day: 'Quinta-feira', enabled: true, start: '08:00', end: '18:00' },
-    { id: 'fri', day: 'Sexta-feira', enabled: true, start: '08:00', end: '18:00' },
-    { id: 'sat', day: 'Sábado', enabled: false, start: '08:00', end: '12:00' },
-    { id: 'sun', day: 'Domingo', enabled: false, start: '08:00', end: '12:00' },
-  ],
-  automaticMessages: [
-    { id: 'welcome', name: 'Boas-vindas', trigger: 'Nova conversa recebida', enabled: true, body: 'Olá, {{contact.first_name}}! 👋 Bem-vindo ao atendimento da {{company.name}}. Como podemos ajudar?' },
-    { id: 'after-hours', name: 'Fora do horário', trigger: 'Mensagem recebida fora do horário', enabled: true, body: 'Olá, {{contact.first_name}}. Recebemos sua mensagem fora do nosso horário de atendimento. Retornaremos assim que a equipe estiver disponível.' },
-    { id: 'queue-entry', name: 'Entrada na fila', trigger: 'Cliente encaminhado para uma fila', enabled: true, body: 'Certo. Encaminhei seu atendimento para {{queue.name}}. Nossa equipe continuará por aqui.' },
-    { id: 'assigned', name: 'Atendente assumiu', trigger: 'Atendente assume a conversa', enabled: false, body: 'Olá! Meu nome é {{agent.name}} e vou seguir com o seu atendimento.' },
-    { id: 'waiting-customer', name: 'Aguardando cliente', trigger: 'Conversa passa a aguardar cliente', enabled: false, body: 'Ficamos no aguardo do seu retorno para continuar o atendimento.' },
-    { id: 'closing', name: 'Encerramento', trigger: 'Conversa resolvida', enabled: false, body: 'Atendimento concluído. Quando precisar, é só chamar novamente.' },
-    { id: 'reopen', name: 'Reabertura', trigger: 'Cliente responde após resolução', enabled: false, body: 'Recebemos sua nova mensagem e reabrimos o atendimento.' },
-  ],
-  menu: {
-    enabled: true,
-    message: 'Olá! Como podemos ajudar?\n\n1 — Comercial\n2 — Financeiro\n3 — Documentação\n4 — Suporte\n5 — Falar com atendente',
-    invalidOptionMessage: 'Não consegui identificar a opção escolhida. Digite um número válido do menu.',
-    maxInvalidAttempts: 3,
-    options: [
-      { id: 'menu-1', key: '1', label: 'Comercial', queueId: 'commercial' },
-      { id: 'menu-2', key: '2', label: 'Financeiro', queueId: 'finance' },
-      { id: 'menu-3', key: '3', label: 'Documentação', queueId: 'documents' },
-      { id: 'menu-4', key: '4', label: 'Suporte', queueId: 'support' },
-      { id: 'menu-5', key: '5', label: 'Falar com atendente', queueId: 'general' },
-    ],
-  },
-  queues: [
-    { id: 'general', name: 'Atendimento Geral', description: 'Entrada padrão e fallback de triagem.', active: true, memberIds: ['u-1', 'u-2'], supervisorId: 'u-1', priority: 'Normal' },
-    { id: 'commercial', name: 'Comercial', description: 'Novos serviços, propostas e conversão.', active: true, memberIds: ['u-1', 'u-2'], supervisorId: 'u-1', priority: 'Normal' },
-    { id: 'finance', name: 'Financeiro', description: 'Pagamentos, cobranças e comprovantes.', active: true, memberIds: ['u-1'], supervisorId: 'u-1', priority: 'Normal' },
-    { id: 'documents', name: 'Documentação', description: 'Documentos e pendências de processos.', active: true, memberIds: ['u-1', 'u-2'], supervisorId: 'u-1', priority: 'Normal' },
-    { id: 'support', name: 'Suporte', description: 'Dúvidas e suporte operacional.', active: true, memberIds: ['u-1', 'u-2'], supervisorId: 'u-1', priority: 'Normal' },
-    { id: 'legal', name: 'Jurídico', description: 'Assuntos jurídicos e contratuais.', active: true, memberIds: ['u-1'], supervisorId: 'u-1', priority: 'Alta' },
-  ],
-  routing: {
-    strategy: 'manual',
-    keepPreviousAssignee: true,
-  },
-  slaPolicies: [
-    { id: 'sla-general', queueId: 'general', firstResponseMinutes: 10, ongoingResponseMinutes: 15, resolutionMinutes: 480 },
-    { id: 'sla-commercial', queueId: 'commercial', firstResponseMinutes: 10, ongoingResponseMinutes: 20, resolutionMinutes: 480 },
-    { id: 'sla-finance', queueId: 'finance', firstResponseMinutes: 20, ongoingResponseMinutes: 30, resolutionMinutes: 720 },
-  ],
-  escalationRules: [
-    { id: 'esc-1', name: 'Primeira resposta atrasada', enabled: true, afterMinutes: 10, queueId: 'general', action: 'notify-supervisor' },
-    { id: 'esc-2', name: 'Prioridade alta sem resposta', enabled: false, afterMinutes: 20, queueId: 'commercial', action: 'raise-priority' },
+  version: 2,
+  enabled: true,
+  welcome_message: 'Olá! Seja bem-vindo(a) à Central de Atendimento da Visa Fácil. Para direcionarmos seu atendimento, escolha uma das opções abaixo respondendo com o número correspondente.',
+  main_menu_message: '1. Comercial\n2. Financeiro\n3. Documentação\n4. Suporte\n5. Falar com atendente',
+  menu_options: [
+    { id: 'commercial', order: 1, label: 'Comercial', responseTemplateId: 'commercial', queue: 'Comercial', sector: 'Comercial', defaultAssignee: null, tags: ['Comercial'], priority: 'media', active: true, required_fields: INITIAL_REQUIRED_FIELDS, optional_fields: [] },
+    { id: 'finance', order: 2, label: 'Financeiro', responseTemplateId: 'finance', queue: 'Financeiro', sector: 'Financeiro', defaultAssignee: null, tags: ['Financeiro'], priority: 'alta', active: true },
+    { id: 'documents', order: 3, label: 'Documentação', responseTemplateId: 'documents', queue: 'Documentação', sector: 'Documentação', defaultAssignee: null, tags: ['Documentação'], priority: 'alta', active: true },
+    { id: 'support', order: 4, label: 'Suporte', responseTemplateId: 'support', queue: 'Suporte', sector: 'Suporte', defaultAssignee: null, tags: ['Suporte'], priority: 'media', active: true },
+    { id: 'general', order: 5, label: 'Falar com atendente', responseTemplateId: 'general', queue: 'Atendimento', sector: 'Triagem', defaultAssignee: null, tags: ['Atendimento'], priority: 'media', active: true },
   ],
   templates: [
-    { id: 'tpl-welcome', name: 'Apresentação do atendente', shortcut: '/ola', body: 'Olá, {{contact.first_name}}! Meu nome é {{agent.name}} e vou continuar seu atendimento.', active: true },
-    { id: 'tpl-documents', name: 'Solicitação de documentos', shortcut: '/documentos', body: 'Olá, {{contact.first_name}}. Para prosseguirmos, preciso que envie os documentos solicitados para o seu processo.', active: true },
-    { id: 'tpl-closing', name: 'Encerramento', shortcut: '/encerrar', body: 'Concluímos esta etapa do atendimento. Se surgir alguma dúvida, pode nos chamar novamente.', active: true },
+    { id: 'commercial', name: 'Comercial', shortcut: '/comercial', body: 'Perfeito. Vamos direcionar seu atendimento para a equipe comercial, que dará sequência por aqui.', active: true },
+    { id: 'finance', name: 'Financeiro', shortcut: '/financeiro', body: 'Vamos encaminhar seu atendimento para o financeiro. Para agilizar, envie o máximo de detalhes sobre sua solicitação.', active: true },
+    { id: 'documents', name: 'Documentação', shortcut: '/documentacao', body: 'Recebemos sua solicitação sobre documentação. A equipe responsável irá continuar o atendimento por aqui.', active: true },
+    { id: 'support', name: 'Suporte', shortcut: '/suporte', body: 'Sua solicitação de suporte foi recebida e direcionada para a equipe responsável.', active: true },
+    { id: 'general', name: 'Falar com atendente', shortcut: '/atendente', body: 'Certo. Vamos direcionar seu atendimento para um atendente.', active: true },
   ],
-  tags: [
-    { id: 'tag-vip', name: 'VIP', active: true },
-    { id: 'tag-urgent', name: 'Urgente', active: true },
-    { id: 'tag-docs', name: 'Documentação', active: true },
-    { id: 'tag-payment', name: 'Pagamento', active: true },
-    { id: 'tag-contract', name: 'Contrato', active: true },
-    { id: 'tag-return', name: 'Retorno', active: true },
+  required_fields: INITIAL_REQUIRED_FIELDS,
+  optional_fields: [],
+  invalid_option_message: 'Não consegui identificar essa opção. Responda apenas com o número de uma das opções do menu principal.',
+  absence_message: 'No momento não identificamos uma resposta válida. Você pode responder com o número da opção desejada para continuar.',
+  out_of_hours_message: 'Recebemos sua mensagem fora do horário de atendimento. Sua solicitação foi registrada e será tratada no próximo período útil.',
+  closing_message: 'Atendimento encerrado. Obrigado por falar com a Visa Fácil.',
+  return_to_menu_rule: { enabled: true, commands: ['0', 'menu', 'voltar', 'inicio'] },
+  escalation_rules: [
+    { id: 'supervisor-5m', afterMinutes: 5, level: 'supervisor', recipientRole: 'supervisor', recipientUserId: null, channels: ['in_app'], active: true },
+    { id: 'manager-10m', afterMinutes: 10, level: 'manager', recipientRole: 'manager', recipientUserId: null, channels: ['in_app'], active: true },
   ],
-  priorities: [...VISACHAT_PRIORITIES],
-  notifications: {
-    newInternalMessage: true,
-    mention: true,
-    newAssignment: true,
-    customerReply: true,
-    slaWarning: true,
-    slaExpired: true,
-  },
+  notification_channels: { in_app: true, whatsapp: false, sms: false },
+  supervisor_user_id: null,
+  manager_user_id: null,
 };
 
 function clone<T>(value: T): T { return structuredClone(value); }
 function isObject(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
 function isString(value: unknown): value is string { return typeof value === 'string'; }
-function isNonEmpty(value: unknown): value is string { return typeof value === 'string' && value.trim().length > 0; }
 function isBoolean(value: unknown): value is boolean { return typeof value === 'boolean'; }
-function isNonNegativeInteger(value: unknown): value is number { return typeof value === 'number' && Number.isInteger(value) && value >= 0; }
+function isNonEmpty(value: unknown): value is string { return typeof value === 'string' && value.trim().length > 0; }
+function isPositiveInteger(value: unknown): value is number { return typeof value === 'number' && Number.isInteger(value) && value > 0; }
 function uniqueIds(values: Array<{ id: string }>) { return new Set(values.map((item) => item.id)).size === values.length; }
 function validPriority(value: unknown): value is VisaChatPriority { return typeof value === 'string' && (VISACHAT_PRIORITIES as readonly string[]).includes(value); }
-function validRouting(value: unknown): value is RoutingStrategy { return typeof value === 'string' && (ROUTING_STRATEGIES as readonly string[]).includes(value); }
+function validNotificationChannel(value: unknown): value is VisaChatNotificationChannel { return typeof value === 'string' && (VISACHAT_NOTIFICATION_CHANNELS as readonly string[]).includes(value); }
 
 export function isVisaChatSettings(value: unknown): value is VisaChatSettings {
-  if (!isObject(value) || value.version !== 1) return false;
-  const general = value.general;
-  const menu = value.menu;
-  const routing = value.routing;
-  const notifications = value.notifications;
-  if (!isObject(general) || !isNonEmpty(general.displayName) || !isNonEmpty(general.language) || !isNonEmpty(general.timezone)
-    || !isBoolean(general.reopenOnCustomerReply) || !isNonNegativeInteger(general.archiveAfterDays)) return false;
-  if (!Array.isArray(value.businessHours) || !uniqueIds(value.businessHours as BusinessHour[]) || !value.businessHours.every((hour) => isObject(hour)
-    && isNonEmpty(hour.id) && isNonEmpty(hour.day) && isBoolean(hour.enabled) && isString(hour.start) && isString(hour.end))) return false;
-  if (!Array.isArray(value.automaticMessages) || !uniqueIds(value.automaticMessages as AutomaticMessage[]) || !value.automaticMessages.every((message) => isObject(message)
-    && isNonEmpty(message.id) && isNonEmpty(message.name) && isNonEmpty(message.trigger) && isBoolean(message.enabled) && isString(message.body))) return false;
-  if (!isObject(menu) || !isBoolean(menu.enabled) || !isString(menu.message) || !isString(menu.invalidOptionMessage)
-    || !isNonNegativeInteger(menu.maxInvalidAttempts) || !Array.isArray(menu.options) || !uniqueIds(menu.options as MenuOption[])
-    || !menu.options.every((option) => isObject(option) && isNonEmpty(option.id) && isNonEmpty(option.key) && isNonEmpty(option.label) && isNonEmpty(option.queueId))) return false;
-  if (!Array.isArray(value.queues) || !uniqueIds(value.queues as SupportQueue[]) || !value.queues.every((queue) => isObject(queue)
-    && isNonEmpty(queue.id) && isNonEmpty(queue.name) && isString(queue.description) && isBoolean(queue.active)
-    && Array.isArray(queue.memberIds) && queue.memberIds.every(isNonEmpty) && new Set(queue.memberIds).size === queue.memberIds.length
-    && isString(queue.supervisorId) && validPriority(queue.priority))) return false;
-  if (!isObject(routing) || !validRouting(routing.strategy) || !isBoolean(routing.keepPreviousAssignee)) return false;
-  if (!Array.isArray(value.slaPolicies) || !uniqueIds(value.slaPolicies as SlaPolicy[]) || !value.slaPolicies.every((policy) => isObject(policy)
-    && isNonEmpty(policy.id) && isNonEmpty(policy.queueId) && isNonNegativeInteger(policy.firstResponseMinutes)
-    && isNonNegativeInteger(policy.ongoingResponseMinutes) && isNonNegativeInteger(policy.resolutionMinutes))) return false;
-  if (!Array.isArray(value.escalationRules) || !uniqueIds(value.escalationRules as EscalationRule[]) || !value.escalationRules.every((rule) => isObject(rule)
-    && isNonEmpty(rule.id) && isNonEmpty(rule.name) && isBoolean(rule.enabled) && isNonNegativeInteger(rule.afterMinutes)
-    && isNonEmpty(rule.queueId) && ['notify-supervisor', 'raise-priority', 'transfer-supervisor'].includes(String(rule.action)))) return false;
+  if (!isObject(value) || value.version !== 2 || !isBoolean(value.enabled)) return false;
+  for (const key of ['welcome_message', 'main_menu_message', 'invalid_option_message', 'absence_message', 'out_of_hours_message', 'closing_message']) if (!isString(value[key])) return false;
+  if (!Array.isArray(value.required_fields) || !value.required_fields.every(isString) || !Array.isArray(value.optional_fields) || !value.optional_fields.every(isString)) return false;
+  if (!Array.isArray(value.menu_options) || !uniqueIds(value.menu_options as VisaChatMenuOption[]) || !value.menu_options.every((option) => isObject(option)
+    && isNonEmpty(option.id) && isPositiveInteger(option.order) && isString(option.label) && isNonEmpty(option.responseTemplateId)
+    && isString(option.queue) && isString(option.sector) && (option.defaultAssignee == null || isString(option.defaultAssignee))
+    && Array.isArray(option.tags) && option.tags.every(isString) && validPriority(option.priority) && isBoolean(option.active)
+    && (option.required_fields === undefined || (Array.isArray(option.required_fields) && option.required_fields.every(isString)))
+    && (option.optional_fields === undefined || (Array.isArray(option.optional_fields) && option.optional_fields.every(isString))))) return false;
   if (!Array.isArray(value.templates) || !uniqueIds(value.templates as ReplyTemplate[]) || !value.templates.every((template) => isObject(template)
     && isNonEmpty(template.id) && isNonEmpty(template.name) && isNonEmpty(template.shortcut) && isString(template.body) && isBoolean(template.active))) return false;
-  if (!Array.isArray(value.tags) || !uniqueIds(value.tags as TagDefinition[]) || !value.tags.every((tag) => isObject(tag)
-    && isNonEmpty(tag.id) && isNonEmpty(tag.name) && isBoolean(tag.active))) return false;
-  if (!Array.isArray(value.priorities) || value.priorities.length !== VISACHAT_PRIORITIES.length || !value.priorities.every(validPriority)) return false;
-  if (!isObject(notifications) || !['newInternalMessage', 'mention', 'newAssignment', 'customerReply', 'slaWarning', 'slaExpired'].every((key) => isBoolean(notifications[key]))) return false;
+  if (!isObject(value.return_to_menu_rule) || (value.return_to_menu_rule.enabled !== undefined && !isBoolean(value.return_to_menu_rule.enabled))
+    || (value.return_to_menu_rule.commands !== undefined && (!Array.isArray(value.return_to_menu_rule.commands) || !value.return_to_menu_rule.commands.every(isString)))) return false;
+  if (!Array.isArray(value.escalation_rules) || !uniqueIds(value.escalation_rules as EscalationRule[]) || !value.escalation_rules.every((rule) => isObject(rule)
+    && isNonEmpty(rule.id) && isPositiveInteger(rule.afterMinutes) && isString(rule.level) && isNonEmpty(rule.recipientRole)
+    && (rule.recipientUserId == null || isString(rule.recipientUserId)) && Array.isArray(rule.channels) && rule.channels.every(validNotificationChannel) && isBoolean(rule.active))) return false;
+  if (!isObject(value.notification_channels)) return false;
+  if (value.supervisor_user_id != null && !isString(value.supervisor_user_id)) return false;
+  if (value.manager_user_id != null && !isString(value.manager_user_id)) return false;
   return true;
-}
-
-function stripLegacyChannelSettings(settings: VisaChatSettings): VisaChatSettings {
-  const next = clone(settings) as VisaChatSettings & { channels?: unknown };
-  delete next.channels;
-  return next;
 }
 
 export function getDefaultVisaChatSettings(): VisaChatSettings { return clone(DEFAULT_SETTINGS); }
@@ -262,9 +156,7 @@ export function getVisaChatSettings(): VisaChatSettings {
       try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
       return next;
     }
-    const next = stripLegacyChannelSettings(parsed);
-    try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
-    return next;
+    return clone(parsed);
   } catch {
     return fallback();
   }
@@ -272,7 +164,7 @@ export function getVisaChatSettings(): VisaChatSettings {
 
 export function saveVisaChatSettings(settings: VisaChatSettings): VisaChatSettings {
   if (!isVisaChatSettings(settings)) throw new Error('Invalid VisaChat settings');
-  const next = stripLegacyChannelSettings(settings);
+  const next = clone(settings);
   if (typeof sessionStorage !== 'undefined') {
     try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
   }
