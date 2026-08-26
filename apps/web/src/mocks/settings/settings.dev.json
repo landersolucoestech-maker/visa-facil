@@ -1,0 +1,32 @@
+{
+  "company": {
+    "companyName": "Visa Fácil Assessoria LTDA",
+    "fantasyName": "Visa Fácil",
+    "cnpj": "",
+    "address": "",
+    "phone": "",
+    "responsible": "Administrador",
+    "slug": "visa-facil"
+  },
+  "automations": {
+    "email": true,
+    "push": true,
+    "newLead": true,
+    "leadFollowup": true,
+    "financeMovement": true,
+    "weeklyFinance": false,
+    "weeklyReport": true,
+    "criticalAlerts": true,
+    "operational": true,
+    "backup": false
+  },
+  "users": [
+    { "id": "u-1", "name": "Administrador", "email": "admin@visafacil.com.br", "role": "Administrador", "status": "Ativo" },
+    { "id": "u-2", "name": "Equipe Comercial", "email": "comercial@visafacil.com.br", "role": "Consultor", "status": "Ativo" }
+  ],
+  "roles": [
+    { "id": "r-1", "name": "Administrador", "description": "Acesso total ao CRM e às configurações.", "permissions": ["Todos os módulos", "Financeiro", "Configurações", "Usuários e permissões"], "system": true },
+    { "id": "r-2", "name": "Consultor", "description": "Operação comercial e atendimento.", "permissions": ["CRM", "Atendimentos", "Tarefas", "Agenda"] },
+    { "id": "r-3", "name": "Financeiro", "description": "Acesso às rotinas financeiras.", "permissions": ["Financeiro", "Relatórios"] }
+  ]
+}
