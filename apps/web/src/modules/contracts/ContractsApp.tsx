@@ -23,6 +23,7 @@ function statusClosed(status:ContractRecord['status']){return status==='expired'
 function canEditRecord(record:ContractRecord){return record.status==='draft'||record.status==='review'}
 
 function Kpi({label,value,note}:{label:string;value:string|number;note:string}){return <article className="contracts-kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></article>}
+function NotificationBell(){return <button type="button" aria-label="Notificações — nenhuma disponível" title="Nenhuma notificação de Contratos disponível" disabled/>}
 
 export function ContractsApp(){
  const section=sectionFromPath();
@@ -104,7 +105,11 @@ export function ContractsApp(){
  const subtitle=section==='contracts'?'Gestão de contratos, documentos e preparação para assinatura eletrônica':section==='templates'?'Modelos reutilizáveis que classificam e estruturam cada contrato':'Registro canônico de placeholders reutilizáveis';
 
  return <div className="crm-shell contracts-shell"><div className="crm-workspace">
-  <header className="crm-topbar"><div><small>VISA FÁCIL · CRM · CONTRATOS</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions contracts-topbar-actions">{section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button></>}{section==='templates'&&<><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button></>}</div></header>
+  <header className="crm-topbar"><div><small>VISA FÁCIL · CRM · CONTRATOS</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions contracts-topbar-actions">
+   {section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button></>}
+   {section==='templates'&&<><button type="button" onClick={()=>go('/crm/contratos')}>Voltar (Contratos)</button><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
+   {section==='variables'&&<><button type="button" onClick={()=>go('/crm/contratos')}>Voltar (Contratos)</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
+  </div></header>
   <main className="contracts-content">
    {section==='contracts'&&<ContractsList records={filteredRecords} allRecords={records} templates={templates} query={query} setQuery={setQuery} statusFilter={statusFilter} setStatusFilter={setStatusFilter} templateFilter={templateFilter} setTemplateFilter={setTemplateFilter} stats={stats} activeValue={activeValue} onView={setViewRecord} onEdit={record=>{setEditingRecord(record);setEditorOpen(true)}} onDelete={removeRecord}/>} 
    {section==='templates'&&<TemplatesWorkspace templates={templates} records={records} onNew={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}} onEdit={template=>{setEditingTemplate(template);setTemplateEditorOpen(true)}} onDelete={removeTemplate}/>} 
