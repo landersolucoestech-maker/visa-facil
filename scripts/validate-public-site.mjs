@@ -29,6 +29,7 @@ const crmSidebar = read('apps/web/src/components/CrmSidebar.tsx');
 const crmMockProvider = read('apps/web/src/modules/crm/mocks/mockDataProvider.ts');
 const crmMockData = read('apps/web/src/modules/crm/mocks/crm-records.dev.json');
 const contractsApp = read('apps/web/src/modules/contracts/ContractsApp.tsx');
+const contractTypes = read('apps/web/src/modules/contracts/contractTypes.ts');
 const contractEditor = read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
 const contractStore = read('apps/web/src/modules/contracts/contractSessionStore.ts');
 const contractEngine = read('apps/web/src/modules/contracts/contractTemplateEngine.ts');
@@ -37,7 +38,8 @@ const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
 
 assert(rootApp.includes('<PublicSitePage/>') || rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
 assert(containsAll(rootApp, ["path==='/crm'", '<CrmDashboardApp/>', "path==='/crm/relacionamento'", '<CrmApp/>']), 'Dashboard and relationship routes must remain explicit and separate');
-assert(containsAll(rootApp, ["path==='/crm/contratos'", "path.startsWith('/crm/contratos/')", '<ContractsApp/>']), 'Contracts route and subworkspaces must remain explicit and lazy-loaded');
+assert(containsAll(rootApp, ["path==='/crm/contratos'", "path==='/crm/contratos/templates'", "path==='/crm/contratos/variaveis'", '<ContractsApp/>']), 'Contracts route and canonical subworkspaces must remain explicit and lazy-loaded');
+assert(containsAll(rootApp, ["path==='/crm/contratos/categorias'", "replacePath('/crm/contratos/templates')"]), 'Obsolete contract categories URL must redirect to Templates');
 assert(containsAll(rootApp, ["path==='/login'", "path==='/workspaces'", "path==='/site-admin'", '<LoginApp/>', '<WorkspaceSelectorApp/>', '<SiteCmsApp/>']), 'Authentication/workspace/CMS routes are incomplete');
 assert(rootApp.includes('lazy(') && rootApp.includes('Suspense'), 'Internal workspaces must remain lazy-loaded');
 assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Obsolete internal management application must not return');
@@ -48,7 +50,7 @@ assert(!main.includes('/crm/') && !main.includes('styles/finance') && !main.incl
 assert(containsAll(crmSidebar, ["../modules/crm/crm.css", "../styles/ui-system.css", "../styles/product-refinement.css", "../styles/sidebar-v2.css", "../styles/crm-header-actions-unified.css"]), 'Shared CRM styles must remain owned by the lazy CRM shell');
 assert(containsAll(rootApp, ['agenda-refinement.css', 'visachat-refinement.css', 'tasks-refinement.css', 'finance-transactions-refinement.css', 'invoices-refinement.css', 'accounting-refinement.css', 'marketing-refinement.css', 'reports-refinement.css', 'settings-refinement.css']), 'Module refinement styles must remain route-lazy instead of returning to the public entrypoint');
 
-assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D"']), 'Official metadata changed unexpectedly');
+assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D']), 'Official metadata changed unexpectedly');
 assert(containsAll(schemaGlobal, ['EUA', 'Canadá', 'Vistos', 'Como Funciona', 'Dúvidas', 'Analisar meu perfil']), 'CMS default navigation changed unexpectedly');
 assert(containsAll(hero, ['cmsList(values.slides)', 'slides.map', 'data-hero-slide', 'data-hero-dot']) && schemaConversion.includes("repeater('slides','Banners'"), 'Hero must render dynamically from CMS-editable slides');
 assert(existsSync(resolve(root, 'apps/web/src/modules/public-site/assets/hero-visa-facil.webp')), 'Official hero artwork is missing');
@@ -74,9 +76,13 @@ assert(containsAll(crm, ['label="CPF"', 'label="RG"', 'label="Número do passapo
 assert(containsAll(crmMockProvider, ['isCrmRecord', 'isMockDataEnabled', 'isText(value.cpf)', 'isText(value.rg)', 'isText(value.passportNumber)', 'clone.filter(isCrmRecord)']), 'CRM mock provider must runtime-validate document fields under the centralized mock policy');
 assert(!crmMockProvider.includes('crypto.randomUUID()') && !crmMockProvider.includes('new Date().toISOString()'), 'CRM mock provider must reject malformed fixture identity/timestamps instead of fabricating replacements');
 
-assert(containsAll(contractsApp, ['TemplatesWorkspace', 'VariablesWorkspace', 'CategoriesWorkspace', 'getCrmSessionRecords', 'getIntegrationStatuses']), 'Contracts workspace is incomplete');
+assert(containsAll(contractsApp, ['TemplatesWorkspace', 'VariablesWorkspace', 'getCrmSessionRecords', 'getIntegrationStatuses', 'Todos os templates', '<th>Template</th>']), 'Contracts workspace is incomplete');
+assert(!contractsApp.includes('contracts-module-tabs')&&!contractsApp.includes('CategoriesWorkspace')&&!contractsApp.includes('/crm/contratos/categorias'), 'Contracts page must not restore module tabs or a Categories workspace');
+assert(!contractTypes.includes('ContractCategory')&&!contractTypes.includes('categoryId'), 'Contracts canonical types must classify through Template only');
 assert(containsAll(contractEditor, ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão']), 'Contracts six-step wizard changed unexpectedly');
-assert(containsAll(contractStore, ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','isContractCategory']), 'Contracts session persistence contract is incomplete');
+assert(!contractEditor.includes('categoryId')&&!contractEditor.includes('>Categoria<'), 'Contract wizard must not expose a second category classification');
+assert(containsAll(contractStore, ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v3']), 'Contracts session persistence contract is incomplete');
+assert(!contractStore.includes('ContractCategory')&&!contractStore.includes('contract-categories')&&!contractStore.includes('categoryId'), 'Contracts session store must not retain category persistence');
 assert(containsAll(contractEngine, ['extractTemplatePlaceholders','resolveTemplateContent','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}']), 'Contracts template engine is incomplete');
 assert(!contractStore.toLowerCase().includes('clicksign')&&!contractStore.toLowerCase().includes('docusign'), 'Contracts signing provider must remain Autentique-only');
 
