@@ -33,6 +33,11 @@ const contractTypes = read('apps/web/src/modules/contracts/contractTypes.ts');
 const contractEditor = read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
 const contractStore = read('apps/web/src/modules/contracts/contractSessionStore.ts');
 const contractEngine = read('apps/web/src/modules/contracts/contractTemplateEngine.ts');
+const contractMockProvider = read('apps/web/src/modules/contracts/mocks/contractsMockProvider.ts');
+const contractMockRecords = read('apps/web/src/mocks/contracts/contracts-records.dev.json');
+const financeConfigStore = read('apps/web/src/modules/finance/financeConfigStore.ts');
+const settingsShared = read('apps/web/src/modules/settings/settingsShared.tsx');
+const uiStandard = read('apps/web/src/styles/crm-ui-standard.css');
 const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store, cmsDocumentContract].join('\n');
 const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
 
@@ -49,6 +54,7 @@ assert(main.includes("01-base.css") && main.includes("02-sections-responsive.css
 assert(!main.includes('/crm/') && !main.includes('styles/finance') && !main.includes('styles/marketing') && !main.includes('styles/settings'), 'Public entrypoint must not eagerly load internal workspace styles');
 assert(containsAll(crmSidebar, ["../modules/crm/crm.css", "../styles/ui-system.css", "../styles/product-refinement.css", "../styles/sidebar-v2.css", "../styles/crm-header-actions-unified.css"]), 'Shared CRM styles must remain owned by the lazy CRM shell');
 assert(containsAll(rootApp, ['agenda-refinement.css', 'visachat-refinement.css', 'tasks-refinement.css', 'finance-transactions-refinement.css', 'invoices-refinement.css', 'accounting-refinement.css', 'marketing-refinement.css', 'reports-refinement.css', 'settings-refinement.css']), 'Module refinement styles must remain route-lazy instead of returning to the public entrypoint');
+assert(rootApp.includes("./styles/crm-ui-standard.css"), 'Canonical CRM visual contract must remain loaded by the shared internal shell');
 
 assert(containsAll(indexHtml, ['<html lang="pt-BR">', '<title>VISA FÁCIL | Assessoria para Vistos Internacionais</title>', '<meta name="theme-color" content="#0D1B3D']), 'Official metadata changed unexpectedly');
 assert(containsAll(schemaGlobal, ['EUA', 'Canadá', 'Vistos', 'Como Funciona', 'Dúvidas', 'Analisar meu perfil']), 'CMS default navigation changed unexpectedly');
@@ -81,17 +87,23 @@ assert(!contractsApp.includes('contracts-module-tabs')&&!contractsApp.includes('
 assert(!contractTypes.includes('ContractCategory')&&!contractTypes.includes('categoryId'), 'Contracts canonical types must classify through Template only');
 assert(containsAll(contractEditor, ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão']), 'Contracts six-step wizard changed unexpectedly');
 assert(!contractEditor.includes('categoryId')&&!contractEditor.includes('>Categoria<'), 'Contract wizard must not expose a second category classification');
-assert(containsAll(contractStore, ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v3']), 'Contracts session persistence contract is incomplete');
+assert(containsAll(contractStore, ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v4','getContractMockRecords']), 'Contracts session persistence/mock contract is incomplete');
+assert(containsAll(contractMockProvider, ['contracts-records.dev.json','getContractMockRecords','isMockDataEnabled']), 'Contracts must consume centralized operational mock records');
+assert(contractMockRecords.includes('mock-contract-001')&&contractMockRecords.includes('"signatureProvider": null')&&contractMockRecords.includes('"signatureState": "not_sent"'), 'Contract mock records must be present without pretending external signature completion');
 assert(!contractStore.includes('ContractCategory')&&!contractStore.includes('contract-categories')&&!contractStore.includes('categoryId'), 'Contracts session store must not retain category persistence');
 assert(containsAll(contractEngine, ['extractTemplatePlaceholders','resolveTemplateContent','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}']), 'Contracts template engine is incomplete');
 assert(!contractStore.toLowerCase().includes('clicksign')&&!contractStore.toLowerCase().includes('docusign'), 'Contracts signing provider must remain Autentique-only');
+
+assert(financeConfigStore.includes('./mocks/financeConfigMockProvider')&&!financeConfigStore.includes("{ id: 'cat-1'"), 'Finance configuration reference data must remain centralized in mocks');
+assert(settingsShared.includes('../../mocks/settings/settings.dev.json')&&!settingsShared.includes("{id:'u-1'"), 'Settings demonstration users/roles must remain centralized in mocks');
+assert(containsAll(uiStandard, ['--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-modal:8px','line-height:0!important']), 'Canonical visual tokens/buttons are incomplete');
 
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
 }
 
-for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
-for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx']) assert(existsSync(resolve(root,file)),`Missing contracts implementation file: ${file}`);
+for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css','apps/web/src/styles/crm-ui-standard.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
+for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx','apps/web/src/mocks/contracts/contracts-records.dev.json','apps/web/src/mocks/finance/config.dev.json','apps/web/src/mocks/settings/settings.dev.json']) assert(existsSync(resolve(root,file)),`Missing canonical implementation/mock file: ${file}`);
 
 if (failures.length) {
   console.error('Visa Fácil website/CRM/CMS contract validation failed:');
