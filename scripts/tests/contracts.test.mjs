@@ -39,3 +39,17 @@ test('reference adaptation keeps the visa contract model and six-step workflow w
   assert.equal(types.includes('categoryId'),false);
   for(const forbidden of ['obra musical','lançamento musical','clicksign','docusign'])assert.equal(`${editor}\n${app}`.toLowerCase().includes(forbidden),false);
 });
+
+test('contracts table uses the standard three-dot action menu with view edit and delete',()=>{
+  const app=read('apps/web/src/modules/contracts/ContractsApp.tsx');
+  const actionsCss=read('apps/web/src/modules/contracts/contract-table-actions.css');
+  assert.ok(app.includes('<th>Ações</th>'));
+  assert.ok(app.includes('>⋯</button>'));
+  assert.ok(app.includes('role="menuitem" onClick={()=>run(onView)}>Ver</button>'));
+  assert.ok(app.includes('>Editar</button>'));
+  assert.ok(app.includes('>Excluir</button>'));
+  assert.ok(app.includes('<RowActionMenu label={record.title}'));
+  assert.equal(app.includes('<div className="contracts-row-actions"><button type="button" onClick={()=>onView(record)}>Ver</button>'),false);
+  assert.ok(actionsCss.includes('.contracts-actions-trigger'));
+  assert.ok(actionsCss.includes('.contracts-actions-dropdown'));
+});
