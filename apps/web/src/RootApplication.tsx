@@ -29,7 +29,7 @@ const ContractsApp = lazy(() => import('./modules/contracts/ContractsApp'));
 const CrmApp = lazy(async () => {
   const module = await import('./modules/crm/CrmApp');
   await import('./modules/crm/crm.css');
-  await import('./styles/crm-relationship-refinement.css');
+  await import('./modules/crm/crm-relationship-refinement.css');
   return { default: module.default };
 });
 const CrmDashboardApp = lazy(async () => {
