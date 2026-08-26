@@ -15,7 +15,7 @@ O frontend passou por consolidação arquitetural, mas o projeto ainda não é u
 | Integrações externas | Contratos frontend preparados | Backend, credenciais, OAuth, webhooks, workers e secret manager |
 | Automações | Preferências modeladas | Worker/jobs/filas inexistentes |
 | Relatórios | Templates/validação local | Importação/exportação operacional persistente exige fonte de dados compartilhada |
-| Contratos | Shell arquitetural criado | Modelo funcional definitivo depende do arquivo de referência e backend documental |
+| Contratos | Frontend funcional em sessão | Persistência server-side, anexos duráveis, auditoria imutável, RBAC e assinatura Autentique real exigem backend |
 | NFS-e | Apenas arquitetura de integração | Provedor fiscal, homologação, certificado/dados fiscais e backend |
 
 ## Pendências obrigatórias para operação real
@@ -24,17 +24,25 @@ O frontend passou por consolidação arquitetural, mas o projeto ainda não é u
 
 Criar API backend versionada, banco de dados persistente, migrations, constraints, índices, transações e estratégia de backup. Migrar os estados hoje limitados a `sessionStorage`/`localStorage` para fontes server-side quando os domínios correspondentes forem ativados para produção.
 
+Contratos deverá migrar sua fonte de sessão para tabelas/entidades persistentes de contratos, versões, templates, categorias, variáveis, partes, signatários, anexos e eventos de auditoria. O snapshot documental e o relacionamento entre versões precisam ser preservados no servidor, não apenas no navegador.
+
 ### Identidade e autorização
 
 Conectar provedor real de autenticação. Implementar sessões server-side, revogação, recuperação de conta, MFA conforme necessidade e RBAC aplicado na API. A interface atual não deve ser tratada como fronteira de segurança.
+
+No domínio de Contratos, permissões server-side deverão controlar ao menos leitura, criação, alteração, exclusão, revisão, envio para assinatura, cancelamento e acesso a documentos/anexos.
 
 ### Integrações
 
 Implementar os adapters descritos em `docs/INTEGRATIONS.md`, armazenamento seguro de credenciais/tokens, OAuth/callbacks, verificação de webhook, idempotência, filas, retries, DLQ/replay, logs e health checks. A UI nunca deve inferir `connected` sem confirmação do backend.
 
+Para Contratos, Autentique permanece o único provedor de assinatura eletrônica previsto. O frontend não envia documentos nem fabrica estados de assinatura. O backend deverá criar/enviar o documento, persistir o identificador externo e processar webhooks verificados para atualizar signatários, documento e trilha de auditoria. Resend poderá ser utilizado para notificações operacionais, também exclusivamente server-side.
+
 ### Observabilidade
 
 Adicionar logs estruturados server-side, métricas, tracing/request IDs, monitoramento de filas/webhooks e alertas operacionais. Logs do navegador não substituem observabilidade de backend.
+
+A trilha histórica local do módulo Contratos não possui valor de auditoria legal. Produção exige eventos imutáveis com identidade do ator, timestamps server-side, origem da ação e correlação por request/event ID.
 
 ### Testes
 
@@ -46,7 +54,8 @@ A suíte atual protege contratos, regras financeiras, stores e build/runtime do 
 - testes de integração em sandboxes dos provedores;
 - testes de webhook/idempotência/retry;
 - testes de migração;
-- testes de segurança e carga dos endpoints críticos.
+- testes de segurança e carga dos endpoints críticos;
+- testes E2E do ciclo contratual completo, incluindo criação, versionamento, anexos, envio Autentique, assinaturas parciais, rejeição, expiração e cancelamento.
 
 ### GitHub Pages
 
@@ -60,7 +69,10 @@ Pages hospeda frontend estático. Uma API real precisa ser publicada separadamen
 - conexão real com WhatsApp, Resend, Autentique, NFS-e, Meta, YouTube, TikTok, Google Ads e Google Calendar;
 - emissão fiscal real;
 - importação/exportação operacional persistente de relatórios;
-- gestão definitiva de contratos/assinaturas;
+- persistência multiusuário de contratos, anexos duráveis e auditoria legal/imutável;
+- envio real de contratos para assinatura, callbacks/webhooks e sincronização de estado do Autentique;
 - sincronização compartilhada do CMS.
 
 A interface deve continuar comunicando essas limitações de forma explícita em vez de usar mocks, fallbacks ou mensagens de sucesso para operações que não ocorreram.
+
+Consulte `docs/CONTRACTS.md` para o contrato funcional do módulo, a adaptação da referência e os limites exatos entre o frontend implementado e a futura camada server-side.
