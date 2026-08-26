@@ -6,6 +6,7 @@ import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './module
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import './styles/crm-content-layout.css';
 import './styles/crm-ui-standard.css';
+import './styles/crm-ui-enforcement.css';
 import './styles/tableview-surface.css';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
@@ -82,6 +83,7 @@ const SiteCmsApp = lazy(async () => {
   const module = await import('./modules/site-cms/SiteCmsApp');
   await import('./styles/ui-system.css');
   await import('./styles/product-refinement.css');
+  await import('./styles/sidebar-v2.css');
   return { default: module.default };
 });
 const TasksApp = lazy(async () => {
