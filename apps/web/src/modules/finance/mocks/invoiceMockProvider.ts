@@ -1,4 +1,4 @@
-import records from './invoices.dev.json';
+import records from '../../../mocks/finance/invoices.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type InvoiceSeedStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';

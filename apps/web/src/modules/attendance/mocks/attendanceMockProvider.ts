@@ -1,4 +1,4 @@
-import raw from './attendance.dev.json';
+import raw from '../../../mocks/attendance/attendance.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type AttendanceMessage = {

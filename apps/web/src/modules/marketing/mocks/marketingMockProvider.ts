@@ -1,4 +1,4 @@
-import mockData from './marketing.dev.json';
+import mockData from '../../../mocks/marketing/marketing.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type MarketingMockContent = {

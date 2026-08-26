@@ -1,4 +1,4 @@
-import data from './agenda.dev.json';
+import data from '../../../mocks/agenda/agenda.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type AgendaStatus = 'Confirmado' | 'Pendente' | 'Realizado' | 'Cancelado';

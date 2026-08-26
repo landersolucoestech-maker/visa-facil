@@ -19,7 +19,7 @@ const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE=/^([01]\d|2[0-3]):[0-5]\d$/;
 
 test('CRM fixtures satisfy the person relationship contract',()=>{
-  const items=json('apps/web/src/modules/crm/mocks/crm-records.dev.json');
+  const items=json('apps/web/src/mocks/crm/crm-records.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'CRM fixtures');
   for(const item of items){
@@ -45,7 +45,7 @@ test('CRM fixtures satisfy the person relationship contract',()=>{
 });
 
 test('finance transaction fixtures satisfy the canonical transaction model',()=>{
-  const items=json('apps/web/src/modules/finance/mocks/finance.dev.json');
+  const items=json('apps/web/src/mocks/finance/finance.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Finance fixtures');
   for(const item of items){
@@ -60,7 +60,7 @@ test('finance transaction fixtures satisfy the canonical transaction model',()=>
 });
 
 test('invoice fixtures have unique documents and settlement-consistent payment ledgers',()=>{
-  const items=json('apps/web/src/modules/finance/mocks/invoices.dev.json');
+  const items=json('apps/web/src/mocks/finance/invoices.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Invoice fixtures');
   const numbers=new Set();
@@ -92,7 +92,7 @@ test('invoice fixtures have unique documents and settlement-consistent payment l
 });
 
 test('task fixtures use canonical statuses, priorities and valid scheduling fields',()=>{
-  const items=json('apps/web/src/modules/tasks/mocks/tasks.dev.json');
+  const items=json('apps/web/src/mocks/tasks/tasks.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Task fixtures');
   for(const item of items){
@@ -107,7 +107,7 @@ test('task fixtures use canonical statuses, priorities and valid scheduling fiel
 });
 
 test('agenda fixtures use valid dates, statuses and chronological time ranges',()=>{
-  const items=json('apps/web/src/modules/agenda/mocks/agenda.dev.json');
+  const items=json('apps/web/src/mocks/agenda/agenda.dev.json');
   assert.ok(Array.isArray(items));
   uniqueIds(items,'Agenda fixtures');
   for(const item of items){
@@ -121,7 +121,7 @@ test('agenda fixtures use valid dates, statuses and chronological time ranges',(
 });
 
 test('attendance fixtures keep conversations and message ids unique',()=>{
-  const data=json('apps/web/src/modules/attendance/mocks/attendance.dev.json');
+  const data=json('apps/web/src/mocks/attendance/attendance.dev.json');
   assert.deepEqual(Object.keys(data).sort(),['conversations']);
   assert.ok(Array.isArray(data.conversations));
   uniqueIds(data.conversations,'Attendance conversations');
@@ -134,7 +134,7 @@ test('attendance fixtures keep conversations and message ids unique',()=>{
 });
 
 test('marketing fixtures expose only supported content and paid campaign contracts',()=>{
-  const data=json('apps/web/src/modules/marketing/mocks/marketing.dev.json');
+  const data=json('apps/web/src/mocks/marketing/marketing.dev.json');
   assert.deepEqual(Object.keys(data).sort(),['campaigns','contents']);
   assert.ok(Array.isArray(data.contents));
   assert.ok(Array.isArray(data.campaigns));

@@ -1,4 +1,4 @@
-import records from './crm-records.dev.json';
+import records from '../../../mocks/crm/crm-records.dev.json';
 import type { CrmRecord, RecordKind } from '../types';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 

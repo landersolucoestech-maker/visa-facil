@@ -1,4 +1,4 @@
-import taskFixtures from './tasks.dev.json';
+import taskFixtures from '../../../mocks/tasks/tasks.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type TaskStatus = 'Pendente' | 'Em andamento' | 'Concluída';
