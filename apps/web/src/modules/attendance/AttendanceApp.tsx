@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './attendance.css';
 import './attendanceSidebarKpis.css';
 import './attendanceTeamChat.css';
-import { getAttendanceConversationKind, getAttendanceInitialConversations, type AttendanceConversation, type AttendanceMessage } from './mocks/attendanceMockProvider';
+import { getAttendanceConversationKind, type AttendanceConversation, type AttendanceMessage } from './mocks/attendanceMockProvider';
 import { getAttendanceSessionConversations, saveAttendanceSessionConversations } from '../../shared/operationalSessionStore';
 
 const STATUS_OPTIONS = ['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Resolvida', 'Arquivada'];
@@ -19,15 +19,9 @@ function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill=
 function PaperclipIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 1 1-2.8-2.8l8.9-8.9"/></svg>; }
 function PlusIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>; }
 function timeNow() { return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
-function loadConversations() {
-  const stored = getAttendanceSessionConversations();
-  const seededTeam = getAttendanceInitialConversations().filter((item) => getAttendanceConversationKind(item) === 'team');
-  const existingIds = new Set(stored.map((item) => item.id));
-  return [...stored, ...seededTeam.filter((item) => !existingIds.has(item.id))];
-}
 
 export function AttendanceApp() {
-  const [conversations, setConversations] = useState<AttendanceConversation[]>(loadConversations);
+  const [conversations, setConversations] = useState<AttendanceConversation[]>(() => getAttendanceSessionConversations());
   const [mode, setMode] = useState<ChatMode>('customer');
   const [selectedId, setSelectedId] = useState<string>(() => conversations.find((item) => getAttendanceConversationKind(item) === 'customer')?.id ?? '');
   const [query, setQuery] = useState('');
