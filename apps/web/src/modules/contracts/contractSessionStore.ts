@@ -1,9 +1,9 @@
 import { readSessionRecords, writeSessionRecords } from '../../shared/sessionRecords';
 import type { ContractAuditEvent, ContractRecord, ContractSigner, ContractTemplate, ContractVariableDefinition, ContractVersion } from './contractTypes';
-import { getContractMockTemplates, getContractMockVariables } from './mocks/contractsMockProvider';
+import { getContractMockRecords, getContractMockTemplates, getContractMockVariables } from './mocks/contractsMockProvider';
 
 const KEYS={
- contracts:'visa-facil.session.contracts.v3',
+ contracts:'visa-facil.session.contracts.v4',
  templates:'visa-facil.session.contract-templates.v4',
  variables:'visa-facil.session.contract-variables.v3',
 } as const;
@@ -45,7 +45,7 @@ export function isContractVariable(value:unknown):value is ContractVariableDefin
 
 function now(){return new Date().toISOString()}
 
-export function getContractRecords(){return readSessionRecords<ContractRecord>(KEYS.contracts,()=>[],isContractRecord)}
+export function getContractRecords(){return readSessionRecords<ContractRecord>(KEYS.contracts,getContractMockRecords,isContractRecord)}
 export function saveContractRecords(records:ContractRecord[]){return writeSessionRecords(KEYS.contracts,records,isContractRecord)}
 export function getContractTemplates(){return readSessionRecords<ContractTemplate>(KEYS.templates,getContractMockTemplates,isContractTemplate)}
 export function saveContractTemplates(records:ContractTemplate[]){return writeSessionRecords(KEYS.templates,records,isContractTemplate)}
