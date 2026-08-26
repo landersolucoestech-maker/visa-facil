@@ -1,5 +1,5 @@
 /* ===== HERO — implementação final baseada no mockup selecionado ===== */
-html,body{overflow-x:hidden}
+.public-site{overflow-x:hidden}
 .header{background:#071b38!important;border-bottom:1px solid rgba(255,255,255,.10)!important}
 .header__inner{min-height:82px!important}
 .logo__text strong,.nav,.nav__trigger{color:#fff!important}
