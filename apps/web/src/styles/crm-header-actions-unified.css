@@ -70,6 +70,18 @@
   color:#102a59!important;
 }
 
+/* Normalize vertical text centering for every textual topbar action, including
+   actions nested inside a local menu wrapper. Notification icon buttons and the
+   account-menu trigger keep their dedicated contracts. */
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not([aria-label="Alertas"]):not([aria-label^="Notificações"]),
+.crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > div:not(.account-menu) > :is(button,a):not([aria-label="Alertas"]):not([aria-label^="Notificações"]){
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  vertical-align:middle!important;
+}
+
 /* Exact canonical notification bell used by every CRM module. */
 .crm-global-shell.crm-global-shell .crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
   button[aria-label="Alertas"][aria-label],
