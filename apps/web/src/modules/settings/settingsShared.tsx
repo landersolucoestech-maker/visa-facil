@@ -1,4 +1,6 @@
 import { type ReactNode } from 'react';
+import settingsMock from '../../mocks/settings/settings.dev.json';
+import { isMockDataEnabled } from '../../shared/runtimeFlags';
 import './settings.css';
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
@@ -15,30 +17,14 @@ export const TABS:Array<{id:Tab;label:string;icon:string}>=[
  {id:'usuarios',label:'Usuários',icon:'♙'},
 ];
 
-export const INITIAL_COMPANY:Company={
- companyName:'Visa Fácil Assessoria LTDA',
- fantasyName:'Visa Fácil',
- cnpj:'',
- address:'',
- phone:'',
- responsible:'Administrador',
- slug:'visa-facil',
-};
+const mockEnabled=isMockDataEnabled();
+const blankCompany:Company={companyName:'',fantasyName:'',cnpj:'',address:'',phone:'',responsible:'',slug:''};
+const blankAutomations:Record<AutomationKey,boolean>={email:false,push:false,newLead:false,leadFollowup:false,financeMovement:false,weeklyFinance:false,weeklyReport:false,criticalAlerts:false,operational:false,backup:false};
 
-export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>={
- email:true,push:true,newLead:true,leadFollowup:true,financeMovement:true,weeklyFinance:false,weeklyReport:true,criticalAlerts:true,operational:true,backup:false,
-};
-
-export const INITIAL_USERS:UserRecord[]=[
- {id:'u-1',name:'Administrador',email:'admin@visafacil.com.br',role:'Administrador',status:'Ativo'},
- {id:'u-2',name:'Equipe Comercial',email:'comercial@visafacil.com.br',role:'Consultor',status:'Ativo'},
-];
-
-export const INITIAL_ROLES:Role[]=[
- {id:'r-1',name:'Administrador',description:'Acesso total ao CRM e às configurações.',permissions:['Todos os módulos','Financeiro','Configurações','Usuários e permissões'],system:true},
- {id:'r-2',name:'Consultor',description:'Operação comercial e atendimento.',permissions:['CRM','Atendimentos','Tarefas','Agenda']},
- {id:'r-3',name:'Financeiro',description:'Acesso às rotinas financeiras.',permissions:['Financeiro','Relatórios']},
-];
+export const INITIAL_COMPANY:Company=mockEnabled?structuredClone(settingsMock.company) as Company:blankCompany;
+export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>=mockEnabled?structuredClone(settingsMock.automations) as Record<AutomationKey,boolean>:blankAutomations;
+export const INITIAL_USERS:UserRecord[]=mockEnabled?structuredClone(settingsMock.users) as UserRecord[]:[];
+export const INITIAL_ROLES:Role[]=mockEnabled?structuredClone(settingsMock.roles) as Role[]:[];
 
 export function base(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
 export function Bell(){return <svg className="settings-bell-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
@@ -61,7 +47,7 @@ export function SettingRow({title,description,checked,onChange,disabled=false}:{
 }
 
 export function MiniModal({title,description,close,children,footer}:{title:string;description?:string;close:()=>void;children:ReactNode;footer?:ReactNode}){
- return <div className="settings-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="settings-mini-modal" role="dialog" aria-modal="true"><header><div><span>CONFIGURAÇÕES</span><h2>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="settings-mini-modal-body">{children}</div>{footer&&<footer>{footer}</footer>}</div></div>;
+ return <div className="settings-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="settings-mini-modal" role="dialog" aria-modal="true"><header><div><span>CONFIGURAÇÕES</span><h2>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="settings-mini-modal-body">{children}</div>{footer&&<footer>{footer}</div>}</div></div>;
 }
 
 export function SettingsGroup({title,icon,children}:{title:string;icon:string;children:ReactNode}){return <div className="settings-section-block"><div className="settings-section-title"><span>{icon}</span><div><h3>{title}</h3></div></div><div className="settings-setting-list">{children}</div></div>}
