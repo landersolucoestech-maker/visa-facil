@@ -16,6 +16,7 @@ const hero = read('apps/web/src/modules/public-site/components/HeroSection.tsx')
 const contact = read('apps/web/src/modules/public-site/components/ContactSection.tsx');
 const footer = read('apps/web/src/modules/public-site/components/PublicFooter.tsx');
 const interactions = read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
+const leadService = read('apps/web/src/modules/public-site/services/publicLeadService.ts');
 const schema = read('apps/web/src/modules/site-cms/siteSchema.ts');
 const schemaGlobal = read('apps/web/src/modules/site-cms/siteSchemaGlobal.ts');
 const schemaConversion = read('apps/web/src/modules/site-cms/siteSchemaConversion.ts');
@@ -32,6 +33,7 @@ const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
 
 assert(rootApp.includes('<PublicSitePage/>') || rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
 assert(containsAll(rootApp, ["path==='/crm'", '<CrmDashboardApp/>', "path==='/crm/relacionamento'", '<CrmApp/>']), 'Dashboard and relationship routes must remain explicit and separate');
+assert(containsAll(rootApp, ["path==='/crm/contratos'", '<ContractsApp/>']), 'Contracts route must remain explicit and lazy-loaded');
 assert(containsAll(rootApp, ["path==='/login'", "path==='/workspaces'", "path==='/site-admin'", '<LoginApp/>', '<WorkspaceSelectorApp/>', '<SiteCmsApp/>']), 'Authentication/workspace/CMS routes are incomplete');
 assert(rootApp.includes('lazy(') && rootApp.includes('Suspense'), 'Internal workspaces must remain lazy-loaded');
 assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Obsolete internal management application must not return');
@@ -50,6 +52,8 @@ assert(containsAll(schemaConversion, ['O caminho mais fácil', 'para o seu visto
 assert(interactions.includes('6000'), 'Hero autoplay interval must remain 6000 ms');
 assert(interactions.includes('IntersectionObserver'), 'Reveal behavior must remain active');
 assert(contact.includes('data-form') && containsAll(schemaEditorial, ['Nome completo', 'WhatsApp', 'E-mail', 'Enviar para análise']), 'CMS-driven lead capture form changed unexpectedly');
+assert(containsAll(contact, ['submitPublicLead', 'isBackendConfigured', 'onSubmit={submit}']) && leadService.includes("'/v1/public/leads'"), 'Public lead form must use the real backend contract when configured');
+assert(!interactions.includes('Formulário demonstrativo') && !contact.includes('Formulário demonstrativo'), 'Public lead form must not simulate submission success');
 assert(containsAll(schemaGlobal, ['Instagram', 'Facebook', 'TikTok', '© 2026 VISA FÁCIL']), 'CMS footer/social defaults changed unexpectedly');
 assert(!schemaGlobal.toLowerCase().includes('youtube'), 'YouTube must remain removed');
 assert(containsAll(publicPage, ['SiteContentProvider', 'resolvePublicDocument', 'page.sections.filter', 'page.seo.title', "ensureMeta('description')", "ensureMeta('og:image',true)"]), 'Public page must consume the CMS document and page SEO');
@@ -57,7 +61,7 @@ assert(containsAll(store, ['DRAFT_KEY', 'PUBLISHED_KEY', 'loadDraft', 'loadPubli
 assert(containsAll(cmsDocumentContract, ['isCmsDocument', 'parseCmsDocument', 'normalizeCmsPath', 'VALID_PAGE_STATUSES', 'VALID_MEDIA_KINDS', 'hasUniqueIds']), 'Persisted CMS document validation contract is incomplete');
 assert(containsAll(schema, ['PAGE_SECTION_TYPES', 'GLOBAL_SECTION_TYPES', 'createInitialCmsDocument', 'createSectionFromType']), 'Dynamic CMS schema contract is incomplete');
 
-assert(containsAll(crmSidebar, ['Dashboard', 'CRM', 'VisaChat', 'Tarefas', 'Agenda', 'Financeiro', 'Marketing', 'Relatórios', 'Configurações']), 'Shared CRM sidebar is incomplete');
+assert(containsAll(crmSidebar, ['Dashboard', 'CRM', 'Agenda', 'Tarefas', 'VisaChat', 'Contratos', 'Financeiro', 'Marketing', 'Relatórios', 'Configurações']), 'Shared CRM sidebar is incomplete');
 assert(!crm.includes('<aside className="crm-sidebar"'), 'Relationship CRM must not render a second sidebar');
 assert(containsAll(crm, ['Total de contatos', 'Clientes', 'Leads', 'Qualificados', 'Convertidos']), 'Relationship summary is incomplete');
 assert(containsAll(crm, ['value={query}', 'value={filter}', 'normalizedQuery']), 'Relationship search/filter controls must remain connected to data');
@@ -70,7 +74,7 @@ for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'lega
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
 }
 
-for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
+for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
 
 if (failures.length) {
   console.error('Visa Fácil website/CRM/CMS contract validation failed:');
