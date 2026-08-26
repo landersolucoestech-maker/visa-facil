@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AUTHENTICATION_ENABLED, signOut } from '../modules/auth/auth';
 import { AppSidebarIcon, type AppSidebarIconName } from './AppSidebarIcon';
-import '../modules/crm/crm.css';
 import './crm-sidebar.css';
 import './crm-workspace-switch.css';
 import '../styles/sidebar-v2.css';
