@@ -89,11 +89,7 @@ const SiteCmsApp = lazy(async () => {
   await import('./styles/sidebar-v2.css');
   return { default: module.default };
 });
-const TasksApp = lazy(async () => {
-  const module = await import('./modules/tasks/TasksApp');
-  await import('./styles/tasks-refinement.css');
-  return { default: module.TasksApp };
-});
+const TasksApp = lazy(() => import('./modules/tasks/TasksApp').then(module => ({ default: module.TasksApp })));
 const WorkspaceSelectorApp = lazy(() => import('./modules/workspaces/WorkspaceSelectorApp'));
 
 function basePath() {
