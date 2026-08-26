@@ -1,25 +1,14 @@
 import type { FinanceRecord, FinanceType } from './types';
+import { getFinanceCategoryMocks, getFinanceRuleMocks } from './mocks/financeConfigMockProvider';
 
 export type FinanceCategory = { id: string; name: string; type: FinanceType; active: boolean };
 export type FinanceRule = { id: string; contains: string; category: string; type: FinanceType; active: boolean };
 
-const CATEGORY_KEY = 'visa-facil.finance.categories.v1';
-const RULE_KEY = 'visa-facil.finance.rules.v1';
+const CATEGORY_KEY = 'visa-facil.finance.categories.v2';
+const RULE_KEY = 'visa-facil.finance.rules.v2';
 
-export const DEFAULT_FINANCE_CATEGORIES: FinanceCategory[] = [
-  { id: 'cat-1', name: 'Assessoria', type: 'Receita', active: true },
-  { id: 'cat-2', name: 'Renovação', type: 'Receita', active: true },
-  { id: 'cat-3', name: 'Taxas consulares', type: 'Despesa', active: true },
-  { id: 'cat-4', name: 'Serviços terceiros', type: 'Despesa', active: true },
-  { id: 'cat-5', name: 'Marketing', type: 'Despesa', active: true },
-  { id: 'cat-6', name: 'Outros', type: 'Despesa', active: true },
-];
-
-export const DEFAULT_FINANCE_RULES: FinanceRule[] = [
-  { id: 'rule-1', contains: 'META ADS', category: 'Marketing', type: 'Despesa', active: true },
-  { id: 'rule-2', contains: 'CONSULADO', category: 'Taxas consulares', type: 'Despesa', active: true },
-  { id: 'rule-3', contains: 'VISA FACIL', category: 'Assessoria', type: 'Receita', active: true },
-];
+export const DEFAULT_FINANCE_CATEGORIES: FinanceCategory[] = getFinanceCategoryMocks();
+export const DEFAULT_FINANCE_RULES: FinanceRule[] = getFinanceRuleMocks();
 
 function isType(value: unknown): value is FinanceType { return value === 'Receita' || value === 'Despesa'; }
 function normalizeName(value: string) { return value.trim().toLocaleLowerCase('pt-BR'); }
