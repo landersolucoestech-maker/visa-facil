@@ -1,13 +1,10 @@
 export const VISACHAT_SETTINGS_STORAGE_KEY = 'visa-facil.session.visachat.settings.v1';
 
-export const VISACHAT_CHANNEL_IDS = ['whatsapp', 'instagram', 'facebook', 'website', 'email'] as const;
 export const ROUTING_STRATEGIES = ['manual', 'round-robin', 'least-loaded'] as const;
 export const VISACHAT_PRIORITIES = ['Baixa', 'Normal', 'Alta', 'Urgente'] as const;
 
-export type VisaChatChannelId = typeof VISACHAT_CHANNEL_IDS[number];
 export type RoutingStrategy = typeof ROUTING_STRATEGIES[number];
 export type VisaChatPriority = typeof VISACHAT_PRIORITIES[number];
-export type ChannelConnectionState = 'not-configured' | 'connected' | 'error';
 
 export type BusinessHour = {
   id: string;
@@ -73,14 +70,6 @@ export type TagDefinition = {
   active: boolean;
 };
 
-export type ChannelConfig = {
-  id: VisaChatChannelId;
-  label: string;
-  state: ChannelConnectionState;
-  inbound: boolean;
-  outbound: boolean;
-};
-
 export type VisaChatSettings = {
   version: 1;
   general: {
@@ -90,7 +79,6 @@ export type VisaChatSettings = {
     reopenOnCustomerReply: boolean;
     archiveAfterDays: number;
   };
-  channels: ChannelConfig[];
   businessHours: BusinessHour[];
   automaticMessages: AutomaticMessage[];
   menu: {
@@ -129,13 +117,6 @@ const DEFAULT_SETTINGS: VisaChatSettings = {
     reopenOnCustomerReply: true,
     archiveAfterDays: 30,
   },
-  channels: [
-    { id: 'whatsapp', label: 'WhatsApp', state: 'not-configured', inbound: false, outbound: false },
-    { id: 'instagram', label: 'Instagram', state: 'not-configured', inbound: false, outbound: false },
-    { id: 'facebook', label: 'Facebook', state: 'not-configured', inbound: false, outbound: false },
-    { id: 'website', label: 'Chat do site', state: 'not-configured', inbound: false, outbound: false },
-    { id: 'email', label: 'E-mail', state: 'not-configured', inbound: false, outbound: false },
-  ],
   businessHours: [
     { id: 'mon', day: 'Segunda-feira', enabled: true, start: '08:00', end: '18:00' },
     { id: 'tue', day: 'Terça-feira', enabled: true, start: '08:00', end: '18:00' },
@@ -221,7 +202,6 @@ function isNonNegativeInteger(value: unknown): value is number { return typeof v
 function uniqueIds(values: Array<{ id: string }>) { return new Set(values.map((item) => item.id)).size === values.length; }
 function validPriority(value: unknown): value is VisaChatPriority { return typeof value === 'string' && (VISACHAT_PRIORITIES as readonly string[]).includes(value); }
 function validRouting(value: unknown): value is RoutingStrategy { return typeof value === 'string' && (ROUTING_STRATEGIES as readonly string[]).includes(value); }
-function validChannelId(value: unknown): value is VisaChatChannelId { return typeof value === 'string' && (VISACHAT_CHANNEL_IDS as readonly string[]).includes(value); }
 
 export function isVisaChatSettings(value: unknown): value is VisaChatSettings {
   if (!isObject(value) || value.version !== 1) return false;
@@ -231,9 +211,6 @@ export function isVisaChatSettings(value: unknown): value is VisaChatSettings {
   const notifications = value.notifications;
   if (!isObject(general) || !isNonEmpty(general.displayName) || !isNonEmpty(general.language) || !isNonEmpty(general.timezone)
     || !isBoolean(general.reopenOnCustomerReply) || !isNonNegativeInteger(general.archiveAfterDays)) return false;
-  if (!Array.isArray(value.channels) || !uniqueIds(value.channels as ChannelConfig[]) || !value.channels.every((channel) => isObject(channel)
-    && validChannelId(channel.id) && isNonEmpty(channel.label) && ['not-configured', 'connected', 'error'].includes(String(channel.state))
-    && isBoolean(channel.inbound) && isBoolean(channel.outbound))) return false;
   if (!Array.isArray(value.businessHours) || !uniqueIds(value.businessHours as BusinessHour[]) || !value.businessHours.every((hour) => isObject(hour)
     && isNonEmpty(hour.id) && isNonEmpty(hour.day) && isBoolean(hour.enabled) && isString(hour.start) && isString(hour.end))) return false;
   if (!Array.isArray(value.automaticMessages) || !uniqueIds(value.automaticMessages as AutomaticMessage[]) || !value.automaticMessages.every((message) => isObject(message)
@@ -261,6 +238,12 @@ export function isVisaChatSettings(value: unknown): value is VisaChatSettings {
   return true;
 }
 
+function stripLegacyChannelSettings(settings: VisaChatSettings): VisaChatSettings {
+  const next = clone(settings) as VisaChatSettings & { channels?: unknown };
+  delete next.channels;
+  return next;
+}
+
 export function getDefaultVisaChatSettings(): VisaChatSettings { return clone(DEFAULT_SETTINGS); }
 
 export function getVisaChatSettings(): VisaChatSettings {
@@ -279,7 +262,9 @@ export function getVisaChatSettings(): VisaChatSettings {
       try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
       return next;
     }
-    return clone(parsed);
+    const next = stripLegacyChannelSettings(parsed);
+    try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
+    return next;
   } catch {
     return fallback();
   }
@@ -287,7 +272,7 @@ export function getVisaChatSettings(): VisaChatSettings {
 
 export function saveVisaChatSettings(settings: VisaChatSettings): VisaChatSettings {
   if (!isVisaChatSettings(settings)) throw new Error('Invalid VisaChat settings');
-  const next = clone(settings);
+  const next = stripLegacyChannelSettings(settings);
   if (typeof sessionStorage !== 'undefined') {
     try { sessionStorage.setItem(VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(next)); } catch {}
   }
