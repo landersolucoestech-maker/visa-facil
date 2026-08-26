@@ -99,6 +99,58 @@
   align-self:center;
 }
 
+/* VisaChat settings must not restyle the global AccountMenu through broad header selectors. */
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__trigger{
+  color:#10213b!important;
+  -webkit-text-fill-color:#10213b!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__avatar{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__identity strong{
+  color:#10213b!important;
+  -webkit-text-fill-color:#10213b!important;
+  font-size:10.5px!important;
+  line-height:1.15!important;
+  font-weight:800!important;
+  letter-spacing:0!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__identity small{
+  display:block!important;
+  margin-top:2px!important;
+  color:#7d899b!important;
+  -webkit-text-fill-color:#7d899b!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__caret{
+  color:#718096!important;
+  -webkit-text-fill-color:#718096!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>a,
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>button{
+  color:#34445b!important;
+  -webkit-text-fill-color:#34445b!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+}
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>a:hover,
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>button:hover,
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>a:focus-visible,
+.crm-global-shell .crm-global-page .visachat-ref-header .account-menu__panel>button:focus-visible{
+  color:#102a59!important;
+  -webkit-text-fill-color:#102a59!important;
+}
+
 /* Standalone internal surfaces still reserve their fixed account slot. */
 .site-cms-topbar{padding-right:216px!important}
 .workspace-header{position:sticky;top:0;z-index:30;padding-right:calc(clamp(24px,5vw,72px) + 196px)}
