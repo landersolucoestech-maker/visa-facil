@@ -8,13 +8,14 @@
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .attendance-topbar.attendance-topbar .attendance-settings-button.attendance-settings-button:hover{border-color:#aeb8c7!important;background:#f7f8fa!important;color:#102a59!important}
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .attendance-topbar.attendance-topbar .attendance-new-conversation.attendance-new-conversation{font-size:10.5px!important;justify-content:center!important;white-space:nowrap!important;letter-spacing:0!important}
 
-/* Automações do VisaChat: pixel-parity com o cabeçalho da página principal do Chat.
-   A estrutura funcional continua própria da configuração; apenas o chrome do topbar é espelhado. */
+/* Automações do VisaChat: topbar travado na mesma caixa visual do VisaChat principal. */
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header{
   position:sticky!important;
   top:0!important;
   z-index:10!important;
+  height:72px!important;
   min-height:72px!important;
+  max-height:72px!important;
   margin:0 -18px!important;
   padding:14px 18px!important;
   box-sizing:border-box!important;
@@ -22,21 +23,24 @@
   align-items:center!important;
   justify-content:space-between!important;
   gap:24px!important;
+  overflow:visible!important;
   border-bottom:1px solid var(--crm-border,#dfe6f0)!important;
   background:rgba(255,255,255,.96)!important;
   backdrop-filter:blur(12px)!important;
   color:#172033!important;
   -webkit-text-fill-color:#172033!important;
 }
+
+/* Kicker idêntico ao visual efetivo da página principal do VisaChat. */
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header>div:first-child::before{
   content:"VISA FÁCIL · CRM"!important;
   display:block!important;
   margin:0!important;
-  color:#b22234!important;
-  -webkit-text-fill-color:#b22234!important;
-  font-size:11px!important;
-  line-height:normal!important;
-  font-weight:900!important;
+  color:#7d899b!important;
+  -webkit-text-fill-color:#7d899b!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  font-weight:700!important;
   letter-spacing:.12em!important;
   text-transform:none!important;
 }
@@ -58,6 +62,8 @@
   line-height:1.4!important;
 }
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions{
+  height:36px!important;
+  min-height:36px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:flex-end!important;
@@ -71,6 +77,7 @@
   min-width:0!important;
   height:36px!important;
   min-height:36px!important;
+  max-height:36px!important;
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
@@ -97,9 +104,7 @@
   color:#102a59!important;
   -webkit-text-fill-color:#102a59!important;
 }
-.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>button.crm-btn-secondary.crm-btn-secondary:disabled{
-  cursor:not-allowed!important;
-}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>button.crm-btn-secondary.crm-btn-secondary:disabled{cursor:not-allowed!important}
 
 /* Primary control = exactly the same red action surface used by "Nova conversa". */
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>button.crm-btn-primary.crm-btn-primary{
@@ -107,6 +112,7 @@
   min-width:0!important;
   height:36px!important;
   min-height:36px!important;
+  max-height:36px!important;
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
@@ -134,7 +140,7 @@
   -webkit-text-fill-color:#fff!important;
 }
 
-/* Bell = the exact canonical glyph/surface used by the main VisaChat topbar. */
+/* Bell = exact canonical control used by the main VisaChat topbar. */
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-topbar-menu{
   position:relative!important;
   order:0!important;
@@ -168,27 +174,29 @@
   box-shadow:none!important;
   cursor:pointer!important;
 }
-.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-notification-button.visachat-ref-notification-button>svg{
-  display:none!important;
-}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-notification-button.visachat-ref-notification-button>svg{display:none!important}
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-notification-button.visachat-ref-notification-button:hover,
-.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-notification-button.visachat-ref-notification-button[aria-expanded="true"]{
-  border-color:#aeb8c7!important;
-  background-color:#f7f8fa!important;
-}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .visachat-ref-notification-button.visachat-ref-notification-button[aria-expanded="true"]{border-color:#aeb8c7!important;background-color:#f7f8fa!important}
 
-/* AccountMenu is the same global component portaled into this exact action row. */
+/* AccountMenu = same global component, same physical slot. */
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>.account-menu--crm{
   order:0!important;
   margin:0!important;
   align-self:center!important;
+  height:36px!important;
+  min-height:36px!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>.account-menu--crm .account-menu__trigger{
+  height:36px!important;
+  min-height:36px!important;
+  max-height:36px!important;
 }
 
 @media(max-width:1180px){
   .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions>.account-menu--crm{flex-basis:42px!important}
 }
 @media(max-width:1050px){
-  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header{align-items:flex-start!important;gap:10px!important}
-  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions{justify-content:flex-start!important;flex-wrap:wrap!important}
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header{height:auto!important;min-height:72px!important;max-height:none!important;align-items:flex-start!important;gap:10px!important}
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header .crm-topbar-actions.visachat-ref-actions.visachat-ref-actions{height:auto!important;justify-content:flex-start!important;flex-wrap:wrap!important}
 }
 @media(max-width:760px){.attendance-settings-button span{display:none}.attendance-settings-button{width:36px;min-width:36px;padding:0}.attendance-template-select{max-width:130px}.attendance-support-nav,.attendance-team-type-tabs{padding-left:8px;padding-right:8px}}
