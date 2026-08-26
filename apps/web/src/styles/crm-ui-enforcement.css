@@ -1,0 +1,239 @@
+/* VISA FÁCIL — shared CRM component enforcement.
+   The token values live in crm-ui-standard.css. This layer exists only to
+   guarantee that legacy module refinements cannot reintroduce different sizes
+   for equivalent shared primitives. Domain-specific geometry (calendar cells,
+   charts, contract document paper, editor grids) is intentionally excluded. */
+
+/* Equivalent page surfaces. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-panel,.crm-kpi-card,.crm-relationship-card,.crm-relationship-summary article,
+  .tasks-card,.tasks-panel,.finance-card,.finance-config-card,.finance-table-card,.finance-kpi-card,.finance-transactions-card,
+  .invoice-list-card,.accounting-report-card,.marketing-panel,.marketing-table-card,.marketing-metric-card,.marketing-metrics-card,.marketing-chart-card,
+  .reports-card,.reports-dataset-card,.settings-card,.contracts-panel,.contracts-kpi,.visachat-ref-card,.visachat-ref-inner-card
+){
+  border-color:var(--vf-border)!important;
+  border-radius:var(--vf-radius-card)!important;
+  background:var(--vf-surface)!important;
+  box-shadow:none!important;
+}
+
+/* Equivalent KPI cards. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-transaction-stats article,
+  .invoice-kpis article,.accounting-kpis article,.tasks-kpis article,.tasks-stats article,.settings-user-metrics article,.contracts-kpi
+){
+  min-width:0!important;
+  min-height:86px!important;
+  padding:13px 14px!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-card)!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+
+/* Equivalent form fields. Search-shell inputs are excluded because their border
+   belongs to the parent search control. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .settings-field input,.settings-field select,.settings-invite-row input,.settings-invite-row select,.settings-user-row select,
+  .contracts-toolbar input,.contracts-toolbar select,.contracts-field input,.contracts-field select,.contracts-variable-panel>input
+){
+  min-height:var(--vf-field-height)!important;
+  height:var(--vf-field-height)!important;
+  padding:0 10px!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  color:var(--vf-text)!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.settings-field textarea,.contracts-field textarea){
+  min-height:96px!important;
+  height:auto!important;
+  padding:9px 10px!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  color:var(--vf-text)!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  line-height:1.45!important;
+}
+
+/* Standard tabs: underline navigation for equivalent page-level tab sets. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs){
+  width:100%!important;
+  max-width:100%!important;
+  min-height:39px!important;
+  display:flex!important;
+  align-items:stretch!important;
+  gap:0!important;
+  padding:0!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  border:0!important;
+  border-bottom:1px solid var(--vf-border)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs)>button{
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:max-content!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:0 12px!important;
+  border:0!important;
+  border-bottom:2px solid transparent!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#687586!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs)>button:hover{background:#f7f8fa!important;color:#344256!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs)>button.is-active,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-relationship-tabs>button[aria-selected="true"]{
+  border-bottom-color:var(--vf-navy)!important;
+  background:transparent!important;
+  color:var(--vf-navy)!important;
+  box-shadow:none!important;
+}
+
+/* Standard textual buttons. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .settings-btn,.contracts-primary-button,.contracts-secondary-button,.contracts-danger-button,.reports-action-button
+){
+  min-height:var(--vf-control-height)!important;
+  height:var(--vf-control-height)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:0 11px!important;
+  border-radius:var(--vf-radius-control)!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.settings-btn-primary,.contracts-primary-button,.reports-action-button--primary){
+  border:1px solid var(--vf-red)!important;
+  background:var(--vf-red)!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.settings-btn-primary,.contracts-primary-button,.reports-action-button--primary):hover:not(:disabled){border-color:var(--vf-red-hover)!important;background:var(--vf-red-hover)!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.settings-btn-outline,.settings-btn-ghost,.contracts-secondary-button,.reports-action-button:not(.reports-action-button--primary)){
+  border:1px solid var(--vf-border)!important;
+  background:#fff!important;
+  color:#344256!important;
+  -webkit-text-fill-color:#344256!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.settings-btn-outline,.settings-btn-ghost,.contracts-secondary-button,.reports-action-button:not(.reports-action-button--primary)):hover:not(:disabled){border-color:#aeb8c7!important;background:var(--vf-soft)!important;color:#102a59!important;-webkit-text-fill-color:#102a59!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-danger-button{border:1px solid #e5c2c7!important;background:#fff!important;color:var(--vf-danger)!important}
+
+/* Row actions. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-actions-trigger,.tasks-actions-trigger,.finance-actions-trigger,.invoice-action-trigger,.contracts-actions-trigger,.marketing-action-trigger){
+  width:var(--vf-row-action-size)!important;
+  min-width:var(--vf-row-action-size)!important;
+  max-width:var(--vf-row-action-size)!important;
+  height:var(--vf-row-action-size)!important;
+  min-height:var(--vf-row-action-size)!important;
+  max-height:var(--vf-row-action-size)!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  color:#435166!important;
+  box-shadow:none!important;
+}
+
+/* Status/badge geometry. Semantic colors stay module-owned. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-status-pill,.marketing-status,.finance-type,.finance-status,.invoice-status,.tasks-status,.tasks-priority,.attendance-status,.reports-status,.settings-status,.contracts-status
+){
+  min-height:22px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 7px!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+  font-size:9px!important;
+  line-height:1!important;
+  font-weight:650!important;
+  white-space:nowrap!important;
+}
+
+/* Popovers/action menus. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-actions-menu,.tasks-actions-menu,.finance-actions-menu,.invoice-actions-menu,.contracts-actions-menu,
+  .marketing-action-menu,.marketing-dropdown,.agenda-dropdown,.attendance-dropdown,.tasks-dropdown,.finance-dropdown,
+  .reports-dropdown,.settings-dropdown,.accounting-dropdown,.invoice-notification-menu,.visachat-ref-notifications
+){
+  max-width:calc(100vw - 24px)!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-popover)!important;
+  background:#fff!important;
+  box-shadow:var(--vf-shadow-menu)!important;
+}
+
+/* Modal/dialog geometry shared across product workspaces. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-record-modal,.crm-form-modal,.crm-view-modal,
+  .tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,
+  .finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,
+  .invoice-detail-modal,.fiscal-document-modal,.reports-import-modal,.settings-mini-modal,
+  .contracts-editor,.contracts-view,.contracts-template-editor,
+  .marketing-content-modal,.marketing-campaign-builder,.marketing-campaign-view
+){
+  max-width:calc(100vw - 40px)!important;
+  max-height:calc(100dvh - 40px)!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-modal)!important;
+  background:#fff!important;
+  box-shadow:var(--vf-shadow-modal)!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-modal-backdrop,.tasks-modal-backdrop,.agenda-modal-backdrop,.attendance-modal-backdrop,.finance-modal-backdrop,
+  .finance-accounting-backdrop,.settings-modal-backdrop,.contracts-modal-backdrop,.reports-modal-backdrop,.marketing-modal-backdrop
+){
+  padding:20px!important;
+  background:rgba(8,19,37,.52)!important;
+  backdrop-filter:blur(3px)!important;
+}
+
+/* Legacy manual AccountMenu space is forbidden now that the menu is physically
+   portaled into the canonical action row. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar :is(.contracts-topbar-actions,.invoice-topbar-actions,.accounting-topbar-actions,.finance-header-actions){
+  padding-right:0!important;
+  margin-right:0!important;
+}
+
+/* Shared empty states. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-dashboard-empty,.crm-empty,.tasks-empty,.attendance-empty,.reports-empty,.finance-empty,.invoice-empty,.settings-empty,.contracts-empty){
+  min-height:180px;
+  color:#7b8796!important;
+  font-size:10.5px!important;
+  line-height:1.5!important;
+}
+
+@media(max-width:720px){
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+    .crm-record-modal,.crm-form-modal,.crm-view-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,
+    .finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.fiscal-document-modal,.reports-import-modal,
+    .settings-mini-modal,.contracts-editor,.contracts-view,.contracts-template-editor,.marketing-content-modal,.marketing-campaign-builder,.marketing-campaign-view
+  ){
+    max-width:calc(100vw - 20px)!important;
+    max-height:calc(100dvh - 20px)!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(.crm-modal-backdrop,.tasks-modal-backdrop,.agenda-modal-backdrop,.attendance-modal-backdrop,.finance-modal-backdrop,.finance-accounting-backdrop,.settings-modal-backdrop,.contracts-modal-backdrop,.reports-modal-backdrop,.marketing-modal-backdrop){padding:10px!important}
+}
