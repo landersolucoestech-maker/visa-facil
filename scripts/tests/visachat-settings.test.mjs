@@ -36,10 +36,10 @@ test('VisaChat internal domain still supports direct, group and channel without 
   for(const teamType of ['direct','group','channel']) assert.equal(attendanceDomain.isAttendanceConversation({...base,teamType,...(teamType==='channel'?{channelSlug:'geral'}:{})}),true);
 });
 
-test('VisaChat chat surface keeps structured features without internal note composer mode', () => {
+test('VisaChat chat surface keeps structured features, department transfer and no internal note composer mode', () => {
   const app=read('apps/web/src/modules/attendance/AttendanceApp.tsx');
   const panel=read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
-  for(const token of ['TEAM_CONVERSATION_TYPES','Conversa direta','Grupo','Canal','Resposta rápida']) assert.ok(app.includes(token),`AttendanceApp missing ${token}`);
+  for(const token of ['TEAM_CONVERSATION_TYPES','Conversa direta','Grupo','Canal','Resposta rápida','transferSelectedCustomer','Transferir atendimento para departamento','getVisaChatSettings().menu_options']) assert.ok(app.includes(token),`AttendanceApp missing ${token}`);
   for(const removed of ['Nota interna','Responder cliente','Salvar nota','composerMode','isInternalNote']) assert.equal(app.includes(removed),false,`AttendanceApp still contains removed internal-note feature ${removed}`);
   for(const token of ['Mensagens','Menu e filas','Escalonamento','Templates','Fluxo inicial','Mensagens de exceção e encerramento','Menu principal de triagem','Retorno ao menu principal','Responsáveis padrão','Regras de escalonamento','Questionários por serviço','Campos obrigatórios','Mensagem Automática','Salvar configuração','Testar escalonamento']) assert.ok(panel.includes(token),`settings panel missing ${token}`);
   for(const extra of ['Configurações gerais','Horários de atendimento','Roteamento e SLA','Canais de atendimento']) assert.equal(panel.includes(extra),false,`unexpected extra settings section ${extra}`);
