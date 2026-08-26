@@ -7,11 +7,11 @@ import { isAttendanceConversation, getAttendanceInitialConversations, type Atten
 import { readSessionRecords, writeSessionRecords } from './sessionRecords';
 
 const KEYS={
- crm:'visa-facil.session.crm.v1',
- tasks:'visa-facil.session.tasks.v1',
- agenda:'visa-facil.session.agenda.v1',
- finance:'visa-facil.session.finance.v1',
- attendance:'visa-facil.session.attendance.v1',
+ crm:'visa-facil.session.crm.v2',
+ tasks:'visa-facil.session.tasks.v2',
+ agenda:'visa-facil.session.agenda.v2',
+ finance:'visa-facil.session.finance.v2',
+ attendance:'visa-facil.session.attendance.v2',
 } as const;
 
 export function getCrmSessionRecords(){return readSessionRecords<CrmRecord>(KEYS.crm,getCrmInitialRecords,isCrmRecord)}
