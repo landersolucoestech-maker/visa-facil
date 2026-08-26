@@ -10,8 +10,10 @@ import { createAudit, createVersion, getContractRecords, getContractTemplates, g
 import { extractTemplatePlaceholders, nextVersionLabel } from './contractTemplateEngine';
 import { CONTRACT_STATUS_LABEL, type ContractEditorDraft, type ContractRecord, type ContractTemplate, type ContractVariableDefinition } from './contractTypes';
 import './contracts.css';
+import './contract-table-actions.css';
 
 type Section='contracts'|'templates'|'variables';
+type ItemModalMode='create'|'edit'|'view';
 
 function base(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
 function href(path:string){return `${base()}${path}`||path}
@@ -27,6 +29,11 @@ function variableTypeLabel(type:ContractVariableDefinition['type']){const labels
 function Kpi({label,value,note}:{label:string;value:string|number;note:string}){return <article className="contracts-kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></article>}
 function NotificationBell(){return <button type="button" aria-label="Notificações — nenhuma disponível" title="Nenhuma notificação de Contratos disponível" disabled/>}
 function BackButton(){return <button type="button" onClick={()=>go('/crm/contratos')}><span aria-hidden="true">←</span> Voltar</button>}
+function RowActionMenu({label,onView,onEdit,onDelete,deleteDisabled=false,deleteTitle}:{label:string;onView:()=>void;onEdit:()=>void;onDelete:()=>void;deleteDisabled?:boolean;deleteTitle?:string}){
+ const [open,setOpen]=useState(false);
+ const run=(action:()=>void)=>{setOpen(false);action()};
+ return <div className="contracts-actions-menu"><button className="contracts-actions-trigger" type="button" aria-label={`Ações de ${label}`} aria-haspopup="menu" aria-expanded={open} onClick={()=>setOpen(current=>!current)}>⋮</button>{open&&<div className="contracts-actions-dropdown" role="menu"><button type="button" role="menuitem" onClick={()=>run(onView)}>Ver</button><button type="button" role="menuitem" onClick={()=>run(onEdit)}>Editar</button><button type="button" role="menuitem" className="is-danger" disabled={deleteDisabled} title={deleteTitle} onClick={()=>run(onDelete)}>Excluir</button></div>}</div>;
+}
 
 export function ContractsApp(){
  const section=sectionFromPath();
@@ -40,8 +47,11 @@ export function ContractsApp(){
  const [viewRecord,setViewRecord]=useState<ContractRecord>();
  const [editorOpen,setEditorOpen]=useState(false);
  const [templateEditorOpen,setTemplateEditorOpen]=useState(false);
+ const [templateModalMode,setTemplateModalMode]=useState<ItemModalMode>('create');
  const [variableEditorOpen,setVariableEditorOpen]=useState(false);
+ const [variableModalMode,setVariableModalMode]=useState<ItemModalMode>('create');
  const [editingTemplate,setEditingTemplate]=useState<ContractTemplate>();
+ const [selectedVariable,setSelectedVariable]=useState<ContractVariableDefinition>();
  const [autentiqueState,setAutentiqueState]=useState('Backend não configurado');
  const contacts=useMemo(()=>getCrmSessionRecords(),[]);
 
@@ -106,8 +116,14 @@ export function ContractsApp(){
  };
  const saveVariable=(draft:ContractVariableDraft)=>{
   const stamp=new Date().toISOString();
-  persistVariables([{id:crypto.randomUUID(),...draft,createdAt:stamp,updatedAt:stamp},...variables]);
-  setVariableEditorOpen(false);
+  if(selectedVariable){const updated:ContractVariableDefinition={...selectedVariable,...draft,updatedAt:stamp};persistVariables(variables.map(item=>item.id===updated.id?updated:item))}
+  else persistVariables([{id:crypto.randomUUID(),...draft,createdAt:stamp,updatedAt:stamp},...variables]);
+  setSelectedVariable(undefined);setVariableEditorOpen(false);
+ };
+ const removeVariable=(variable:ContractVariableDefinition)=>{
+  if(templates.some(template=>template.content.includes(variable.placeholder))){window.alert('Esta variável está sendo usada por um template e não pode ser removida.');return}
+  if(!window.confirm(`Excluir ${variable.placeholder}?`))return;
+  persistVariables(variables.filter(item=>item.id!==variable.id));
  };
 
  const title=section==='contracts'?'Contratos':section==='templates'?'Templates de Contrato':'Variáveis de Template';
@@ -116,19 +132,19 @@ export function ContractsApp(){
  return <div className="crm-shell contracts-shell"><div className="crm-workspace">
   <header className="crm-topbar"><div><small>VISA FÁCIL · CRM · CONTRATOS</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions contracts-topbar-actions">
    {section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button><NotificationBell/></>}
-   {section==='templates'&&<><BackButton/><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
-   {section==='variables'&&<><BackButton/><button className="crm-topbar-primary" type="button" onClick={()=>setVariableEditorOpen(true)}>+ Criar Variável</button><NotificationBell/></>}
+   {section==='templates'&&<><BackButton/><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateModalMode('create');setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
+   {section==='variables'&&<><BackButton/><button className="crm-topbar-primary" type="button" onClick={()=>{setSelectedVariable(undefined);setVariableModalMode('create');setVariableEditorOpen(true)}}>+ Criar Variável</button><NotificationBell/></>}
   </div></header>
   <main className="contracts-content">
    {section==='contracts'&&<ContractsList records={filteredRecords} allRecords={records} templates={templates} query={query} setQuery={setQuery} statusFilter={statusFilter} setStatusFilter={setStatusFilter} templateFilter={templateFilter} setTemplateFilter={setTemplateFilter} stats={stats} activeValue={activeValue} onView={setViewRecord} onEdit={record=>{setEditingRecord(record);setEditorOpen(true)}} onDelete={removeRecord}/>} 
-   {section==='templates'&&<TemplatesWorkspace templates={templates} records={records} onEdit={template=>{setEditingTemplate(template);setTemplateEditorOpen(true)}} onDelete={removeTemplate}/>} 
-   {section==='variables'&&<VariablesWorkspace variables={variables} templates={templates} persist={persistVariables}/>} 
+   {section==='templates'&&<TemplatesWorkspace templates={templates} records={records} onView={template=>{setEditingTemplate(template);setTemplateModalMode('view');setTemplateEditorOpen(true)}} onEdit={template=>{setEditingTemplate(template);setTemplateModalMode('edit');setTemplateEditorOpen(true)}} onDelete={removeTemplate}/>} 
+   {section==='variables'&&<VariablesWorkspace variables={variables} templates={templates} onView={variable=>{setSelectedVariable(variable);setVariableModalMode('view');setVariableEditorOpen(true)}} onEdit={variable=>{setSelectedVariable(variable);setVariableModalMode('edit');setVariableEditorOpen(true)}} onDelete={removeVariable}/>} 
   </main>
  </div>
  {editorOpen&&<ContractEditorModal record={editingRecord} contacts={contacts} templates={templates} variables={variables} onClose={()=>{setEditingRecord(undefined);setEditorOpen(false)}} onSave={saveEditor}/>} 
  {viewRecord&&<ContractViewModal record={viewRecord} template={templates.find(item=>item.id===viewRecord.templateId)} autentiqueState={autentiqueState} onClose={()=>setViewRecord(undefined)} onEdit={()=>{if(canEditRecord(viewRecord)){setEditingRecord(viewRecord);setViewRecord(undefined);setEditorOpen(true)}}} onDelete={()=>removeRecord(viewRecord)}/>} 
- {templateEditorOpen&&<ContractTemplateModal template={editingTemplate} variables={variables} onClose={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(false)}} onSave={saveTemplate}/>} 
- {variableEditorOpen&&<ContractVariableModal variables={variables} onClose={()=>setVariableEditorOpen(false)} onSave={saveVariable}/>} 
+ {templateEditorOpen&&<ContractTemplateModal template={editingTemplate} variables={variables} mode={templateModalMode} onClose={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(false)}} onSave={saveTemplate}/>} 
+ {variableEditorOpen&&<ContractVariableModal variable={selectedVariable} variables={variables} mode={variableModalMode} onClose={()=>{setSelectedVariable(undefined);setVariableEditorOpen(false)}} onSave={saveVariable}/>} 
  </div>;
 }
 
@@ -139,17 +155,16 @@ function ContractsList({records,allRecords,templates,query,setQuery,statusFilter
   </section></>;
 }
 
-function TemplatesWorkspace({templates,records,onEdit,onDelete}:{templates:ContractTemplate[];records:ContractRecord[];onEdit:(template:ContractTemplate)=>void;onDelete:(template:ContractTemplate)=>void}){
+function TemplatesWorkspace({templates,records,onView,onEdit,onDelete}:{templates:ContractTemplate[];records:ContractRecord[];onView:(template:ContractTemplate)=>void;onEdit:(template:ContractTemplate)=>void;onDelete:(template:ContractTemplate)=>void}){
  const [query,setQuery]=useState('');
  const filtered=templates.filter(item=>`${item.name} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <><section className="contracts-kpis contracts-kpis--four"><Kpi label="Templates" value={templates.length} note="total"/><Kpi label="Ativos" value={templates.filter(item=>item.active).length} note="disponíveis no wizard"/><Kpi label="Em uso" value={new Set(records.map(item=>item.templateId)).size} note="vinculados a contratos"/><Kpi label="Placeholders" value={templates.reduce((sum,item)=>sum+extractTemplatePlaceholders(item.content).length,0)} note="mapeados"/></section><section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar templates" placeholder="Buscar template…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {templates.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Template</th><th>Variáveis</th><th>Status</th><th>Atualizado</th><th aria-label="Ações"/></tr></thead><tbody>{filtered.map(template=><tr key={template.id}><td><strong>{template.name}</strong><small>{template.description||'Sem descrição'}</small></td><td>{extractTemplatePlaceholders(template.content).length}</td><td><span className={`contracts-status ${template.active?'is-active':'is-draft'}`}>{template.active?'Ativo':'Inativo'}</span></td><td>{new Date(template.updatedAt).toLocaleDateString('pt-BR')}</td><td><div className="contracts-row-actions"><button type="button" onClick={()=>onEdit(template)}>Editar</button><button type="button" className="is-danger" onClick={()=>onDelete(template)}>Excluir</button></div></td></tr>)}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhum template encontrado</strong><p>Ajuste a busca para localizar templates.</p></div>}</section></>;
+ return <><section className="contracts-kpis contracts-kpis--four"><Kpi label="Templates" value={templates.length} note="total"/><Kpi label="Ativos" value={templates.filter(item=>item.active).length} note="disponíveis no wizard"/><Kpi label="Em uso" value={new Set(records.map(item=>item.templateId)).size} note="vinculados a contratos"/><Kpi label="Placeholders" value={templates.reduce((sum,item)=>sum+extractTemplatePlaceholders(item.content).length,0)} note="mapeados"/></section><section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar templates" placeholder="Buscar template…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {templates.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Template</th><th>Variáveis</th><th>Status</th><th>Atualizado</th><th>Ações</th></tr></thead><tbody>{filtered.map(template=>{const inUse=records.some(record=>record.templateId===template.id);return <tr key={template.id}><td><strong>{template.name}</strong><small>{template.description||'Sem descrição'}</small></td><td>{extractTemplatePlaceholders(template.content).length}</td><td><span className={`contracts-status ${template.active?'is-active':'is-draft'}`}>{template.active?'Ativo':'Inativo'}</span></td><td>{new Date(template.updatedAt).toLocaleDateString('pt-BR')}</td><td><RowActionMenu label={template.name} onView={()=>onView(template)} onEdit={()=>onEdit(template)} onDelete={()=>onDelete(template)} deleteDisabled={inUse} deleteTitle={inUse?'Template vinculado a contrato; desative-o em vez de excluir.':'Excluir template'}/></td></tr>})}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhum template encontrado</strong><p>Ajuste a busca para localizar templates.</p></div>}</section></>;
 }
 
-function VariablesWorkspace({variables,templates,persist}:{variables:ContractVariableDefinition[];templates:ContractTemplate[];persist:(records:ContractVariableDefinition[])=>void}){
+function VariablesWorkspace({variables,templates,onView,onEdit,onDelete}:{variables:ContractVariableDefinition[];templates:ContractTemplate[];onView:(variable:ContractVariableDefinition)=>void;onEdit:(variable:ContractVariableDefinition)=>void;onDelete:(variable:ContractVariableDefinition)=>void}){
  const [query,setQuery]=useState('');
- const remove=(variable:ContractVariableDefinition)=>{if(templates.some(template=>template.content.includes(variable.placeholder))){window.alert('Esta variável está sendo usada por um template e não pode ser removida.');return}if(window.confirm(`Excluir ${variable.placeholder}?`))persist(variables.filter(item=>item.id!==variable.id))};
  const filtered=variables.filter(item=>`${item.label} ${item.placeholder} ${item.description} ${item.group} ${item.field}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar variáveis" placeholder="Buscar variável…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {variables.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Variável</th><th>Placeholder</th><th>Tipo</th><th>Obrigatória</th><th>Uso em templates</th><th>Atualizado</th><th aria-label="Ações"/></tr></thead><tbody>{filtered.map(variable=>{const usage=templates.filter(template=>template.content.includes(variable.placeholder)).length;return <tr key={variable.id}><td><strong>{variable.label}</strong><small>{variable.description||`${variable.group}.${variable.field}`}</small></td><td><code>{variable.placeholder}</code></td><td>{variableTypeLabel(variable.type)}</td><td>{variable.required?'Sim':'Não'}</td><td>{usage}</td><td>{new Date(variable.updatedAt).toLocaleDateString('pt-BR')}</td><td><div className="contracts-row-actions"><button type="button" onClick={()=>navigator.clipboard?.writeText(variable.placeholder)}>Copiar</button><button type="button" className="is-danger" disabled={usage>0} title={usage>0?'Variável em uso por template':'Excluir variável'} onClick={()=>remove(variable)}>Excluir</button></div></td></tr>})}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhuma variável encontrada</strong><p>{variables.length?'Ajuste a busca para localizar variáveis.':'Crie a primeira variável pelo botão no cabeçalho.'}</p></div>}</section>;
+ return <section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar variáveis" placeholder="Buscar variável…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {variables.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Variável</th><th>Placeholder</th><th>Tipo</th><th>Obrigatória</th><th>Uso em templates</th><th>Atualizado</th><th>Ações</th></tr></thead><tbody>{filtered.map(variable=>{const usage=templates.filter(template=>template.content.includes(variable.placeholder)).length;return <tr key={variable.id}><td><strong>{variable.label}</strong><small>{variable.description||`${variable.group}.${variable.field}`}</small></td><td><code>{variable.placeholder}</code></td><td>{variableTypeLabel(variable.type)}</td><td>{variable.required?'Sim':'Não'}</td><td>{usage}</td><td>{new Date(variable.updatedAt).toLocaleDateString('pt-BR')}</td><td><RowActionMenu label={variable.label} onView={()=>onView(variable)} onEdit={()=>onEdit(variable)} onDelete={()=>onDelete(variable)} deleteDisabled={usage>0} deleteTitle={usage>0?'Variável em uso por template':'Excluir variável'}/></td></tr>})}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhuma variável encontrada</strong><p>{variables.length?'Ajuste a busca para localizar variáveis.':'Crie a primeira variável pelo botão no cabeçalho.'}</p></div>}</section>;
 }
 
 export default ContractsApp;
