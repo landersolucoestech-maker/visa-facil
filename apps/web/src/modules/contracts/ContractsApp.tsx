@@ -115,7 +115,7 @@ export function ContractsApp(){
 
  return <div className="crm-shell contracts-shell"><div className="crm-workspace">
   <header className="crm-topbar"><div><small>VISA FÁCIL · CRM · CONTRATOS</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions contracts-topbar-actions">
-   {section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button></>}
+   {section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button><NotificationBell/></>}
    {section==='templates'&&<><BackButton/><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
    {section==='variables'&&<><BackButton/><button className="crm-topbar-primary" type="button" onClick={()=>setVariableEditorOpen(true)}>+ Criar Variável</button><NotificationBell/></>}
   </div></header>
