@@ -37,6 +37,7 @@ const contractMockProvider = read('apps/web/src/modules/contracts/mocks/contract
 const contractMockRecords = read('apps/web/src/mocks/contracts/contracts-records.dev.json');
 const financeConfigStore = read('apps/web/src/modules/finance/financeConfigStore.ts');
 const settingsShared = read('apps/web/src/modules/settings/settingsShared.tsx');
+const settingsMockProvider = read('apps/web/src/modules/settings/mocks/settingsMockProvider.ts');
 const uiStandard = read('apps/web/src/styles/crm-ui-standard.css');
 const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store, cmsDocumentContract].join('\n');
 const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
@@ -95,7 +96,7 @@ assert(containsAll(contractEngine, ['extractTemplatePlaceholders','resolveTempla
 assert(!contractStore.toLowerCase().includes('clicksign')&&!contractStore.toLowerCase().includes('docusign'), 'Contracts signing provider must remain Autentique-only');
 
 assert(financeConfigStore.includes('./mocks/financeConfigMockProvider')&&!financeConfigStore.includes("{ id: 'cat-1'"), 'Finance configuration reference data must remain centralized in mocks');
-assert(settingsShared.includes('../../mocks/settings/settings.dev.json')&&!settingsShared.includes("{id:'u-1'"), 'Settings demonstration users/roles must remain centralized in mocks');
+assert(settingsShared.includes('./mocks/settingsMockProvider')&&settingsMockProvider.includes('settings.dev.json')&&!settingsShared.includes("{id:'u-1'"), 'Settings demonstration users/roles must remain centralized behind a validated mock provider');
 assert(containsAll(uiStandard, ['--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-modal:8px','line-height:0!important']), 'Canonical visual tokens/buttons are incomplete');
 
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
@@ -103,7 +104,7 @@ for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'lega
 }
 
 for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css','apps/web/src/styles/crm-ui-standard.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
-for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx','apps/web/src/mocks/contracts/contracts-records.dev.json','apps/web/src/mocks/finance/config.dev.json','apps/web/src/mocks/settings/settings.dev.json']) assert(existsSync(resolve(root,file)),`Missing canonical implementation/mock file: ${file}`);
+for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx','apps/web/src/mocks/contracts/contracts-records.dev.json','apps/web/src/mocks/finance/config.dev.json','apps/web/src/mocks/settings/settings.dev.json','apps/web/src/modules/settings/mocks/settingsMockProvider.ts']) assert(existsSync(resolve(root,file)),`Missing canonical implementation/mock file: ${file}`);
 
 if (failures.length) {
   console.error('Visa Fácil website/CRM/CMS contract validation failed:');
