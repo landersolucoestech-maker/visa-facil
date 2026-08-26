@@ -63,16 +63,8 @@ const MarketingApp = lazy(async () => {
   return { default: module.default };
 });
 const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
-const SettingsApp = lazy(async () => {
-  const module = await import('./modules/settings/SettingsApp');
-  await import('./styles/settings-refinement.css');
-  return { default: module.default };
-});
-const ProfileApp = lazy(async () => {
-  const module = await import('./modules/settings/ProfileApp');
-  await import('./styles/settings-refinement.css');
-  return { default: module.default };
-});
+const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
+const ProfileApp = lazy(() => import('./modules/settings/ProfileApp'));
 const SiteCmsApp = lazy(async () => {
   const module = await import('./modules/site-cms/SiteCmsApp');
   await import('./styles/ui-system.css');
