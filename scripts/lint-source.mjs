@@ -144,6 +144,7 @@ const pages=read('.github/workflows/pages.yml');
 if(!ci.includes('npm run audit'))fail('Website CI must keep dependency audit as a required gate.');
 if(!pages.includes('npm run audit'))fail('Pages deployment must keep dependency audit as a required gate.');
 if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not hardcode-enable CRM mocks; runtime policy owns the prototype default.');
+if(!pages.includes('ref: dev'))fail('Pages deployment must always build the current dev head instead of a delayed event SHA.');
 
 for(const removed of[
   'apps/web/src/modules/finance/FinanceApp.tsx',
@@ -151,6 +152,7 @@ for(const removed of[
   'apps/web/src/styles/crm-dashboard-relationship-bell-fix.css',
   'apps/web/src/styles/invoices-header-actions-fix.css',
   'apps/web/src/styles/settings-header-actions-fix.css',
+  'apps/web/src/styles/crm-header-actions-unified.css',
 ])if(existsSync(resolve(root,removed)))fail(`Obsolete duplicate file must stay removed: ${removed}`);
 
 const main=read('apps/web/src/main.tsx');
@@ -162,16 +164,23 @@ const profileApp=read('apps/web/src/modules/settings/ProfileApp.tsx');
 const routeLoader=read('apps/web/src/components/GlobalRouteLoader.tsx');
 const routeLoaderCss=read('apps/web/src/components/global-route-loader.css');
 const uiStandard=read('apps/web/src/styles/crm-ui-standard.css');
-const canonical='crm-header-actions-unified.css';
-if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be owned by the lazy shared CRM shell.');
-if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
+const uiEnforcement=read('apps/web/src/styles/crm-ui-enforcement.css');
+const attendanceSettingsPanel=read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
+
+for(const forbidden of ['../styles/ui-system.css','../styles/product-refinement.css','crm-header-actions-unified.css'])if(crmSidebar.includes(forbidden))fail(`CrmSidebar must not load global visual themes as lazy side effects: ${forbidden}.`);
 if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings-header-actions-fix'))fail('Module-specific bell overrides must not return.');
 if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correction layer must not return; the base contract owns the six-card grid.');
 if(rootApplication.includes('invoices-header-actions-fix')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
-if(!rootApplication.includes("import './styles/crm-ui-standard.css';"))fail('RootApplication must load the canonical CRM visual contract.');
-for(const token of ['--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-modal:8px','line-height:0!important'])if(!uiStandard.includes(token))fail(`Canonical CRM visual contract is incomplete: missing ${token}.`);
-for(const forbidden of ['.agenda-calendar','.marketing-calendar','.marketing-month-view'])if(uiStandard.includes(forbidden))fail(`Canonical UI layer must not override calendar geometry: ${forbidden}.`);
+for(const styleImport of ["import './styles/crm-content-layout.css';","import './styles/crm-ui-standard.css';","import './styles/crm-ui-enforcement.css';","import './styles/tableview-surface.css';"])if(!rootApplication.includes(styleImport))fail(`RootApplication is missing canonical CRM style ownership: ${styleImport}`);
+if(!rootApplication.includes("await import('./styles/sidebar-v2.css')"))fail('Site CMS must load the same authenticated sidebar geometry as CRM.');
+for(const token of ['--vf-topbar-height:72px','--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-popover:6px','--vf-radius-modal:8px'])if(!uiStandard.includes(token))fail(`Canonical CRM visual contract is incomplete: missing ${token}.`);
+for(const token of ['.contracts-topbar-actions','.settings-tabs','.contracts-status','.marketing-content-modal','.reports-import-modal'])if(!uiEnforcement.includes(token))fail(`Shared UI enforcement is incomplete: missing ${token}.`);
+for(const forbidden of ['.agenda-calendar','.marketing-calendar','.marketing-month-view'])if(uiStandard.includes(forbidden)||uiEnforcement.includes(forbidden))fail(`Canonical UI layers must not override calendar geometry: ${forbidden}.`);
+if(/letter-spacing:\s*1(?:;|!important)/.test(uiStandard)||/letter-spacing:\s*1(?:;|!important)/.test(uiEnforcement))fail('Unitless non-zero letter-spacing is invalid in the canonical UI contract.');
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
+
+for(const token of ['crm-topbar attendance-topbar visachat-ref-header','crm-topbar-actions attendance-topbar-actions visachat-ref-actions','attendance-notification-button visachat-ref-notification-button','<small>VISA FÁCIL · CRM</small>','<h1>Automações do VisaChat</h1>'])if(!attendanceSettingsPanel.includes(token))fail(`Automações do VisaChat must reuse the canonical VisaChat header contract: missing ${token}.`);
+if(attendanceSettingsPanel.includes('::before'))fail('Automações do VisaChat must not synthesize header content through pseudo-element assumptions.');
 
 const mainNavBlock=crmSidebar.match(/const MAIN_ITEMS:[\s\S]*?\];/)?.[0]??'';
 const expectedMainNav=['Dashboard','CRM','Agenda','Tarefas','VisaChat','Contratos'];
@@ -197,7 +206,7 @@ for(const token of ['<span>Perfil</span>','<span>Configurações</span>','<span>
 if(accountMenu.includes('<span>Workspaces</span>'))fail('Canonical AccountMenu must contain only Perfil, Configurações and Logout actions.');
 if(!accountMenu.includes("go(AUTHENTICATION_ENABLED ? '/login' : '/workspaces')"))fail('Logout must clear the auth session and route consistently whether authentication is enabled or disabled.');
 for(const token of ['Perfil da conta','AUTHENTICATION_ENABLED','getAuthSession','readOnly'])if(!profileApp.includes(token))fail(`Canonical profile destination is incomplete: missing ${token}.`);
-for(const token of ['.crm-global-shell .crm-global-page .crm-topbar','.site-cms-topbar','.workspace-header'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must reserve the global account slot consistently: missing ${token}.`);
+for(const token of ['.crm-topbar.crm-topbar','.site-cms-topbar.site-cms-topbar','.workspace-header.workspace-header'])if(!accountMenuCss.includes(token))fail(`Canonical account-menu CSS must reserve the global account slot consistently: missing ${token}.`);
 for(const legacyToken of ['.crm-global-shell .crm-global-page .crm-user','.workspace-account','.site-cms-user'])if(accountMenuCss.includes(legacyToken))fail(`Canonical account-menu CSS must not retain legacy neutralization selector: ${legacyToken}.`);
 if(!routeLoader.includes('global-route-loader__progress')||!routeLoader.includes('role="progressbar"')||!routeLoader.includes('M7 8h17l8 39L20 56 7 8Z'))fail('GlobalRouteLoader must render the canonical Visa Fácil mark and an accessible progress indicator.');
 if(!routeLoaderCss.includes('position:fixed')||!routeLoaderCss.includes('place-items:center')||!routeLoaderCss.includes('100dvh')||!routeLoaderCss.includes('prefers-reduced-motion'))fail('GlobalRouteLoader must remain viewport-centered, responsive and reduced-motion aware.');
