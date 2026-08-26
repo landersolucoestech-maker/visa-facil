@@ -6,7 +6,7 @@
   color:#172033!important;
 }
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-header.visachat-ref-header{
-  min-height:91px!important;
+  min-height:72px!important;
   margin:0 -18px 10px!important;
   padding:14px 18px!important;
   box-sizing:border-box!important;
@@ -98,6 +98,16 @@
 }
 .crm-global-page .visachat-ref-notifications strong{display:block;color:#102a59!important;-webkit-text-fill-color:#102a59!important;font-size:12px}
 .crm-global-page .visachat-ref-notifications p{margin:7px 0 0!important;color:#6f7b8b!important;-webkit-text-fill-color:#6f7b8b!important;font-size:10.5px!important;line-height:1.45!important}
+
+/* Exact visual match to the VisaChat topbar shown in the reference screen. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-page.visachat-ref-page .crm-topbar.visachat-ref-header.visachat-ref-header>div:first-child::before{
+  color:#8993a2!important;
+  -webkit-text-fill-color:#8993a2!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  font-weight:700!important;
+  letter-spacing:.12em!important;
+}
 
 @media(max-width:1180px){.crm-global-page .visachat-ref-actions>.account-menu--crm{flex-basis:42px}}
 @media(max-width:1050px){.visachat-ref-header{flex-direction:column}.visachat-ref-actions{justify-content:flex-start}.visachat-ref-grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-menu-row,.visachat-ref-escalation-row{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-inline-actions{grid-column:1/-1}.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-actions.visachat-ref-actions{flex-wrap:wrap!important}}
