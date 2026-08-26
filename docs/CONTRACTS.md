@@ -4,22 +4,29 @@
 
 O módulo foi materializado a partir do arquivo de referência fornecido para análise. A referência foi tratada como fonte de ideias de produto e experiência, não como código canônico a ser copiado.
 
-Foram preservados os conceitos úteis ao Visa Fácil: gestão de contratos, templates reutilizáveis, registro de variáveis no formato `{{GRUPO.CAMPO}}`, categorias, criação guiada em seis etapas, vínculo com partes, prévia documental, signatários, versões e histórico.
+Foram preservados os conceitos úteis ao Visa Fácil: gestão de contratos, templates reutilizáveis, registro de variáveis no formato `{{GRUPO.CAMPO}}`, criação guiada em seis etapas, vínculo com partes, prévia documental, signatários, versões e histórico.
 
 Foram deliberadamente removidos conceitos incompatíveis com o domínio atual, incluindo estruturas específicas de música/licenciamento, entidades de artista/obra/lançamento, provedores de assinatura concorrentes como Clicksign/DocuSign, persistências locais paralelas e qualquer operação que simulasse backend, geração inteligente ou assinatura real.
 
 ## Rotas
 
+As superfícies funcionais do módulo são:
+
 - `/crm/contratos` — contratos;
 - `/crm/contratos/templates` — templates;
-- `/crm/contratos/variaveis` — registro de variáveis;
-- `/crm/contratos/categorias` — categorias.
+- `/crm/contratos/variaveis` — registro de variáveis.
+
+Não existe uma barra de abas interna para alternar entre essas superfícies. A navegação contextual é feita pelos botões do cabeçalho: em Contratos, `Templates` aparece ao lado de `+ Novo Contrato`; em Templates, `Variáveis` aparece ao lado de `+ Novo Template`.
+
+A antiga URL `/crm/contratos/categorias` é apenas um alias de compatibilidade e redireciona para Templates. **Categorias não constituem mais entidade, store, filtro ou workspace do domínio contratual.**
 
 Todas as rotas permanecem sob o shell compartilhado do CRM e utilizam o mesmo sidebar, Account Menu e loader global dos demais módulos internos.
 
 ## Domínio canônico
 
-`modules/contracts/contractTypes.ts` é o contrato de domínio. Ele define contratos, partes, signatários, templates, categorias, variáveis, versões e eventos de histórico.
+`modules/contracts/contractTypes.ts` é o contrato de domínio. Ele define contratos, partes, signatários, templates, variáveis, versões e eventos de histórico.
+
+O **Template é a única classificação estrutural do contrato**. Não existe uma segunda entidade de Categoria concorrendo com ele. Cada contrato referencia um `templateId`, e essa relação é utilizada na criação, listagem, filtros e visualização.
 
 Estados do contrato:
 
@@ -40,14 +47,15 @@ O único provedor de assinatura admitido pelo contrato atual é `autentique`. Um
 
 - contratos;
 - templates;
-- variáveis;
-- categorias.
+- variáveis.
 
 Todas as leituras e gravações reutilizam `shared/sessionRecords.ts`, com validação runtime e unicidade de IDs. Contratos operacionais começam vazios: não há registros fictícios de contratos para produção.
 
-Templates, variáveis e categorias possuem apenas dados-base de configuração para tornar a experiência utilizável. Esses registros não representam contratos reais de clientes.
+Templates e variáveis possuem apenas dados-base de configuração para tornar a experiência utilizável. Esses registros não representam contratos reais de clientes.
 
 A persistência atual usa `sessionStorage`. Portanto, ela serve ao frontend atual e à validação de UX, mas não é banco de dados, não é multiusuário e não deve ser usada para contratos reais em produção.
+
+A remoção da antiga classificação por categorias introduziu uma nova versão do contrato de sessão para contratos/templates, evitando que estruturas obsoletas continuem sendo tratadas como canônicas. Como a persistência atual é deliberadamente limitada à sessão do navegador, ela não constitui migração de dados de produção.
 
 ## Integração com CRM
 
@@ -61,7 +69,7 @@ O CRM permanece person-only. O módulo Contratos não introduz uma entidade para
 
 O fluxo canônico possui seis etapas:
 
-1. **Template** — seleção do modelo documental;
+1. **Template** — seleção do modelo documental e da classificação estrutural do contrato;
 2. **Partes** — seleção do cliente/contratante no CRM ou preenchimento manual;
 3. **Variáveis** — dados estruturados do contrato e variáveis adicionais;
 4. **Documento** — prévia do texto resultante e identificação de placeholders pendentes;
@@ -95,7 +103,7 @@ Exemplos de variáveis de sistema:
 
 O engine não interpreta HTML e não usa `dangerouslySetInnerHTML`. A prévia documental renderiza texto e destaca placeholders ainda não resolvidos. Variáveis personalizadas podem ser registradas e reutilizadas em templates, mantendo um único catálogo canônico.
 
-Templates preservam categoria, descrição, conteúdo e estado ativo/inativo. Ao salvar um contrato, o conteúdo utilizado é preservado em `templateSnapshot`, para que uma alteração futura no template não reescreva silenciosamente documentos existentes.
+Templates preservam nome, descrição, conteúdo e estado ativo/inativo. Eles cumprem simultaneamente a função de **modelo documental e classificação do contrato**, evitando uma camada adicional de Categorias. Ao salvar um contrato, o conteúdo utilizado é preservado em `templateSnapshot`, para que uma alteração futura no template não reescreva silenciosamente documentos existentes.
 
 ## Versões e histórico
 
@@ -122,7 +130,7 @@ Não existe fallback que marque um contrato como enviado, assinado ou conectado 
 A camada server-side futura deve persistir, no mínimo:
 
 - contratos e versões;
-- templates e categorias compartilhadas;
+- templates compartilhados;
 - variáveis configuráveis;
 - partes e signatários;
 - anexos e documentos gerados;
