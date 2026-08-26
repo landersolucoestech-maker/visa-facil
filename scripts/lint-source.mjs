@@ -107,10 +107,13 @@ const contractStore=read('apps/web/src/modules/contracts/contractSessionStore.ts
 const contractEngine=read('apps/web/src/modules/contracts/contractTemplateEngine.ts');
 const contractEditor=read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
 const contractView=read('apps/web/src/modules/contracts/ContractViewModal.tsx');
+const contractMockProvider=read('apps/web/src/modules/contracts/mocks/contractsMockProvider.ts');
+const contractMockRecords=read('apps/web/src/mocks/contracts/contracts-records.dev.json');
 const contractsSources=sourceFiles.filter(path=>path.includes('/modules/contracts/')).map(read).join('\n').toLowerCase();
 for(const token of ['ContractRecord','ContractTemplate','ContractVariableDefinition','ContractSigner','ContractVersion','ContractAuditEvent'])if(!contractTypes.includes(token))fail(`Canonical contracts domain is incomplete: missing ${token}.`);
-for(const token of ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v3'])if(!contractStore.includes(token))fail(`Contracts session store is incomplete: missing ${token}.`);
-if(!contractStore.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"))fail('Contracts must not seed fake operational records.');
+for(const token of ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v4','getContractMockRecords'])if(!contractStore.includes(token))fail(`Contracts session/mock store is incomplete: missing ${token}.`);
+for(const token of ['contracts-records.dev.json','getContractMockRecords','isMockDataEnabled'])if(!contractMockProvider.includes(token))fail(`Contracts centralized mock provider is incomplete: missing ${token}.`);
+if(!contractMockRecords.includes('mock-contract-001')||!contractMockRecords.includes('"signatureProvider": null')||!contractMockRecords.includes('"signatureState": "not_sent"'))fail('Contracts must include operational fixtures without fabricating Autentique/signature completion.');
 for(const token of ['makePlaceholder','extractTemplatePlaceholders','resolveTemplateContent','mergedVariableValues','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}'])if(!contractEngine.includes(token)&&!contractStore.includes(token))fail(`Contracts template engine is incomplete: missing ${token}.`);
 for(const token of ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão'])if(!contractEditor.includes(token))fail(`Contract wizard is incomplete: missing ${token}.`);
 for(const token of ['getCrmSessionRecords','getIntegrationStatuses','isBackendConfigured','TemplatesWorkspace','VariablesWorkspace'])if(!contractsApp.includes(token))fail(`Contracts workspace is incomplete: missing ${token}.`);
@@ -119,6 +122,13 @@ if(!contractsApp.includes('Todos os templates')||!contractsApp.includes('<th>Tem
 if(!contractView.includes('Autentique')||!contractView.includes('Enviar para assinatura')||!contractView.includes('disabled'))fail('Contracts signing UI must expose Autentique truthfully without simulating delivery.');
 for(const forbidden of ['clicksign','docusign','obra musical','lançamento musical','gravadora','produtor musical'])if(contractsSources.includes(forbidden))fail(`Contracts module must not retain reference-only/music-specific concept: ${forbidden}.`);
 if(contractsSources.includes('localstorage'))fail('Contracts must use the validated session store instead of a competing localStorage persistence layer.');
+
+const financeConfigStore=read('apps/web/src/modules/finance/financeConfigStore.ts');
+const financeConfigMockProvider=read('apps/web/src/modules/finance/mocks/financeConfigMockProvider.ts');
+const settingsMockProvider=read('apps/web/src/modules/settings/mocks/settingsMockProvider.ts');
+if(!financeConfigStore.includes('./mocks/financeConfigMockProvider')||!financeConfigMockProvider.includes('config.dev.json'))fail('Finance categories/rules must remain centralized under the canonical mock directory.');
+if(!settingsShared.includes('./mocks/settingsMockProvider')||!settingsMockProvider.includes('settings.dev.json'))fail('Settings demonstration company/users/roles must remain centralized under the canonical mock directory.');
+for(const file of ['apps/web/src/mocks/crm/crm-records.dev.json','apps/web/src/mocks/agenda/agenda.dev.json','apps/web/src/mocks/tasks/tasks.dev.json','apps/web/src/mocks/attendance/attendance.dev.json','apps/web/src/mocks/finance/finance.dev.json','apps/web/src/mocks/finance/invoices.dev.json','apps/web/src/mocks/finance/config.dev.json','apps/web/src/mocks/marketing/marketing.dev.json','apps/web/src/mocks/contracts/contracts.dev.json','apps/web/src/mocks/contracts/contracts-records.dev.json','apps/web/src/mocks/settings/settings.dev.json'])if(!existsSync(resolve(root,file)))fail(`Centralized prototype fixture is missing: ${file}.`);
 
 const contactSection=read('apps/web/src/modules/public-site/components/ContactSection.tsx');
 const publicInteractions=read('apps/web/src/modules/public-site/usePublicSiteInteractions.ts');
@@ -133,7 +143,7 @@ const ci=read('.github/workflows/frontend-ci.yml');
 const pages=read('.github/workflows/pages.yml');
 if(!ci.includes('npm run audit'))fail('Website CI must keep dependency audit as a required gate.');
 if(!pages.includes('npm run audit'))fail('Pages deployment must keep dependency audit as a required gate.');
-if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not enable CRM mocks.');
+if(/VITE_CRM_MOCKS:\s*['"]?true/i.test(pages))fail('GitHub Pages production workflow must not hardcode-enable CRM mocks; runtime policy owns the prototype default.');
 
 for(const removed of[
   'apps/web/src/modules/finance/FinanceApp.tsx',
@@ -151,12 +161,16 @@ const accountMenuCss=read('apps/web/src/components/account-menu.css');
 const profileApp=read('apps/web/src/modules/settings/ProfileApp.tsx');
 const routeLoader=read('apps/web/src/components/GlobalRouteLoader.tsx');
 const routeLoaderCss=read('apps/web/src/components/global-route-loader.css');
+const uiStandard=read('apps/web/src/styles/crm-ui-standard.css');
 const canonical='crm-header-actions-unified.css';
 if(!crmSidebar.includes(canonical))fail('Canonical CRM header stylesheet must be owned by the lazy shared CRM shell.');
 if(main.includes(canonical))fail('Canonical CRM header stylesheet must not return to the public entrypoint.');
 if(main.includes('crm-dashboard-relationship-bell-fix')||main.includes('settings-header-actions-fix'))fail('Module-specific bell overrides must not return.');
 if(rootApplication.includes('crm-dashboard-kpis.css'))fail('Dashboard KPI correction layer must not return; the base contract owns the six-card grid.');
 if(rootApplication.includes('invoices-header-actions-fix')||!rootApplication.includes('invoices-header-layout.css'))fail('Invoices must use the explicit header layout contract instead of the obsolete fix layer.');
+if(!rootApplication.includes("import './styles/crm-ui-standard.css';"))fail('RootApplication must load the canonical CRM visual contract.');
+for(const token of ['--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-modal:8px','line-height:0!important'])if(!uiStandard.includes(token))fail(`Canonical CRM visual contract is incomplete: missing ${token}.`);
+for(const forbidden of ['.agenda-calendar','.marketing-calendar','.marketing-month-view'])if(uiStandard.includes(forbidden))fail(`Canonical UI layer must not override calendar geometry: ${forbidden}.`);
 if(/modules\/crm\/crm\.css|styles\/(?:finance|marketing|settings|tasks|agenda|visachat|accounting|invoices|crm-dashboard|crm-relationship)/.test(main))fail('Public entrypoint must not eagerly load CRM/module-specific styles.');
 
 const mainNavBlock=crmSidebar.match(/const MAIN_ITEMS:[\s\S]*?\];/)?.[0]??'';
@@ -178,6 +192,7 @@ if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplicatio
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
 if(!rootApplication.includes("path==='/crm/perfil'")||!rootApplication.includes('withSharedSidebar(<ProfileApp/>)'))fail('Canonical Perfil route must be owned by RootApplication and use the shared CRM shell.');
 if(!rootApplication.includes('fallback={<GlobalRouteLoader/>}')||rootApplication.includes('crm-route-loading')||rootApplication.includes('InternalFallback'))fail('Internal lazy routes must use the canonical full-viewport GlobalRouteLoader only.');
+
 for(const token of ['<span>Perfil</span>','<span>Configurações</span>','<span>Logout</span>',"href('/crm/perfil')",'AUTHENTICATION_ENABLED','signOut','aria-haspopup="menu"'])if(!accountMenu.includes(token))fail(`Canonical AccountMenu contract is incomplete: missing ${token}.`);
 if(accountMenu.includes('<span>Workspaces</span>'))fail('Canonical AccountMenu must contain only Perfil, Configurações and Logout actions.');
 if(!accountMenu.includes("go(AUTHENTICATION_ENABLED ? '/login' : '/workspaces')"))fail('Logout must clear the auth session and route consistently whether authentication is enabled or disabled.');
