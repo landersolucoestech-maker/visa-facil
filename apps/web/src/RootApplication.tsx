@@ -51,11 +51,7 @@ const FinanceInvoicesApp = lazy(async () => {
   await import('./styles/invoices-chrome.css');
   return { default: module.default };
 });
-const FinancePLApp = lazy(async () => {
-  const module = await import('./modules/finance/FinancePLApp');
-  await import('./styles/accounting-refinement.css');
-  return { default: module.default };
-});
+const FinancePLApp = lazy(() => import('./modules/finance/FinancePLApp'));
 const FinancialCategoriesApp = lazy(() => import('./modules/finance/FinancialCategoriesApp').then(module => ({ default: module.FinancialCategoriesApp })));
 const FinancialRulesApp = lazy(() => import('./modules/finance/FinancialRulesApp').then(module => ({ default: module.FinancialRulesApp })));
 const MarketingApp = lazy(async () => {
