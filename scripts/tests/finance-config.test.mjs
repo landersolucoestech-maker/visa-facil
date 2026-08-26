@@ -1,6 +1,21 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import { resolve } from 'node:path';
+import { createServer } from 'vite';
+
+const webRoot = resolve(process.cwd(), 'apps/web');
+const vite = await createServer({
+  root: webRoot,
+  logLevel: 'silent',
+  server: { middlewareMode: true },
+  appType: 'custom',
+});
+
+after(async () => {
+  await vite.close();
+});
+
+const {
   DEFAULT_FINANCE_CATEGORIES,
   DEFAULT_FINANCE_RULES,
   applyFinanceRulesWithConfig,
@@ -8,7 +23,7 @@ import {
   getFinanceRules,
   saveFinanceCategories,
   saveFinanceRules,
-} from '../../apps/web/src/modules/finance/financeConfigStore.ts';
+} = await vite.ssrLoadModule('/src/modules/finance/financeConfigStore.ts');
 
 const baseRecord = {
   id: 'ofx-rule-test',

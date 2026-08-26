@@ -14,10 +14,11 @@ test('contract placeholders are normalized, unique and resolved as plain text',(
   assert.equal(resolveTemplateContent(source,{'{{CLIENTE.NOME}}':'Ana <b>Silva</b>','{{CLIENTE.CPF}}':'123'}),'Cliente Ana <b>Silva</b> · 123 · Ana <b>Silva</b>');
 });
 
-test('contracts source keeps validated stores and an empty operational seed',()=>{
+test('contracts source keeps validated stores and centralized operational fixtures',()=>{
   const store=read('apps/web/src/modules/contracts/contractSessionStore.ts');
-  for(const token of ['isContractRecord','isContractTemplate','isContractVariable','readSessionRecords','writeSessionRecords'])assert.ok(store.includes(token),`missing ${token}`);
-  assert.ok(store.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"));
+  for(const token of ['isContractRecord','isContractTemplate','isContractVariable','readSessionRecords','writeSessionRecords','getContractMockRecords'])assert.ok(store.includes(token),`missing ${token}`);
+  assert.ok(store.includes('readSessionRecords<ContractRecord>(KEYS.contracts,getContractMockRecords,isContractRecord)'));
+  assert.equal(store.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"),false);
   assert.ok(store.includes("value.signatureProvider===null||value.signatureProvider==='autentique'"));
   assert.equal(store.includes('ContractCategory'),false);
   assert.equal(store.includes('contract-categories'),false);
