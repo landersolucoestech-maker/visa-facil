@@ -1,12 +1,18 @@
-/* Canonical CRM visual contract.
-   This layer owns shared tokens/chrome only; module-specific geometry and calendar layouts stay local. */
+/* VISA FÁCIL — canonical CRM design system.
+   This is the single visual source of truth for shared CRM chrome.
+   Module styles may own domain geometry (calendar grids, table columns, charts),
+   but must not redefine the shared typography, spacing, controls or topbar. */
+
 .crm-global-page{
+  --vf-font-ui:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --vf-navy:#102a59;
   --vf-navy-strong:#071a3b;
+  --vf-blue:#315f9d;
   --vf-red:#b22234;
   --vf-red-hover:#9f1f30;
   --vf-text:#172033;
   --vf-muted:#6f7b8b;
+  --vf-muted-soft:#8993a2;
   --vf-border:#d9dee6;
   --vf-border-soft:#e8ebef;
   --vf-page:#f5f6f8;
@@ -15,139 +21,549 @@
   --vf-danger:#a62536;
   --vf-success:#466954;
   --vf-warning:#7c651f;
-  --vf-radius-control:5px;
-  --vf-radius-card:7px;
-  --vf-radius-modal:8px;
+
+  --vf-space-1:4px;
+  --vf-space-2:8px;
+  --vf-space-3:12px;
+  --vf-space-4:16px;
+  --vf-space-5:20px;
+  --vf-space-6:24px;
+  --vf-space-7:32px;
+
+  --vf-topbar-height:72px;
   --vf-control-height:36px;
   --vf-field-height:40px;
+  --vf-row-action-size:30px;
+  --vf-icon-size:18px;
+  --vf-radius-control:5px;
+  --vf-radius-card:7px;
+  --vf-radius-popover:6px;
+  --vf-radius-modal:8px;
   --vf-shadow-menu:0 10px 24px rgba(13,27,61,.12);
-  --vf-shadow-modal:0 24px 70px rgba(5,17,39,.25);
+  --vf-shadow-modal:0 24px 60px rgba(13,27,61,.22);
+  --vf-focus:0 0 0 2px rgba(49,95,157,.10);
+
+  /* Compatibility aliases for legacy module CSS while the visual owner stays here. */
+  --crm-navy:var(--vf-navy);
+  --crm-navy-2:var(--vf-navy);
+  --crm-red:var(--vf-red);
+  --crm-blue:var(--vf-blue);
+  --crm-bg:var(--vf-page);
+  --crm-card:var(--vf-surface);
+  --crm-border:var(--vf-border);
+  --crm-text:var(--vf-text);
+  --crm-muted:var(--vf-muted);
+  --crm-control-h:var(--vf-control-height);
+  --crm-control-radius:var(--vf-radius-control);
+  --crm-card-radius:var(--vf-radius-card);
+  --crm-shadow-card:none;
+
+  min-height:100dvh;
+  background:var(--vf-page);
   color:var(--vf-text);
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:var(--vf-font-ui);
+  font-size:14px;
+  line-height:1.45;
 }
 
+.crm-global-shell{min-height:100dvh;background:var(--vf-page)}
+.crm-global-page>.crm-shell,
+.crm-global-page .crm-shell,
+.crm-global-page .crm-workspace,
+.crm-global-page .attendance-shell,
+.crm-global-page .agenda-shell,
+.crm-global-page .tasks-shell,
+.crm-global-page .contracts-shell,
+.crm-global-page .finance-shell,
+.crm-global-page .finance-transactions-shell,
+.crm-global-page .marketing-shell,
+.crm-global-page .reports-shell,
+.crm-global-page .settings-shell{
+  min-height:100dvh!important;
+  background:var(--vf-page);
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-workspace,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .finance-transactions-workspace,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .invoice-workspace-main,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .accounting-workspace-main{
+  margin-left:0!important;
+}
+.crm-global-page *,
+.crm-global-page *::before,
+.crm-global-page *::after{box-sizing:border-box}
 .crm-global-page :is(button,input,select,textarea){font-family:inherit}
-.crm-global-page :is(input,select,textarea){color:var(--vf-text)}
-.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]){min-height:var(--vf-field-height);border-color:var(--vf-border);border-radius:var(--vf-radius-control)}
-.crm-global-page textarea{min-height:96px;border-color:var(--vf-border);border-radius:var(--vf-radius-control);line-height:1.45}
-.crm-global-page :is(input,select,textarea):focus{outline:0;border-color:#9cb0cf;box-shadow:0 0 0 3px rgba(27,54,95,.06)}
+.crm-global-page :is(img,svg,video,canvas){max-width:100%}
 
-/* Topbar typography and actions */
-.crm-global-page :is(.crm-topbar,.invoice-topbar) h1{color:var(--vf-text);font-size:21px!important;font-weight:750!important;line-height:1.15!important;letter-spacing:-.02em!important}
-.crm-global-page :is(.crm-topbar,.invoice-topbar)>div:first-child>p{color:var(--vf-muted)!important;font-size:11.5px!important;line-height:1.4!important}
-.crm-global-page .crm-topbar-actions,
-.crm-global-page .invoice-topbar-actions,
-.crm-global-page .contracts-topbar-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important}
+/* ---------- Shared topbar ---------- */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar{
+  position:sticky!important;
+  top:0!important;
+  z-index:30!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:var(--vf-topbar-height)!important;
+  height:auto!important;
+  margin:0!important;
+  padding-top:11px!important;
+  padding-bottom:11px!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  overflow:visible!important;
+  border:0!important;
+  border-bottom:1px solid var(--vf-border)!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar>div:first-child{
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar>div:first-child>small{
+  display:block!important;
+  margin:0!important;
+  color:var(--vf-muted-soft)!important;
+  -webkit-text-fill-color:var(--vf-muted-soft)!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+  font-weight:700!important;
+  letter-spacing:.09em!important;
+  text-transform:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar h1{
+  margin:2px 0 1px!important;
+  padding:0!important;
+  color:var(--vf-text)!important;
+  -webkit-text-fill-color:var(--vf-text)!important;
+  font-size:21px!important;
+  line-height:1.15!important;
+  font-weight:750!important;
+  letter-spacing:-.02em!important;
+  text-shadow:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar>div:first-child>p{
+  margin:2px 0 0!important;
+  padding:0!important;
+  color:var(--vf-muted)!important;
+  -webkit-text-fill-color:var(--vf-muted)!important;
+  font-size:11.5px!important;
+  line-height:1.4!important;
+  font-weight:400!important;
+  letter-spacing:0!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{
+  min-width:0!important;
+  min-height:var(--vf-control-height)!important;
+  margin:0 0 0 auto!important;
+  padding:0!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  flex-wrap:nowrap!important;
+}
 
+/* ---------- Header actions ---------- */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  .crm-topbar-primary,
+  .crm-btn-primary,
+  .invoice-primary-action,
+  .settings-btn-primary,
+  .contracts-primary-button,
+  .tasks-new-button,
+  .attendance-new-conversation,
+  .marketing-new
+){
+  width:auto!important;
+  min-width:0!important;
+  height:var(--vf-control-height)!important;
+  min-height:var(--vf-control-height)!important;
+  max-height:var(--vf-control-height)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:0 12px!important;
+  border:1px solid var(--vf-red)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:var(--vf-red)!important;
+  background-image:none!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+  text-decoration:none!important;
+  white-space:nowrap!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  .crm-topbar-primary,.crm-btn-primary,.invoice-primary-action,.settings-btn-primary,.contracts-primary-button,.tasks-new-button,.attendance-new-conversation,.marketing-new
+):hover:not(:disabled){border-color:var(--vf-red-hover)!important;background:var(--vf-red-hover)!important}
+
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-topbar-primary):not(.crm-btn-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]),
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  .crm-btn-secondary,
+  .invoice-secondary-action,
+  .finance-header-nav-button,
+  .finance-ofx-button,
+  .settings-btn-ghost,
+  .reports-action-button,
+  .contracts-secondary-button,
+  .attendance-settings-button
+){
+  width:auto!important;
+  min-width:0!important;
+  height:var(--vf-control-height)!important;
+  min-height:var(--vf-control-height)!important;
+  max-height:var(--vf-control-height)!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:0 11px!important;
+  border:1px solid #d8dde5!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  background-image:none!important;
+  color:#1b365f!important;
+  -webkit-text-fill-color:#1b365f!important;
+  box-shadow:none!important;
+  font-size:10.5px!important;
+  line-height:1!important;
+  font-weight:650!important;
+  letter-spacing:0!important;
+  text-decoration:none!important;
+  white-space:nowrap!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions > :is(button,a):not(.crm-topbar-primary):not(.crm-btn-primary):not([aria-label="Alertas"]):not([aria-label^="Notificações"]):hover:not(:disabled),
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(.crm-btn-secondary,.invoice-secondary-action,.finance-header-nav-button,.finance-ofx-button,.settings-btn-ghost,.reports-action-button,.contracts-secondary-button,.attendance-settings-button):hover:not(:disabled){
+  border-color:#aeb8c7!important;
+  background:var(--vf-soft)!important;
+  color:#102a59!important;
+  -webkit-text-fill-color:#102a59!important;
+}
+
+/* Canonical notification control. The glyph is owned here so local bell drawings cannot drift. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"],button[aria-label^="Notificações"],
+  .attendance-notification-button,.tasks-notification-button,.agenda-notification-button,.finance-notification-button,
+  .invoice-notification-button,.accounting-notification-button,.marketing-bell,.reports-notification-button,
+  .settings-notification-btn,.settings-notification-button,.contracts-notification-button,.crm-notification-button
+){
+  position:relative!important;
+  width:var(--vf-control-height)!important;
+  min-width:var(--vf-control-height)!important;
+  max-width:var(--vf-control-height)!important;
+  height:var(--vf-control-height)!important;
+  min-height:var(--vf-control-height)!important;
+  max-height:var(--vf-control-height)!important;
+  flex:0 0 var(--vf-control-height)!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid #d8dde5!important;
+  border-radius:var(--vf-radius-control)!important;
+  background-color:#fff!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b365f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-size:var(--vf-icon-size) var(--vf-icon-size)!important;
+  color:transparent!important;
+  -webkit-text-fill-color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"],button[aria-label^="Notificações"],.attendance-notification-button,.tasks-notification-button,.agenda-notification-button,.finance-notification-button,.invoice-notification-button,.accounting-notification-button,.marketing-bell,.reports-notification-button,.settings-notification-btn,.settings-notification-button,.contracts-notification-button,.crm-notification-button
+):hover:not(:disabled),
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"],button[aria-label^="Notificações"],.attendance-notification-button,.tasks-notification-button,.agenda-notification-button,.finance-notification-button,.invoice-notification-button,.accounting-notification-button,.marketing-bell,.reports-notification-button,.settings-notification-btn,.settings-notification-button,.contracts-notification-button,.crm-notification-button
+)[aria-expanded="true"]{border-color:#aeb8c7!important;background-color:var(--vf-soft)!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  button[aria-label="Alertas"],button[aria-label^="Notificações"],.attendance-notification-button,.tasks-notification-button,.agenda-notification-button,.finance-notification-button,.invoice-notification-button,.accounting-notification-button,.marketing-bell,.reports-notification-button,.settings-notification-btn,.settings-notification-button,.contracts-notification-button,.crm-notification-button
+)>svg{display:none!important}
+
+/* Notification count stays visible even though the local glyph is hidden. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions :is(
+  .attendance-notification-button,.tasks-notification-button,.agenda-notification-button,.finance-notification-button,.invoice-notification-button,.accounting-notification-button
+)>span{
+  position:absolute!important;
+  right:-4px!important;
+  top:-4px!important;
+  min-width:16px!important;
+  width:auto!important;
+  height:16px!important;
+  min-height:16px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0 4px!important;
+  border:2px solid #fff!important;
+  border-radius:8px!important;
+  background:var(--vf-red)!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:8px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+
+/* ---------- Inputs and form controls ---------- */
+.crm-global-page :is(input,select,textarea){max-width:100%;color:var(--vf-text)}
+.crm-global-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]){
+  min-height:var(--vf-field-height);
+  border:1px solid var(--vf-border);
+  border-radius:var(--vf-radius-control);
+  background:#fff;
+  font-size:11px;
+}
+.crm-global-page textarea{
+  min-height:96px;
+  border:1px solid var(--vf-border);
+  border-radius:var(--vf-radius-control);
+  background:#fff;
+  font-size:11px;
+  line-height:1.45;
+}
+.crm-global-page :is(input,select,textarea):focus{outline:0;border-color:#8fa1ba;box-shadow:var(--vf-focus)}
+.crm-global-page :is(input,select,textarea)::placeholder{color:#9aa4b2;opacity:1}
+.crm-global-page label>span{color:#56667b;font-size:9.5px;font-weight:750;line-height:1.3;letter-spacing:.02em}
+
+/* ---------- Shared buttons/states outside topbars ---------- */
 .crm-global-page :is(
- .crm-topbar-primary,
- .crm-btn-primary,
- .crm-btn-secondary,
- .invoice-primary-action,
- .invoice-secondary-action,
- .finance-header-nav-button,
- .finance-ofx-button,
- .settings-btn-primary,
- .settings-btn-ghost,
- .reports-action-button,
- .contracts-primary-button,
- .contracts-secondary-button
-){min-height:var(--vf-control-height);height:var(--vf-control-height);display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:0 12px;border-radius:var(--vf-radius-control);box-shadow:none;font-size:10.5px;font-weight:700;white-space:nowrap}
+ .crm-btn-primary,.crm-btn-secondary,.crm-topbar-primary,
+ .marketing-new,.marketing-edit-btn,.finance-header-link,.finance-header-nav-button,.finance-ofx-button,.finance-import-button,
+ .reports-action-button,.tasks-new-button,.settings-btn,.settings-btn-primary,.settings-btn-ghost,
+ .contracts-primary-button,.contracts-secondary-button,.crm-relationship-card__heading>button
+){
+  min-height:var(--vf-control-height);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 12px;
+  border-radius:var(--vf-radius-control);
+  box-shadow:none;
+  font-size:10.5px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+.crm-global-page :is(.crm-btn-primary,.crm-topbar-primary,.marketing-new,.tasks-new-button,.settings-btn-primary,.contracts-primary-button){border:1px solid var(--vf-red);background:var(--vf-red);color:#fff}
+.crm-global-page :is(.crm-btn-primary,.crm-topbar-primary,.marketing-new,.tasks-new-button,.settings-btn-primary,.contracts-primary-button):hover:not(:disabled){border-color:var(--vf-red-hover);background:var(--vf-red-hover)}
+.crm-global-page :is(.crm-btn-secondary,.finance-header-nav-button,.finance-ofx-button,.reports-action-button,.settings-btn-ghost,.contracts-secondary-button){border:1px solid var(--vf-border);background:#fff;color:#344256}
+.crm-global-page :is(.crm-btn-secondary,.finance-header-nav-button,.finance-ofx-button,.reports-action-button,.settings-btn-ghost,.contracts-secondary-button):hover:not(:disabled){border-color:#aeb8c7;background:var(--vf-soft);color:#102a59}
+.crm-global-page button:disabled,.crm-global-page [aria-disabled="true"]{cursor:not-allowed!important;opacity:.52}
+.crm-global-page :is(button,a,[role="button"],input,select,textarea):focus-visible{outline:2px solid var(--vf-blue);outline-offset:2px}
 
-/* Text in topbar actions intentionally uses line-height 0: this is the visual centering contract chosen for this UI. */
-.crm-global-page :is(.crm-topbar-actions,.invoice-topbar-actions,.contracts-topbar-actions) :is(
- button,
- .crm-topbar-primary,
- .crm-btn-primary,
- .crm-btn-secondary,
- .invoice-primary-action,
- .invoice-secondary-action,
- .finance-header-nav-button,
- .finance-ofx-button,
- .settings-btn-primary,
- .settings-btn-ghost,
- .reports-action-button,
- .contracts-primary-button,
- .contracts-secondary-button
-){line-height:0!important;align-items:center!important;justify-content:center!important}
-
-.crm-global-page :is(.crm-topbar-primary,.crm-btn-primary,.invoice-primary-action,.settings-btn-primary){border:1px solid var(--vf-red)!important;background:var(--vf-red)!important;color:#fff!important}
-.crm-global-page :is(.crm-topbar-primary,.crm-btn-primary,.invoice-primary-action,.settings-btn-primary):hover:not(:disabled){border-color:var(--vf-red-hover)!important;background:var(--vf-red-hover)!important}
-.crm-global-page :is(.crm-btn-secondary,.invoice-secondary-action,.finance-header-nav-button,.finance-ofx-button,.settings-btn-ghost,.reports-action-button,.contracts-secondary-button){border:1px solid var(--vf-border)!important;background:#fff!important;color:#344256!important}
-.crm-global-page :is(.crm-btn-secondary,.invoice-secondary-action,.finance-header-nav-button,.finance-ofx-button,.settings-btn-ghost,.reports-action-button,.contracts-secondary-button):hover:not(:disabled){border-color:#aeb8c5!important;background:var(--vf-soft)!important}
-
-/* Icon-only controls */
-.crm-global-page :is(.crm-notification-button,.invoice-notification-button,.contracts-notification-button,.settings-notification-button){width:36px!important;min-width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;display:grid!important;place-items:center!important;border:1px solid #d8dde5!important;border-radius:var(--vf-radius-control)!important;background:#fff!important;color:#1b365f!important;line-height:0!important;box-shadow:none!important}
-
-/* KPI cards: shared chrome and typography without changing module-specific grid counts. */
-.crm-global-page :is(.contracts-kpi,.invoice-kpis article,.finance-stats article,.crm-kpi-card,.tasks-kpi,.marketing-kpi,.reports-kpi,.settings-kpi){border:1px solid #dfe3e8!important;border-radius:var(--vf-radius-card)!important;background:#fff!important;box-shadow:none!important}
-.crm-global-page :is(.contracts-kpi,.invoice-kpis article,.finance-stats article,.crm-kpi-card,.tasks-kpi,.marketing-kpi,.reports-kpi,.settings-kpi)>span{color:#667386!important;font-size:9.5px!important;font-weight:650!important;letter-spacing:0!important}
-.crm-global-page :is(.contracts-kpi,.invoice-kpis article,.finance-stats article,.crm-kpi-card,.tasks-kpi,.marketing-kpi,.reports-kpi,.settings-kpi)>strong{color:var(--vf-text)!important;font-size:20px!important;font-weight:750!important;line-height:1.1!important;letter-spacing:-.02em!important}
-.crm-global-page :is(.contracts-kpi,.invoice-kpis article,.finance-stats article,.crm-kpi-card,.tasks-kpi,.marketing-kpi,.reports-kpi,.settings-kpi)>small{color:#8a94a3!important;font-size:9px!important}
-
-/* Modal overlays */
+/* ---------- Cards, KPI cards and standard surfaces ---------- */
 .crm-global-page :is(
- .crm-modal-backdrop,
- .tasks-modal-backdrop,
- .agenda-modal-backdrop,
- .attendance-modal-backdrop,
- .finance-modal-backdrop,
- .finance-accounting-backdrop,
- .settings-modal-backdrop,
- .contracts-modal-backdrop,
- [class*="marketing-modal-backdrop"]
-){position:fixed!important;inset:0!important;z-index:1200!important;display:grid!important;place-items:center!important;padding:22px!important;background:rgba(8,19,37,.52)!important;backdrop-filter:blur(3px)}
+ .crm-panel,.crm-kpi-card,.crm-relationship-card,.crm-relationship-summary article,
+ .tasks-card,.tasks-panel,.finance-card,.finance-config-card,.finance-table-card,.finance-kpi-card,
+ .invoice-list-card,.accounting-report-card,.marketing-panel,.marketing-table-card,
+ .reports-card,.reports-dataset-card,.settings-card,.contracts-panel,.visachat-ref-card,.visachat-ref-inner-card
+){
+  border-color:var(--vf-border)!important;
+  border-radius:var(--vf-radius-card)!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.finance-stats article,.tasks-kpis article,.tasks-stats article,.settings-user-metrics article){
+  min-width:0;
+  min-height:88px;
+  padding:14px 15px;
+  border:1px solid var(--vf-border);
+  border-radius:var(--vf-radius-card);
+  background:#fff;
+  box-shadow:none;
+}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.finance-stats article,.tasks-kpis article,.tasks-stats article,.settings-user-metrics article) :is(span,small){font-size:10px;color:#7b8796}
+.crm-global-page :is(.crm-kpi-card,.crm-relationship-summary article,.marketing-kpis article,.finance-kpis article,.finance-stats article,.tasks-kpis article,.tasks-stats article,.settings-user-metrics article) strong{font-size:22px;line-height:1.1;font-weight:750;letter-spacing:-.02em;color:var(--vf-text)}
 
+/* ---------- Tabs ---------- */
+.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs){
+  display:flex;
+  align-items:center;
+  gap:0;
+  padding:0;
+  border:0;
+  border-bottom:1px solid var(--vf-border);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs)>button{
+  min-height:38px;
+  padding:0 12px;
+  border:0;
+  border-bottom:2px solid transparent;
+  border-radius:0;
+  background:transparent;
+  color:#687586;
+  box-shadow:none;
+  font-size:10.5px;
+  font-weight:700;
+}
+.crm-global-page :is(.crm-relationship-tabs,.settings-tabs,.visachat-ref-tabs)>button.is-active,
+.crm-global-page .crm-relationship-tabs>button[aria-selected="true"]{
+  border-bottom-color:var(--vf-navy);
+  background:transparent;
+  color:var(--vf-navy);
+}
+
+/* ---------- Tables/list density ---------- */
+.crm-global-page [class*="table-head"]{color:#667386;font-size:9px;font-weight:700;line-height:1.2;letter-spacing:.045em}
+.crm-global-page [class*="table-row"],.crm-global-page [class*="-row"]{line-height:1.35}
+.crm-global-page :is(.crm-actions-trigger,.tasks-actions-trigger,.finance-actions-trigger,.invoice-action-trigger,.contracts-actions-trigger){
+  width:var(--vf-row-action-size)!important;
+  min-width:var(--vf-row-action-size)!important;
+  height:var(--vf-row-action-size)!important;
+  min-height:var(--vf-row-action-size)!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  color:#435166!important;
+  box-shadow:none!important;
+}
+
+/* ---------- Badges/statuses ---------- */
+.crm-global-page :is(.marketing-status,.finance-status,.tasks-status,.tasks-priority,.attendance-status,.reports-status,.settings-status,.crm-view-badges b){
+  min-height:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 7px;
+  border-radius:4px!important;
+  box-shadow:none!important;
+  font-size:9px;
+  line-height:1;
+  font-weight:650;
+  white-space:nowrap;
+}
+
+/* ---------- Menus/popovers ---------- */
 .crm-global-page :is(
- [role="dialog"],
- .crm-record-modal,
- .tasks-modal,
- .agenda-modal,
- .attendance-modal,
- .finance-form-modal,
- .finance-view-modal,
- .finance-ofx-modal,
- .finance-accounting-modal,
- .invoice-detail-modal,
- .fiscal-document-modal,
- .settings-mini-modal,
- .contracts-editor,
- .contracts-view,
- .contracts-template-editor,
- [class*="marketing-modal"]
-){border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-modal)!important;background:#fff;box-shadow:var(--vf-shadow-modal)!important}
+ .crm-actions-menu,.tasks-actions-menu,.finance-actions-menu,.invoice-actions-menu,.contracts-actions-menu,
+ .marketing-dropdown,.agenda-dropdown,.attendance-dropdown,.tasks-dropdown,.finance-dropdown,.reports-dropdown,.settings-dropdown,
+ .marketing-action-menu,.accounting-actions-menu
+){
+  max-width:calc(100vw - 24px);
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-popover)!important;
+  background:#fff!important;
+  box-shadow:var(--vf-shadow-menu)!important;
+}
+.crm-global-page :is(.crm-actions-menu,.tasks-actions-menu,.finance-actions-menu,.invoice-actions-menu,.contracts-actions-menu,.marketing-action-menu) button{min-height:32px;border-radius:4px;font-size:10px;font-weight:650}
 
-.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-modal,.agenda-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor)>header{border-bottom:1px solid var(--vf-border-soft);background:#fff}
-.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-modal,.agenda-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor)>header h2{color:var(--vf-text);font-size:18px;line-height:1.2}
-.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-modal,.agenda-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor)>header p{color:var(--vf-muted);font-size:10.5px;line-height:1.45}
-.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-modal,.agenda-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor)>header>button[aria-label="Fechar"]{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;display:grid!important;place-items:center!important;border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-control)!important;background:#fff!important;color:#4d5b70!important;font-size:18px!important;line-height:1!important;box-shadow:none!important}
-
-/* Form fields inside modal/dialog surfaces */
-.crm-global-page :is([role="dialog"],.contracts-editor,.contracts-template-editor,.finance-form-modal,.finance-ofx-modal) :is(input,select){height:var(--vf-field-height)!important;min-height:var(--vf-field-height)!important;padding-inline:10px!important;border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-control)!important;background:#fff!important;font-size:11px!important}
-.crm-global-page :is([role="dialog"],.contracts-editor,.contracts-template-editor,.finance-form-modal,.finance-ofx-modal) textarea{min-height:96px!important;padding:10px!important;border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-control)!important;background:#fff!important;font-size:11px!important;line-height:1.45!important}
-.crm-global-page :is([role="dialog"],.contracts-editor,.contracts-template-editor,.finance-form-modal,.finance-ofx-modal) label>span{color:#56667b;font-size:9px;font-weight:800;letter-spacing:.035em}
-
-/* Dropdowns and row-action menus */
+/* ---------- Modal/dialog contract ---------- */
 .crm-global-page :is(
- .crm-actions-menu,
- .tasks-actions-menu,
- .finance-actions-menu,
- .invoice-actions-menu,
- .contracts-actions-menu,
- .account-menu-dropdown,
- .settings-dropdown,
- .finance-dropdown,
- [class*="marketing-actions-menu"]
-){border:1px solid var(--vf-border)!important;border-radius:6px!important;background:#fff!important;box-shadow:var(--vf-shadow-menu)!important}
-.crm-global-page :is(.crm-actions-menu,.tasks-actions-menu,.finance-actions-menu,.invoice-actions-menu,.contracts-actions-menu,.account-menu-dropdown,.settings-dropdown,.finance-dropdown,[class*="marketing-actions-menu"]) button{min-height:32px;border-radius:4px;font-size:9.8px;font-weight:650}
+ .crm-modal-backdrop,.tasks-modal-backdrop,.agenda-modal-backdrop,.attendance-modal-backdrop,.finance-modal-backdrop,
+ .finance-accounting-backdrop,.settings-modal-backdrop,.contracts-modal-backdrop,.reports-modal-backdrop,[class*="marketing-modal-backdrop"]
+){
+  position:fixed!important;
+  inset:0!important;
+  z-index:1200!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:20px!important;
+  background:rgba(8,19,37,.52)!important;
+  backdrop-filter:blur(3px)!important;
+}
+.crm-global-page :is(
+ [role="dialog"],.crm-record-modal,.crm-form-modal,.crm-view-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,
+ .attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.fiscal-document-modal,
+ .settings-mini-modal,.contracts-editor,.contracts-view,.contracts-template-editor,.reports-import-modal,[class*="marketing-modal"]
+){
+  max-width:calc(100vw - 40px);
+  max-height:calc(100dvh - 40px);
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-modal)!important;
+  background:#fff;
+  box-shadow:var(--vf-shadow-modal)!important;
+}
+.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor,.reports-import-modal)>header{
+  border-bottom:1px solid var(--vf-border-soft);
+  background:#fff;
+}
+.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor,.reports-import-modal)>header h2{color:var(--vf-text);font-size:18px;line-height:1.2}
+.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor,.reports-import-modal)>header p{color:var(--vf-muted);font-size:10.5px;line-height:1.45}
+.crm-global-page :is([role="dialog"],.crm-record-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.settings-mini-modal,.contracts-template-editor,.reports-import-modal)>header>button[aria-label="Fechar"]{
+  width:32px!important;
+  min-width:32px!important;
+  height:32px!important;
+  min-height:32px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid var(--vf-border)!important;
+  border-radius:var(--vf-radius-control)!important;
+  background:#fff!important;
+  color:#4d5b70!important;
+  font-size:18px!important;
+  line-height:1!important;
+  box-shadow:none!important;
+}
 
-/* Canonical row action trigger */
-.crm-global-page :is(.crm-actions-trigger,.tasks-actions-trigger,.finance-actions-trigger,.invoice-action-trigger,.contracts-actions-trigger){width:30px!important;min-width:30px!important;height:30px!important;min-height:30px!important;display:grid!important;place-items:center!important;padding:0!important;border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-control)!important;background:#fff!important;color:#435166!important;font-size:17px!important;font-weight:700!important;line-height:1!important;box-shadow:none!important}
+/* ---------- Empty/loading states ---------- */
+.crm-global-page :is(.crm-dashboard-empty,.tasks-empty,.attendance-empty,.reports-empty,.finance-empty,.settings-empty,.contracts-empty){
+  color:#7b8796;
+  font-size:11px;
+  line-height:1.5;
+}
 
-/* Standard cards/table surfaces. Calendar canvases are deliberately not selected here. */
-.crm-global-page :is(.contracts-panel,.finance-card,.finance-config-card,.invoice-list-card,.settings-card,.reports-card,.tasks-table-card,.crm-directory-card){border:1px solid var(--vf-border)!important;border-radius:var(--vf-radius-card)!important;background:#fff!important;box-shadow:none!important}
-
+/* ---------- Responsive contract ---------- */
+@media(max-width:1180px){
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar{gap:12px!important}
+}
+@media(max-width:900px){
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar{
+    min-height:var(--vf-topbar-height)!important;
+    align-items:center!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{
+    max-width:62%;
+    overflow-x:auto;
+    overflow-y:visible;
+    scrollbar-width:thin;
+  }
+}
 @media(max-width:720px){
- .crm-global-page :is(.crm-modal-backdrop,.tasks-modal-backdrop,.agenda-modal-backdrop,.attendance-modal-backdrop,.finance-modal-backdrop,.finance-accounting-backdrop,.settings-modal-backdrop,.contracts-modal-backdrop,[class*="marketing-modal-backdrop"]){padding:10px!important}
- .crm-global-page :is([role="dialog"],.contracts-editor,.contracts-view,.contracts-template-editor,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.invoice-detail-modal){max-width:calc(100vw - 20px)!important}
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar{
+    min-height:auto!important;
+    padding-top:10px!important;
+    padding-bottom:10px!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    gap:8px!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar>div:first-child>p{display:none!important}
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions{
+    width:100%!important;
+    max-width:100%!important;
+    justify-content:flex-start!important;
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+    padding-bottom:2px!important;
+  }
+  .crm-global-page :is(.crm-modal-backdrop,.tasks-modal-backdrop,.agenda-modal-backdrop,.attendance-modal-backdrop,.finance-modal-backdrop,.finance-accounting-backdrop,.settings-modal-backdrop,.contracts-modal-backdrop,.reports-modal-backdrop,[class*="marketing-modal-backdrop"]){padding:10px!important}
+  .crm-global-page :is([role="dialog"],.crm-record-modal,.crm-form-modal,.crm-view-modal,.tasks-form-modal,.tasks-view-modal,.agenda-form-modal,.agenda-view-modal,.attendance-modal,.finance-form-modal,.finance-view-modal,.finance-ofx-modal,.finance-accounting-modal,.invoice-detail-modal,.fiscal-document-modal,.settings-mini-modal,.contracts-editor,.contracts-view,.contracts-template-editor,.reports-import-modal,[class*="marketing-modal"]){max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 20px)!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .crm-global-page *,
+  .crm-global-page *::before,
+  .crm-global-page *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
