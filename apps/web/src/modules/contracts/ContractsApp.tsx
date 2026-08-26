@@ -4,10 +4,11 @@ import { isBackendConfigured } from '../../shared/apiClient';
 import { getIntegrationStatuses } from '../integrations/integrationApi';
 import { ContractEditorModal } from './ContractEditorModal';
 import { ContractTemplateModal, type ContractTemplateDraft } from './ContractTemplateModal';
+import { ContractVariableModal, type ContractVariableDraft } from './ContractVariableModal';
 import { ContractViewModal } from './ContractViewModal';
 import { createAudit, createVersion, getContractRecords, getContractTemplates, getContractVariables, saveContractRecords, saveContractTemplates, saveContractVariables } from './contractSessionStore';
-import { extractTemplatePlaceholders, makePlaceholder, nextVersionLabel } from './contractTemplateEngine';
-import { CONTRACT_STATUS_LABEL, type ContractEditorDraft, type ContractRecord, type ContractTemplate, type ContractVariableDefinition, type ContractVariableType } from './contractTypes';
+import { extractTemplatePlaceholders, nextVersionLabel } from './contractTemplateEngine';
+import { CONTRACT_STATUS_LABEL, type ContractEditorDraft, type ContractRecord, type ContractTemplate, type ContractVariableDefinition } from './contractTypes';
 import './contracts.css';
 
 type Section='contracts'|'templates'|'variables';
@@ -21,9 +22,11 @@ function date(value:string){if(!value)return'—';const parsed=new Date(`${value
 function statusClass(status:ContractRecord['status']){return `is-${status.replaceAll('_','-')}`}
 function statusClosed(status:ContractRecord['status']){return status==='expired'||status==='terminated'||status==='cancelled'}
 function canEditRecord(record:ContractRecord){return record.status==='draft'||record.status==='review'}
+function variableTypeLabel(type:ContractVariableDefinition['type']){const labels:Record<ContractVariableDefinition['type'],string>={text:'Texto',textarea:'Texto longo',number:'Número',date:'Data',currency:'Moeda',email:'E-mail',cpf:'CPF',passport:'Passaporte'};return labels[type]}
 
 function Kpi({label,value,note}:{label:string;value:string|number;note:string}){return <article className="contracts-kpi"><span>{label}</span><strong>{value}</strong><small>{note}</small></article>}
 function NotificationBell(){return <button type="button" aria-label="Notificações — nenhuma disponível" title="Nenhuma notificação de Contratos disponível" disabled/>}
+function BackButton(){return <button type="button" onClick={()=>go('/crm/contratos')}><span aria-hidden="true">←</span> Voltar</button>}
 
 export function ContractsApp(){
  const section=sectionFromPath();
@@ -37,6 +40,7 @@ export function ContractsApp(){
  const [viewRecord,setViewRecord]=useState<ContractRecord>();
  const [editorOpen,setEditorOpen]=useState(false);
  const [templateEditorOpen,setTemplateEditorOpen]=useState(false);
+ const [variableEditorOpen,setVariableEditorOpen]=useState(false);
  const [editingTemplate,setEditingTemplate]=useState<ContractTemplate>();
  const [autentiqueState,setAutentiqueState]=useState('Backend não configurado');
  const contacts=useMemo(()=>getCrmSessionRecords(),[]);
@@ -100,6 +104,11 @@ export function ContractsApp(){
   if(!window.confirm(`Excluir o template “${template.name}”?`))return;
   persistTemplates(templates.filter(item=>item.id!==template.id));
  };
+ const saveVariable=(draft:ContractVariableDraft)=>{
+  const stamp=new Date().toISOString();
+  persistVariables([{id:crypto.randomUUID(),...draft,createdAt:stamp,updatedAt:stamp},...variables]);
+  setVariableEditorOpen(false);
+ };
 
  const title=section==='contracts'?'Contratos':section==='templates'?'Templates de Contrato':'Variáveis de Template';
  const subtitle=section==='contracts'?'Gestão de contratos, documentos e preparação para assinatura eletrônica':section==='templates'?'Modelos reutilizáveis que classificam e estruturam cada contrato':'Registro canônico de placeholders reutilizáveis';
@@ -107,18 +116,19 @@ export function ContractsApp(){
  return <div className="crm-shell contracts-shell"><div className="crm-workspace">
   <header className="crm-topbar"><div><small>VISA FÁCIL · CRM · CONTRATOS</small><h1>{title}</h1><p>{subtitle}</p></div><div className="crm-topbar-actions contracts-topbar-actions">
    {section==='contracts'&&<><button type="button" onClick={()=>go('/crm/contratos/templates')}>Templates</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingRecord(undefined);setEditorOpen(true)}}>+ Novo Contrato</button></>}
-   {section==='templates'&&<><button type="button" onClick={()=>go('/crm/contratos')}>Voltar</button><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
-   {section==='variables'&&<><button type="button" onClick={()=>go('/crm/contratos')}>Voltar</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
+   {section==='templates'&&<><BackButton/><button type="button" onClick={()=>go('/crm/contratos/variaveis')}>Variáveis</button><button className="crm-topbar-primary" type="button" onClick={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}}>+ Novo Template</button><NotificationBell/></>}
+   {section==='variables'&&<><BackButton/><button className="crm-topbar-primary" type="button" onClick={()=>setVariableEditorOpen(true)}>+ Criar Variável</button><NotificationBell/></>}
   </div></header>
   <main className="contracts-content">
    {section==='contracts'&&<ContractsList records={filteredRecords} allRecords={records} templates={templates} query={query} setQuery={setQuery} statusFilter={statusFilter} setStatusFilter={setStatusFilter} templateFilter={templateFilter} setTemplateFilter={setTemplateFilter} stats={stats} activeValue={activeValue} onView={setViewRecord} onEdit={record=>{setEditingRecord(record);setEditorOpen(true)}} onDelete={removeRecord}/>} 
-   {section==='templates'&&<TemplatesWorkspace templates={templates} records={records} onNew={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(true)}} onEdit={template=>{setEditingTemplate(template);setTemplateEditorOpen(true)}} onDelete={removeTemplate}/>} 
+   {section==='templates'&&<TemplatesWorkspace templates={templates} records={records} onEdit={template=>{setEditingTemplate(template);setTemplateEditorOpen(true)}} onDelete={removeTemplate}/>} 
    {section==='variables'&&<VariablesWorkspace variables={variables} templates={templates} persist={persistVariables}/>} 
   </main>
  </div>
  {editorOpen&&<ContractEditorModal record={editingRecord} contacts={contacts} templates={templates} variables={variables} onClose={()=>{setEditingRecord(undefined);setEditorOpen(false)}} onSave={saveEditor}/>} 
  {viewRecord&&<ContractViewModal record={viewRecord} template={templates.find(item=>item.id===viewRecord.templateId)} autentiqueState={autentiqueState} onClose={()=>setViewRecord(undefined)} onEdit={()=>{if(canEditRecord(viewRecord)){setEditingRecord(viewRecord);setViewRecord(undefined);setEditorOpen(true)}}} onDelete={()=>removeRecord(viewRecord)}/>} 
  {templateEditorOpen&&<ContractTemplateModal template={editingTemplate} variables={variables} onClose={()=>{setEditingTemplate(undefined);setTemplateEditorOpen(false)}} onSave={saveTemplate}/>} 
+ {variableEditorOpen&&<ContractVariableModal variables={variables} onClose={()=>setVariableEditorOpen(false)} onSave={saveVariable}/>} 
  </div>;
 }
 
@@ -129,19 +139,17 @@ function ContractsList({records,allRecords,templates,query,setQuery,statusFilter
   </section></>;
 }
 
-function TemplatesWorkspace({templates,records,onNew,onEdit,onDelete}:{templates:ContractTemplate[];records:ContractRecord[];onNew:()=>void;onEdit:(template:ContractTemplate)=>void;onDelete:(template:ContractTemplate)=>void}){
+function TemplatesWorkspace({templates,records,onEdit,onDelete}:{templates:ContractTemplate[];records:ContractRecord[];onEdit:(template:ContractTemplate)=>void;onDelete:(template:ContractTemplate)=>void}){
  const [query,setQuery]=useState('');
  const filtered=templates.filter(item=>`${item.name} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <><section className="contracts-kpis contracts-kpis--four"><Kpi label="Templates" value={templates.length} note="total"/><Kpi label="Ativos" value={templates.filter(item=>item.active).length} note="disponíveis no wizard"/><Kpi label="Em uso" value={new Set(records.map(item=>item.templateId)).size} note="vinculados a contratos"/><Kpi label="Placeholders" value={templates.reduce((sum,item)=>sum+extractTemplatePlaceholders(item.content).length,0)} note="mapeados"/></section><section className="contracts-panel"><div className="contracts-toolbar"><input placeholder="Buscar template…" value={query} onChange={event=>setQuery(event.target.value)}/><button className="contracts-primary-button" type="button" onClick={onNew}>+ Novo Template</button></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Template</th><th>Variáveis</th><th>Status</th><th>Atualizado</th><th aria-label="Ações"/></tr></thead><tbody>{filtered.map(template=><tr key={template.id}><td><strong>{template.name}</strong><small>{template.description||'Sem descrição'}</small></td><td>{extractTemplatePlaceholders(template.content).length}</td><td><span className={`contracts-status ${template.active?'is-active':'is-draft'}`}>{template.active?'Ativo':'Inativo'}</span></td><td>{new Date(template.updatedAt).toLocaleDateString('pt-BR')}</td><td><div className="contracts-row-actions"><button type="button" onClick={()=>onEdit(template)}>Editar</button><button type="button" className="is-danger" onClick={()=>onDelete(template)}>Excluir</button></div></td></tr>)}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhum template encontrado</strong><p>Crie ou ajuste os filtros.</p></div>}</section></>;
+ return <><section className="contracts-kpis contracts-kpis--four"><Kpi label="Templates" value={templates.length} note="total"/><Kpi label="Ativos" value={templates.filter(item=>item.active).length} note="disponíveis no wizard"/><Kpi label="Em uso" value={new Set(records.map(item=>item.templateId)).size} note="vinculados a contratos"/><Kpi label="Placeholders" value={templates.reduce((sum,item)=>sum+extractTemplatePlaceholders(item.content).length,0)} note="mapeados"/></section><section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar templates" placeholder="Buscar template…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {templates.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Template</th><th>Variáveis</th><th>Status</th><th>Atualizado</th><th aria-label="Ações"/></tr></thead><tbody>{filtered.map(template=><tr key={template.id}><td><strong>{template.name}</strong><small>{template.description||'Sem descrição'}</small></td><td>{extractTemplatePlaceholders(template.content).length}</td><td><span className={`contracts-status ${template.active?'is-active':'is-draft'}`}>{template.active?'Ativo':'Inativo'}</span></td><td>{new Date(template.updatedAt).toLocaleDateString('pt-BR')}</td><td><div className="contracts-row-actions"><button type="button" onClick={()=>onEdit(template)}>Editar</button><button type="button" className="is-danger" onClick={()=>onDelete(template)}>Excluir</button></div></td></tr>)}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhum template encontrado</strong><p>Ajuste a busca para localizar templates.</p></div>}</section></>;
 }
 
 function VariablesWorkspace({variables,templates,persist}:{variables:ContractVariableDefinition[];templates:ContractTemplate[];persist:(records:ContractVariableDefinition[])=>void}){
- const [label,setLabel]=useState('');const [group,setGroup]=useState('');const [field,setField]=useState('');const [type,setType]=useState<ContractVariableType>('text');const [required,setRequired]=useState(false);const [description,setDescription]=useState('');const [query,setQuery]=useState('');
- const placeholder=group.trim()&&field.trim()?makePlaceholder(group,field):'';
- const add=()=>{if(!label.trim()||!placeholder)return;if(variables.some(item=>item.placeholder===placeholder)){window.alert('Já existe uma variável com este placeholder.');return}const stamp=new Date().toISOString();persist([{id:crypto.randomUUID(),group:group.trim().toUpperCase(),field:field.trim().toUpperCase(),placeholder,label:label.trim(),type,required,description:description.trim(),createdAt:stamp,updatedAt:stamp},...variables]);setLabel('');setGroup('');setField('');setType('text');setRequired(false);setDescription('')};
+ const [query,setQuery]=useState('');
  const remove=(variable:ContractVariableDefinition)=>{if(templates.some(template=>template.content.includes(variable.placeholder))){window.alert('Esta variável está sendo usada por um template e não pode ser removida.');return}if(window.confirm(`Excluir ${variable.placeholder}?`))persist(variables.filter(item=>item.id!==variable.id))};
- const filtered=variables.filter(item=>`${item.label} ${item.placeholder} ${item.description}`.toLowerCase().includes(query.trim().toLowerCase()));
- return <div className="contracts-registry-layout"><section className="contracts-panel contracts-registry-form"><div className="contracts-panel-heading"><span>NOVA VARIÁVEL</span><h2>Placeholder reutilizável</h2><p>Use o padrão <code>{'{{GRUPO.CAMPO}}'}</code>. Templates só armazenam texto; nenhum código é executado.</p></div><div className="contracts-form-grid"><label className="contracts-field"><span>Nome amigável</span><input value={label} onChange={event=>setLabel(event.target.value)} placeholder="Ex: Número do protocolo"/></label><label className="contracts-field"><span>Grupo</span><input value={group} onChange={event=>setGroup(event.target.value)} placeholder="Ex: PROCESSO"/></label><label className="contracts-field"><span>Campo</span><input value={field} onChange={event=>setField(event.target.value)} placeholder="Ex: PROTOCOLO"/></label><label className="contracts-field"><span>Tipo</span><select value={type} onChange={event=>setType(event.target.value as ContractVariableType)}><option value="text">Texto</option><option value="textarea">Texto longo</option><option value="number">Número</option><option value="date">Data</option><option value="currency">Moeda</option><option value="email">E-mail</option><option value="cpf">CPF</option><option value="passport">Passaporte</option></select></label><label className="contracts-field contracts-field--wide"><span>Descrição</span><input value={description} onChange={event=>setDescription(event.target.value)} placeholder="Como e quando esta variável deve ser preenchida"/></label><label className="contracts-checkbox"><input type="checkbox" checked={required} onChange={event=>setRequired(event.target.checked)}/><span>Obrigatória para revisão</span></label></div><div className="contracts-registry-preview"><span>Placeholder</span><code>{placeholder||'{{GRUPO.CAMPO}}'}</code></div><button type="button" className="contracts-primary-button" disabled={!label.trim()||!placeholder} onClick={add}>Criar variável</button></section><section className="contracts-panel"><div className="contracts-toolbar"><input placeholder="Buscar variável…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {variables.length}</span></div><div className="contracts-registry-list">{filtered.map(variable=><article key={variable.id}><div><strong>{variable.label}</strong><code>{variable.placeholder}</code><p>{variable.description||`${variable.type}${variable.required?' · obrigatória':''}`}</p></div><button type="button" onClick={()=>navigator.clipboard?.writeText(variable.placeholder)}>Copiar</button><button type="button" className="is-danger" onClick={()=>remove(variable)}>Excluir</button></article>)}</div></section></div>;
+ const filtered=variables.filter(item=>`${item.label} ${item.placeholder} ${item.description} ${item.group} ${item.field}`.toLowerCase().includes(query.trim().toLowerCase()));
+ return <section className="contracts-panel"><div className="contracts-toolbar"><input aria-label="Buscar variáveis" placeholder="Buscar variável…" value={query} onChange={event=>setQuery(event.target.value)}/><span>{filtered.length} de {variables.length}</span></div>{filtered.length?<div className="contracts-table-wrap"><table className="contracts-table"><thead><tr><th>Variável</th><th>Placeholder</th><th>Tipo</th><th>Obrigatória</th><th>Uso em templates</th><th>Atualizado</th><th aria-label="Ações"/></tr></thead><tbody>{filtered.map(variable=>{const usage=templates.filter(template=>template.content.includes(variable.placeholder)).length;return <tr key={variable.id}><td><strong>{variable.label}</strong><small>{variable.description||`${variable.group}.${variable.field}`}</small></td><td><code>{variable.placeholder}</code></td><td>{variableTypeLabel(variable.type)}</td><td>{variable.required?'Sim':'Não'}</td><td>{usage}</td><td>{new Date(variable.updatedAt).toLocaleDateString('pt-BR')}</td><td><div className="contracts-row-actions"><button type="button" onClick={()=>navigator.clipboard?.writeText(variable.placeholder)}>Copiar</button><button type="button" className="is-danger" disabled={usage>0} title={usage>0?'Variável em uso por template':'Excluir variável'} onClick={()=>remove(variable)}>Excluir</button></div></td></tr>})}</tbody></table></div>:<div className="contracts-empty"><strong>Nenhuma variável encontrada</strong><p>{variables.length?'Ajuste a busca para localizar variáveis.':'Crie a primeira variável pelo botão no cabeçalho.'}</p></div>}</section>;
 }
 
 export default ContractsApp;
