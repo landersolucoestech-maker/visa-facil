@@ -80,7 +80,6 @@ const ReportsApp = lazy(async () => {
 const SettingsApp = lazy(async () => {
   const module = await import('./modules/settings/SettingsApp');
   await import('./styles/settings-refinement.css');
-  await import('./styles/settings-tabs-refinement.css');
   return { default: module.default };
 });
 const ProfileApp = lazy(async () => {
