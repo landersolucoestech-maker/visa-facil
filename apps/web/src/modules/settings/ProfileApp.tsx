@@ -2,7 +2,7 @@ import { AUTHENTICATION_ENABLED, getAuthSession } from '../auth/auth';
 import { Card } from './settingsShared';
 import './settings.css';
 import './settings-responsive.css';
-import './settings-layout-fix.css';
+import './settings-layout.css';
 
 export function ProfileApp(){
  const session=AUTHENTICATION_ENABLED?getAuthSession():null;
