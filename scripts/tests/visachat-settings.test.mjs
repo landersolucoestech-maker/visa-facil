@@ -34,11 +34,11 @@ function withSessionStorage(storage, callback) {
   }
 }
 
-test('VisaChat settings ship complete and valid operational defaults', () => {
+test('VisaChat settings ship complete and valid operational defaults without integration ownership', () => {
   const settings = settingsDomain.getDefaultVisaChatSettings();
   assert.equal(settingsDomain.isVisaChatSettings(settings), true);
   assert.equal(settings.general.timezone, 'America/Sao_Paulo');
-  assert.equal(settings.channels.every((channel) => channel.state === 'not-configured' && !channel.inbound && !channel.outbound), true);
+  assert.equal(Object.hasOwn(settings, 'channels'), false);
   assert.ok(settings.automaticMessages.some((message) => message.id === 'welcome'));
   assert.ok(settings.automaticMessages.some((message) => message.id === 'after-hours'));
   assert.ok(settings.menu.options.length >= 5);
@@ -46,6 +46,18 @@ test('VisaChat settings ship complete and valid operational defaults', () => {
   assert.ok(settings.slaPolicies.length > 0);
   assert.ok(settings.escalationRules.length > 0);
   assert.ok(settings.templates.some((template) => template.shortcut === '/documentos'));
+});
+
+test('VisaChat strips legacy channel settings because integrations belong to Configurações → Integrações', () => {
+  const legacy = {
+    ...settingsDomain.getDefaultVisaChatSettings(),
+    channels: [{ id: 'whatsapp', label: 'WhatsApp', state: 'connected', inbound: true, outbound: true }],
+  };
+  const storage = memoryStorage(new Map([[settingsDomain.VISACHAT_SETTINGS_STORAGE_KEY, JSON.stringify(legacy)]]));
+  withSessionStorage(storage, () => {
+    const migrated = settingsDomain.getVisaChatSettings();
+    assert.equal(Object.hasOwn(migrated, 'channels'), false);
+  });
 });
 
 test('VisaChat settings recover from corrupt storage and quota failures', () => {
@@ -84,7 +96,7 @@ test('VisaChat atendimento supports internal notes without pretending external d
   assert.equal(attendanceDomain.isAttendanceConversation(customer), true);
 });
 
-test('VisaChat UI exposes complete atendimento configuration and structured team spaces', () => {
+test('VisaChat UI exposes atendimento configuration and structured team spaces without channel integration settings', () => {
   const app = read('apps/web/src/modules/attendance/AttendanceApp.tsx');
   const panel = read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
   const settings = read('apps/web/src/modules/attendance/attendanceSettings.ts');
@@ -94,6 +106,10 @@ test('VisaChat UI exposes complete atendimento configuration and structured team
   for (const token of ['Mensagens automáticas', 'Menu inicial', 'Filas', 'Roteamento e SLA', 'Escalonamento', 'Templates', 'Notificações', 'Configurações → Usuários']) {
     assert.ok(panel.includes(token), `settings panel missing ${token}`);
   }
+  assert.equal(panel.includes("id: 'channels'"), false);
+  assert.equal(panel.includes('Canais de atendimento'), false);
+  assert.equal(settings.includes('VISACHAT_CHANNEL_IDS'), false);
+  assert.equal(settings.includes('channels: ChannelConfig[]'), false);
   for (const token of ['welcome', 'after-hours', 'queue-entry', 'invalidOptionMessage', 'round-robin', 'least-loaded', 'slaPolicies', 'escalationRules']) {
     assert.ok(settings.includes(token), `settings domain missing ${token}`);
   }
