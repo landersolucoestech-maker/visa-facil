@@ -1,20 +1,6 @@
 /* VISA FÁCIL — Marketing overview refinement
    Dedicated normalization for /crm/marketing (Visão Geral). */
 
-/* Keep the page title and Marketing submenu labels on one line. */
-.crm-global-page .marketing-shell .crm-topbar h1{
-  display:inline-block!important;
-  max-width:none!important;
-  white-space:nowrap!important;
-  word-break:normal!important;
-  overflow-wrap:normal!important;
-}
-.crm-sidebar--shared .crm-sidebar-subnav a>span{
-  white-space:nowrap!important;
-  word-break:normal!important;
-  overflow-wrap:normal!important;
-}
-
 /* Overview is uniquely identified by KPI cards immediately followed by the
    two-panel marketing grid. Campaigns use the table card instead. */
 .crm-global-page .marketing-content>.marketing-kpis:has(+ .marketing-grid){
@@ -250,40 +236,6 @@
   white-space:nowrap!important;
 }
 
-/* Notification bell — same visual language and exact bell path used by Tarefas. */
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell{
-  position:relative!important;
-  width:36px!important;
-  min-width:36px!important;
-  height:36px!important;
-  min-height:36px!important;
-  display:grid!important;
-  place-items:center!important;
-  padding:0!important;
-  border:1px solid #d8dde5!important;
-  border-radius:5px!important;
-  background-color:#fff!important;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b365f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9'/%3E%3Cpath d='M10 21h4'/%3E%3C/svg%3E")!important;
-  background-repeat:no-repeat!important;
-  background-position:center!important;
-  background-size:18px 18px!important;
-  color:transparent!important;
-  font-size:0!important;
-  line-height:0!important;
-  box-shadow:none!important;
-  cursor:pointer!important;
-}
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell:hover,
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell[aria-expanded="true"]{
-  border-color:#aeb8c7!important;
-  background-color:#f7f8fa!important;
-}
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell::before,
-.crm-global-page .marketing-shell .crm-topbar .marketing-bell::after{
-  content:none!important;
-  display:none!important;
-}
-
 /* Keep both Overview panels exactly the same outer height on desktop even
    when one dataset contains more rows than the other. */
 @media(min-width:1101px){
@@ -315,9 +267,6 @@
 }
 
 @media(max-width:560px){
-  .crm-global-page .marketing-shell .crm-topbar h1{
-    font-size:20px!important;
-  }
   .crm-global-page .marketing-content>.marketing-kpis:has(+ .marketing-grid){
     grid-template-columns:1fr!important;
   }
