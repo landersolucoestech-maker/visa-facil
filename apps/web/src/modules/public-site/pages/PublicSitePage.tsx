@@ -57,7 +57,7 @@ export function PublicSitePage({preview=false}:{preview?:boolean}) {
     if(canonical){if(!canonicalNode){canonicalNode=window.document.createElement('link');canonicalNode.rel='canonical';window.document.head.appendChild(canonicalNode)}canonicalNode.href=canonical}else canonicalNode?.remove();
   },[page,cmsDocument.settings]);
 
-  if(!page)return <main style={{padding:'48px',fontFamily:'Inter, sans-serif'}}><h1>Página não encontrada</h1></main>;
+  if(!page)return <main className="public-site public-site-not-found"><section className="section"><div className="container"><h1>Página não encontrada</h1></div></section></main>;
   const visible=page.sections.filter(section=>section.visible).sort((a,b)=>a.order-b.order);
 
   return <SiteContentProvider document={cmsDocument} pageId={page.id}><div ref={rootRef} className="public-site">
