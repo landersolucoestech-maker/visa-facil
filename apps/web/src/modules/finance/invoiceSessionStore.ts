@@ -1,7 +1,7 @@
 import { getInvoiceMockSeeds, isInvoiceSeed, type InvoiceSeed } from './mocks/invoiceMockProvider';
 import { readSessionRecords, writeSessionRecords } from '../../shared/sessionRecords';
 
-const INVOICE_SESSION_KEY='visa-facil.session.invoices.v1';
+const INVOICE_SESSION_KEY='visa-facil.session.invoices.v2';
 const EPSILON=0.0001;
 
 function number(record:InvoiceSeed,key:string){
