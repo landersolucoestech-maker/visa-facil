@@ -131,7 +131,7 @@ export function RootApplication() {
   if(path==='/crm/atendimentos')return withSharedSidebar(<AttendanceApp/>);
   if(path==='/crm/tarefas')return withSharedSidebar(<TasksApp/>);
   if(path==='/crm/agenda')return withSharedSidebar(<AgendaApp/>);
-  if(path==='/crm/contratos')return withSharedSidebar(<ContractsApp/>);
+  if(path==='/crm/contratos'||path.startsWith('/crm/contratos/'))return withSharedSidebar(<ContractsApp/>);
   if(path==='/crm/categorias-financeiras')return withSharedSidebar(<FinancialCategoriesApp/>);
   if(path==='/crm/regras-financeiras')return withSharedSidebar(<FinancialRulesApp/>);
   if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
