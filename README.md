@@ -17,10 +17,9 @@ Principais áreas:
 - `/crm/agenda` — agenda;
 - `/crm/tarefas` — tarefas;
 - `/crm/atendimentos` — VisaChat;
-- `/crm/contratos` — gestão contratual frontend com contratos, templates, variáveis, categorias, versões e histórico da sessão;
-- `/crm/contratos/templates` — templates de contrato;
+- `/crm/contratos` — gestão contratual frontend com contratos, templates, variáveis, versões e histórico da sessão;
+- `/crm/contratos/templates` — templates, que também são a classificação canônica dos contratos;
 - `/crm/contratos/variaveis` — registro canônico de placeholders;
-- `/crm/contratos/categorias` — categorias contratuais;
 - `/crm/financeiro/*` — transações, invoices e contabilidade;
 - `/crm/categorias-financeiras` — categorias financeiras da sessão;
 - `/crm/regras-financeiras` — regras de classificação financeira da sessão;
@@ -49,7 +48,7 @@ A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = fals
 
 Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
 
-Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates, variáveis e categorias. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
+Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates e variáveis. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
 
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
@@ -74,7 +73,7 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 
 Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos `Liquidado` entram em `paid`; `Pago` e `Parcialmente pago` são derivados do ledger, e o total não pode ser reduzido abaixo do valor já liquidado.
 
-Contratos operacionais iniciam vazios, sem registros fictícios. Templates, variáveis e categorias possuem apenas configuração inicial validada para suportar o fluxo do frontend. O wizard canônico segue `Template → Partes → Variáveis → Documento → Signatários → Revisão`; contratos vinculados ao CRM preservam um snapshot dos dados usados no documento, e alterações no template não reescrevem silenciosamente versões existentes.
+Contratos operacionais iniciam vazios, sem registros fictícios. Templates e variáveis possuem configuração inicial validada para suportar o fluxo do frontend. O **Template é simultaneamente o modelo documental e a classificação canônica do contrato**; não existe uma entidade paralela de Categoria. O wizard segue `Template → Partes → Variáveis → Documento → Signatários → Revisão`; contratos vinculados ao CRM preservam um snapshot dos dados usados no documento, e alterações no template não reescrevem silenciosamente versões existentes.
 
 ## Desenvolvimento
 
