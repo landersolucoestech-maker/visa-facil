@@ -4,6 +4,7 @@ import { GlobalRouteLoader } from './components/GlobalRouteLoader';
 import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import './styles/crm-content-layout.css';
+import './styles/crm-ui-standard.css';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
 const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
