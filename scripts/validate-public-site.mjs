@@ -28,12 +28,16 @@ const crmTypes = read('apps/web/src/modules/crm/types.ts');
 const crmSidebar = read('apps/web/src/components/CrmSidebar.tsx');
 const crmMockProvider = read('apps/web/src/modules/crm/mocks/mockDataProvider.ts');
 const crmMockData = read('apps/web/src/modules/crm/mocks/crm-records.dev.json');
+const contractsApp = read('apps/web/src/modules/contracts/ContractsApp.tsx');
+const contractEditor = read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
+const contractStore = read('apps/web/src/modules/contracts/contractSessionStore.ts');
+const contractEngine = read('apps/web/src/modules/contracts/contractTemplateEngine.ts');
 const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store, cmsDocumentContract].join('\n');
 const crmSource = [crm, crmTypes, crmMockProvider, crmMockData].join('\n');
 
 assert(rootApp.includes('<PublicSitePage/>') || rootApp.includes('<PublicSitePage />'), 'Root application must retain the public website');
 assert(containsAll(rootApp, ["path==='/crm'", '<CrmDashboardApp/>', "path==='/crm/relacionamento'", '<CrmApp/>']), 'Dashboard and relationship routes must remain explicit and separate');
-assert(containsAll(rootApp, ["path==='/crm/contratos'", '<ContractsApp/>']), 'Contracts route must remain explicit and lazy-loaded');
+assert(containsAll(rootApp, ["path==='/crm/contratos'", "path.startsWith('/crm/contratos/')", '<ContractsApp/>']), 'Contracts route and subworkspaces must remain explicit and lazy-loaded');
 assert(containsAll(rootApp, ["path==='/login'", "path==='/workspaces'", "path==='/site-admin'", '<LoginApp/>', '<WorkspaceSelectorApp/>', '<SiteCmsApp/>']), 'Authentication/workspace/CMS routes are incomplete');
 assert(rootApp.includes('lazy(') && rootApp.includes('Suspense'), 'Internal workspaces must remain lazy-loaded');
 assert(!rootApp.includes('ManagementApp') && !rootApp.includes("'/app'"), 'Obsolete internal management application must not return');
@@ -70,11 +74,18 @@ assert(containsAll(crm, ['label="CPF"', 'label="RG"', 'label="Número do passapo
 assert(containsAll(crmMockProvider, ['isCrmRecord', 'isMockDataEnabled', 'isText(value.cpf)', 'isText(value.rg)', 'isText(value.passportNumber)', 'clone.filter(isCrmRecord)']), 'CRM mock provider must runtime-validate document fields under the centralized mock policy');
 assert(!crmMockProvider.includes('crypto.randomUUID()') && !crmMockProvider.includes('new Date().toISOString()'), 'CRM mock provider must reject malformed fixture identity/timestamps instead of fabricating replacements');
 
+assert(containsAll(contractsApp, ['TemplatesWorkspace', 'VariablesWorkspace', 'CategoriesWorkspace', 'getCrmSessionRecords', 'getIntegrationStatuses']), 'Contracts workspace is incomplete');
+assert(containsAll(contractEditor, ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão']), 'Contracts six-step wizard changed unexpectedly');
+assert(containsAll(contractStore, ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','isContractCategory']), 'Contracts session persistence contract is incomplete');
+assert(containsAll(contractEngine, ['extractTemplatePlaceholders','resolveTemplateContent','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}']), 'Contracts template engine is incomplete');
+assert(!contractStore.toLowerCase().includes('clicksign')&&!contractStore.toLowerCase().includes('docusign'), 'Contracts signing provider must remain Autentique-only');
+
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
   assert(!crmSource.includes(forbidden), `CRM must remain person-only; forbidden company field/logic found: ${forbidden}`);
 }
 
 for (const css of ['apps/web/src/modules/public-site/styles/01-base.css','apps/web/src/modules/public-site/styles/02-sections-responsive.css','apps/web/src/modules/public-site/styles/03-hero-v3.css','apps/web/src/modules/crm/crm.css','apps/web/src/modules/site-cms/site-cms-base.css','apps/web/src/modules/contracts/contracts.css']) assert(existsSync(resolve(root, css)), `Missing stylesheet: ${css}`);
+for (const file of ['apps/web/src/modules/contracts/contractTypes.ts','apps/web/src/modules/contracts/contractSessionStore.ts','apps/web/src/modules/contracts/contractTemplateEngine.ts','apps/web/src/modules/contracts/ContractEditorModal.tsx','apps/web/src/modules/contracts/ContractTemplateModal.tsx','apps/web/src/modules/contracts/ContractViewModal.tsx','apps/web/src/modules/contracts/ContractDocumentPreview.tsx']) assert(existsSync(resolve(root,file)),`Missing contracts implementation file: ${file}`);
 
 if (failures.length) {
   console.error('Visa Fácil website/CRM/CMS contract validation failed:');
