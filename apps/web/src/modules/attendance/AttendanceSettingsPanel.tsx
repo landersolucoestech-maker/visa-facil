@@ -21,6 +21,9 @@ const PRIORITY_LABELS: Record<VisaChatPriority, string> = { baixa: 'Baixa', medi
 const CHANNEL_LABELS: Record<VisaChatNotificationChannel, string> = { in_app: 'Sistema', whatsapp: 'WhatsApp preparado', sms: 'SMS preparado' };
 const RECIPIENT_LABELS: Record<string, string> = { supervisor: 'Supervisor', manager: 'Gestor', custom: 'Usuário específico' };
 
+function BellIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
+}
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
   return <label className="visachat-ref-switch"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span aria-hidden="true" /><b>{label}</b></label>;
 }
@@ -39,6 +42,7 @@ export function AttendanceSettingsPanel({ teamMembers: _teamMembers, onClose }: 
   const [openEscalationIds, setOpenEscalationIds] = useState<Record<string, boolean>>({});
   const [openQuestionnaireIds, setOpenQuestionnaireIds] = useState<Record<string, boolean>>(() => ({ [getVisaChatSettings().menu_options[0]?.id ?? 'commercial']: true }));
   const [newFields, setNewFields] = useState<Record<string, string>>({});
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const patch = (updates: Partial<VisaChatSettings>) => setDraft((current) => ({ ...current, ...updates }));
   const previewMenu = useMemo(() => [...draft.menu_options].filter((option) => option.active).sort((a, b) => a.order - b.order).map((option) => `${option.order}. ${option.label}`).join('\n'), [draft.menu_options]);
@@ -87,10 +91,10 @@ export function AttendanceSettingsPanel({ teamMembers: _teamMembers, onClose }: 
   const addField = (optionId: string, fields: string[]) => { const value = (newFields[optionId] ?? '').trim(); if (!value) return; updateRequiredFields(optionId, [...fields, value]); setNewFields((current) => ({ ...current, [optionId]: '' })); };
   const save = () => { saveVisaChatSettings({ ...draft, main_menu_message: draft.main_menu_message || previewMenu, required_fields: draft.required_fields.map((field) => field.trim()).filter(Boolean), optional_fields: draft.optional_fields.map((field) => field.trim()).filter(Boolean), return_to_menu_rule: { ...draft.return_to_menu_rule, commands: uniqueCommands(draft.return_to_menu_rule.commands ?? []) } }); };
 
-  return <section className="visachat-ref-page" aria-label="Configuração de atendimento do VisaChat">
-    <header className="visachat-ref-header">
+  return <section className="visachat-ref-page" aria-label="Configuração de atendimento do VisaChat" onClick={() => setNotificationsOpen(false)}>
+    <header className="crm-topbar visachat-ref-header">
       <div><h1>Automações do VisaChat</h1><p>Configure mensagens automáticas, triagem, campos coletados, filas, templates, notificações e escalonamentos.</p></div>
-      <div className="visachat-ref-actions"><button type="button" className="crm-btn-secondary" disabled title="Indisponível sem executor backend">⚡ Testar escalonamento</button><button type="button" className="crm-btn-primary" onClick={save}>Salvar configuração</button><button type="button" className="crm-btn-secondary" onClick={onClose}>Voltar ao VisaChat</button></div>
+      <div className="crm-topbar-actions visachat-ref-actions" onClick={(event) => event.stopPropagation()}><button type="button" className="crm-btn-secondary" disabled title="Indisponível sem executor backend">⚡ Testar escalonamento</button><button type="button" className="crm-btn-primary" onClick={save}>Salvar configuração</button><button type="button" className="crm-btn-secondary" onClick={onClose}>Voltar ao VisaChat</button><div className="visachat-ref-topbar-menu"><button className="visachat-ref-notification-button" type="button" aria-label="Notificações" aria-haspopup="true" aria-expanded={notificationsOpen} aria-controls="visachat-settings-notifications" onClick={() => setNotificationsOpen((value) => !value)}><BellIcon /></button>{notificationsOpen && <div className="visachat-ref-notifications" id="visachat-settings-notifications" role="region" aria-label="Notificações do VisaChat"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div></div>
     </header>
 
     <nav className="visachat-ref-tabs" aria-label="Configurações de atendimento">
