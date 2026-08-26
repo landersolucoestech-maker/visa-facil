@@ -6,6 +6,7 @@ import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './module
 import { PublicSitePage } from './modules/public-site/pages/PublicSitePage';
 import './styles/crm-content-layout.css';
 import './styles/crm-ui-standard.css';
+import './styles/tableview-surface.css';
 
 const CrmSidebar = lazy(() => import('./components/CrmSidebar'));
 const LoginApp = lazy(() => import('./modules/auth/LoginApp'));
