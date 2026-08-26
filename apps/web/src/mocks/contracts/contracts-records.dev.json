@@ -1,0 +1,217 @@
+[
+  {
+    "id": "mock-contract-001",
+    "title": "Assessoria de Visto B1/B2 — Mariana Alves Costa",
+    "templateId": "builtin-template-assessoria",
+    "status": "draft",
+    "clientId": "contact-pf-001",
+    "serviceDescription": "Assessoria completa para processo de visto de visitante B1/B2.",
+    "destination": "Estados Unidos",
+    "visaType": "B1/B2",
+    "startDate": "2026-08-20",
+    "endDate": "2026-10-20",
+    "notes": "Contrato de demonstração para validação do fluxo operacional.",
+    "templateSnapshot": "Contrato de Assessoria de Visto",
+    "documentContent": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA\n\nCONTRATANTE: Mariana Alves Costa.\nOBJETO: Assessoria completa para processo de visto B1/B2 com destino aos Estados Unidos.",
+    "value": 1850,
+    "parties": [
+      {
+        "id": "party-mock-001",
+        "role": "client",
+        "source": "crm",
+        "crmRecordId": "contact-pf-001",
+        "name": "Mariana Alves Costa",
+        "cpf": "",
+        "rg": "",
+        "passportNumber": "",
+        "email": "mariana.alves@example.com",
+        "phone": "+55 11 98888-1001"
+      }
+    ],
+    "signers": [
+      {
+        "id": "signer-mock-001",
+        "name": "Mariana Alves Costa",
+        "email": "mariana.alves@example.com",
+        "role": "Contratante",
+        "required": true,
+        "order": 1,
+        "status": "pending"
+      }
+    ],
+    "variableValues": {
+      "{{CLIENTE.NOME}}": "Mariana Alves Costa",
+      "{{PROCESSO.DESTINO}}": "Estados Unidos",
+      "{{PROCESSO.TIPO_VISTO}}": "B1/B2",
+      "{{CONTRATO.VALOR}}": "R$ 1.850,00",
+      "{{CONTRATO.DATA_INICIO}}": "20/08/2026"
+    },
+    "signatureProvider": null,
+    "signatureState": "not_sent",
+    "versions": [
+      {
+        "id": "version-mock-001",
+        "label": "1.0",
+        "content": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA — Mariana Alves Costa",
+        "note": "Versão inicial do mock operacional.",
+        "createdAt": "2026-08-20T14:00:00.000Z"
+      }
+    ],
+    "audit": [
+      {
+        "id": "audit-mock-001",
+        "type": "created",
+        "label": "Contrato criado",
+        "detail": "Registro de demonstração inicializado pelo fixture centralizado.",
+        "createdAt": "2026-08-20T14:00:00.000Z"
+      }
+    ],
+    "createdAt": "2026-08-20T14:00:00.000Z",
+    "updatedAt": "2026-08-20T14:00:00.000Z"
+  },
+  {
+    "id": "mock-contract-002",
+    "title": "Assessoria de Visto B1/B2 — Juliana Ferreira Santos",
+    "templateId": "builtin-template-assessoria",
+    "status": "review",
+    "clientId": "lead-pf-001",
+    "serviceDescription": "Preparação documental, revisão e orientação para entrevista consular.",
+    "destination": "Estados Unidos",
+    "visaType": "B1/B2",
+    "startDate": "2026-08-22",
+    "endDate": "2026-11-15",
+    "notes": "Em revisão interna antes da formalização.",
+    "templateSnapshot": "Contrato de Assessoria de Visto",
+    "documentContent": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA\n\nCONTRATANTE: Juliana Ferreira Santos.\nOBJETO: Preparação documental, revisão e orientação para entrevista consular.",
+    "value": 2200,
+    "parties": [
+      {
+        "id": "party-mock-002",
+        "role": "client",
+        "source": "crm",
+        "crmRecordId": "lead-pf-001",
+        "name": "Juliana Ferreira Santos",
+        "cpf": "",
+        "rg": "",
+        "passportNumber": "",
+        "email": "juliana.ferreira@example.com",
+        "phone": "+55 21 97777-2002"
+      }
+    ],
+    "signers": [
+      {
+        "id": "signer-mock-002",
+        "name": "Juliana Ferreira Santos",
+        "email": "juliana.ferreira@example.com",
+        "role": "Contratante",
+        "required": true,
+        "order": 1,
+        "status": "pending"
+      }
+    ],
+    "variableValues": {
+      "{{CLIENTE.NOME}}": "Juliana Ferreira Santos",
+      "{{PROCESSO.DESTINO}}": "Estados Unidos",
+      "{{PROCESSO.TIPO_VISTO}}": "B1/B2",
+      "{{CONTRATO.VALOR}}": "R$ 2.200,00",
+      "{{CONTRATO.DATA_INICIO}}": "22/08/2026"
+    },
+    "signatureProvider": null,
+    "signatureState": "not_sent",
+    "versions": [
+      {
+        "id": "version-mock-002",
+        "label": "1.0",
+        "content": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA — Juliana Ferreira Santos",
+        "note": "Versão inicial em revisão.",
+        "createdAt": "2026-08-22T11:30:00.000Z"
+      }
+    ],
+    "audit": [
+      {
+        "id": "audit-mock-002a",
+        "type": "created",
+        "label": "Contrato criado",
+        "createdAt": "2026-08-22T11:30:00.000Z"
+      },
+      {
+        "id": "audit-mock-002b",
+        "type": "status_changed",
+        "label": "Movido para revisão",
+        "detail": "Documento enviado para revisão interna.",
+        "createdAt": "2026-08-24T09:15:00.000Z"
+      }
+    ],
+    "createdAt": "2026-08-22T11:30:00.000Z",
+    "updatedAt": "2026-08-24T09:15:00.000Z"
+  },
+  {
+    "id": "mock-contract-003",
+    "title": "Assessoria de Visto F-1 — Camila Oliveira Reis",
+    "templateId": "builtin-template-assessoria",
+    "status": "draft",
+    "clientId": "lead-pf-003",
+    "serviceDescription": "Assessoria para organização do processo de visto de estudante F-1.",
+    "destination": "Estados Unidos",
+    "visaType": "F-1",
+    "startDate": "2026-08-25",
+    "endDate": "2026-12-10",
+    "notes": "Aguardando conferência final das informações do cliente.",
+    "templateSnapshot": "Contrato de Assessoria de Visto",
+    "documentContent": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA\n\nCONTRATANTE: Camila Oliveira Reis.\nOBJETO: Assessoria para organização do processo de visto de estudante F-1.",
+    "value": 2900,
+    "parties": [
+      {
+        "id": "party-mock-003",
+        "role": "client",
+        "source": "crm",
+        "crmRecordId": "lead-pf-003",
+        "name": "Camila Oliveira Reis",
+        "cpf": "",
+        "rg": "",
+        "passportNumber": "",
+        "email": "camila.reis@example.com",
+        "phone": "+55 31 96666-3003"
+      }
+    ],
+    "signers": [
+      {
+        "id": "signer-mock-003",
+        "name": "Camila Oliveira Reis",
+        "email": "camila.reis@example.com",
+        "role": "Contratante",
+        "required": true,
+        "order": 1,
+        "status": "pending"
+      }
+    ],
+    "variableValues": {
+      "{{CLIENTE.NOME}}": "Camila Oliveira Reis",
+      "{{PROCESSO.DESTINO}}": "Estados Unidos",
+      "{{PROCESSO.TIPO_VISTO}}": "F-1",
+      "{{CONTRATO.VALOR}}": "R$ 2.900,00",
+      "{{CONTRATO.DATA_INICIO}}": "25/08/2026"
+    },
+    "signatureProvider": null,
+    "signatureState": "not_sent",
+    "versions": [
+      {
+        "id": "version-mock-003",
+        "label": "1.0",
+        "content": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA — Camila Oliveira Reis",
+        "note": "Versão inicial do mock operacional.",
+        "createdAt": "2026-08-25T13:40:00.000Z"
+      }
+    ],
+    "audit": [
+      {
+        "id": "audit-mock-003",
+        "type": "created",
+        "label": "Contrato criado",
+        "createdAt": "2026-08-25T13:40:00.000Z"
+      }
+    ],
+    "createdAt": "2026-08-25T13:40:00.000Z",
+    "updatedAt": "2026-08-25T13:40:00.000Z"
+  }
+]
