@@ -13,7 +13,7 @@ import {
 } from './attendanceSettings';
 import './attendanceSettings.css';
 
-type SettingsSection = 'general' | 'channels' | 'hours' | 'messages' | 'menu' | 'queues' | 'routing' | 'escalation' | 'templates' | 'notifications';
+type SettingsSection = 'general' | 'hours' | 'messages' | 'menu' | 'queues' | 'routing' | 'escalation' | 'templates' | 'notifications';
 
 type Props = {
   teamMembers: OperationalTeamMember[];
@@ -22,7 +22,6 @@ type Props = {
 
 const SECTIONS: Array<{ id: SettingsSection; label: string; description: string }> = [
   { id: 'general', label: 'Geral', description: 'Identidade e comportamento básico' },
-  { id: 'channels', label: 'Canais', description: 'Estado real das integrações externas' },
   { id: 'hours', label: 'Horários', description: 'Janelas de atendimento' },
   { id: 'messages', label: 'Mensagens automáticas', description: 'Textos e gatilhos configuráveis' },
   { id: 'menu', label: 'Menu inicial', description: 'Triagem e opções de entrada' },
@@ -80,7 +79,7 @@ export function AttendanceSettingsPanel({ teamMembers, onClose }: Props) {
 
   return <section className="visachat-settings-page" aria-label="Configurações do VisaChat">
     <header className="visachat-settings-header">
-      <div><small>VISA FÁCIL · CRM · VISACHAT</small><h1>Configurações</h1><p>Configure atendimento, triagem, filas, SLA e respostas sem simular integrações externas inexistentes.</p></div>
+      <div><small>VISA FÁCIL · CRM · VISACHAT</small><h1>Configurações</h1><p>Configure atendimento, triagem, filas, SLA e respostas do VisaChat.</p></div>
       <div className="visachat-settings-header-actions"><span className={saveState === 'saved' ? 'is-saved' : 'is-invalid'}>{saveState === 'saved' ? 'Alterações salvas nesta sessão' : 'Revise os campos obrigatórios'}</span><button type="button" className="crm-btn-secondary" onClick={onClose}>Voltar ao VisaChat</button></div>
     </header>
 
@@ -89,7 +88,7 @@ export function AttendanceSettingsPanel({ teamMembers, onClose }: Props) {
 
       <div className="visachat-settings-content">
         {section === 'general' && <>
-          <SectionIntro title="Configurações gerais" description="Defina a identidade do atendimento e comportamentos que não dependem de integração externa." />
+          <SectionIntro title="Configurações gerais" description="Defina a identidade do atendimento e os comportamentos gerais do VisaChat." />
           <div className="visachat-settings-card visachat-settings-form-grid">
             <label><span>Nome exibido</span><input value={settings.general.displayName} onChange={(event) => patchGeneral({ displayName: event.target.value })} /></label>
             <label><span>Idioma</span><input value={settings.general.language} onChange={(event) => patchGeneral({ language: event.target.value })} /></label>
@@ -97,12 +96,7 @@ export function AttendanceSettingsPanel({ teamMembers, onClose }: Props) {
             <label><span>Arquivar resolvidas após</span><div className="visachat-settings-number"><input type="number" min="0" value={settings.general.archiveAfterDays} onChange={(event) => patchGeneral({ archiveAfterDays: Math.max(0, Number(event.target.value) || 0) })} /><em>dias</em></div></label>
             <div className="visachat-settings-wide"><SettingsSwitch checked={settings.general.reopenOnCustomerReply} onChange={(value) => patchGeneral({ reopenOnCustomerReply: value })} label="Reabrir conversa quando o cliente responder após resolução" /></div>
           </div>
-          <div className="visachat-settings-notice"><strong>Fronteira atual</strong><p>As configurações são funcionais dentro do protótipo e persistem na sessão do navegador. Execução simultânea entre usuários, timers automáticos e entrega em canais externos continuam dependentes de backend compartilhado.</p></div>
-        </>}
-
-        {section === 'channels' && <>
-          <SectionIntro title="Canais de atendimento" description="Conexão de Marketing não é conexão de Mensagens. Somente integrações de mensageria reais podem mudar estes estados." />
-          <div className="visachat-channel-grid">{settings.channels.map((channel) => <article key={channel.id} className="visachat-settings-card visachat-channel-card"><div><span className={`visachat-channel-state state-${channel.state}`}>{channel.state === 'connected' ? 'Conectado' : channel.state === 'error' ? 'Erro' : 'Não configurado'}</span><h3>{channel.label}</h3></div><dl><div><dt>Entrada</dt><dd>{channel.inbound ? 'Disponível' : 'Indisponível'}</dd></div><div><dt>Saída</dt><dd>{channel.outbound ? 'Disponível' : 'Indisponível'}</dd></div></dl><p>A integração específica de mensagens deve ser configurada antes de qualquer envio ou recebimento real.</p></article>)}</div>
+          <div className="visachat-settings-notice"><strong>Fronteira atual</strong><p>As configurações são funcionais dentro do protótipo e persistem na sessão do navegador. Execução simultânea entre usuários e timers automáticos continuam dependentes de backend compartilhado.</p></div>
         </>}
 
         {section === 'hours' && <>
@@ -139,7 +133,7 @@ export function AttendanceSettingsPanel({ teamMembers, onClose }: Props) {
         </>}
 
         {section === 'templates' && <>
-          <SectionIntro title="Templates e respostas rápidas" description="Atalhos ficam disponíveis para o atendimento sem confundir template interno com template aprovado de canal externo." />
+          <SectionIntro title="Templates e respostas rápidas" description="Atalhos ficam disponíveis para o atendimento sem misturar a configuração operacional do VisaChat com integrações externas." />
           <div className="visachat-settings-stack">{settings.templates.map((template) => <article key={template.id} className="visachat-settings-card visachat-template-card"><header><div><h3>{template.name}</h3><p>{template.shortcut}</p></div><SettingsSwitch checked={template.active} onChange={(active) => patchTemplate(template.id, { active })} label={template.active ? 'Ativo' : 'Inativo'} /></header><div className="visachat-settings-form-grid"><label><span>Nome</span><input value={template.name} onChange={(event) => patchTemplate(template.id, { name: event.target.value })} /></label><label><span>Atalho</span><input value={template.shortcut} onChange={(event) => patchTemplate(template.id, { shortcut: event.target.value })} /></label><label className="visachat-settings-wide"><span>Mensagem</span><textarea rows={4} value={template.body} onChange={(event) => patchTemplate(template.id, { body: event.target.value })} /></label></div></article>)}</div>
           <div className="visachat-settings-card"><h3>Tags e prioridades</h3><div className="visachat-taxonomy-grid"><div><strong>Tags</strong>{settings.tags.map((tag) => <SettingsSwitch key={tag.id} checked={tag.active} onChange={(active) => setSettings((current) => ({ ...current, tags: current.tags.map((item) => item.id === tag.id ? { ...item, active } : item) }))} label={tag.name} />)}</div><div><strong>Prioridades</strong>{settings.priorities.map((priority) => <span key={priority} className="visachat-priority-chip">{priority}</span>)}</div></div></div>
         </>}
