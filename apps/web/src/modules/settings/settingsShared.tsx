@@ -47,7 +47,7 @@ export function SettingRow({title,description,checked,onChange,disabled=false}:{
 }
 
 export function MiniModal({title,description,close,children,footer}:{title:string;description?:string;close:()=>void;children:ReactNode;footer?:ReactNode}){
- return <div className="settings-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="settings-mini-modal" role="dialog" aria-modal="true"><header><div><span>CONFIGURAÇÕES</span><h2>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="settings-mini-modal-body">{children}</div>{footer&&<footer>{footer}</div>}</div></div>;
+ return <div className="settings-modal-backdrop" onMouseDown={e=>e.currentTarget===e.target&&close()}><div className="settings-mini-modal" role="dialog" aria-modal="true"><header><div><span>CONFIGURAÇÕES</span><h2>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="settings-mini-modal-body">{children}</div>{footer&&<footer>{footer}</footer>}</div></div>;
 }
 
 export function SettingsGroup({title,icon,children}:{title:string;icon:string;children:ReactNode}){return <div className="settings-section-block"><div className="settings-section-title"><span>{icon}</span><div><h3>{title}</h3></div></div><div className="settings-setting-list">{children}</div></div>}
