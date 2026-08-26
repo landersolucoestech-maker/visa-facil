@@ -1,20 +1,14 @@
-@import '../styles/tableview-surface.css';
-
-/* VISA FÁCIL — canonical account menu for every internal workspace. */
+/* VISA FÁCIL — canonical Account Menu for every internal workspace. */
 .account-menu{
   z-index:80;
   width:188px;
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color:#10213b;
 }
-.account-menu--crm{
-  position:relative;
-  flex:0 0 188px;
-  width:188px;
-  align-self:center;
-}
+.account-menu--crm{position:relative;flex:0 0 188px;width:188px;align-self:center}
 .account-menu--workspace{position:fixed;top:24px;right:clamp(24px,5vw,72px)}
-.account-menu--cms{position:fixed;top:20px;right:20px}
+.account-menu--cms{position:fixed;top:18px;right:20px}
+
 .account-menu__trigger{
   width:188px;
   height:36px;
@@ -31,10 +25,11 @@
   box-shadow:none;
   cursor:pointer;
   text-align:left;
-  transition:border-color .15s ease,background-color .15s ease,box-shadow .15s ease;
+  transition:border-color .15s ease,background-color .15s ease;
 }
 .account-menu__trigger:hover,.account-menu__trigger[aria-expanded="true"]{border-color:#aeb8c7;background:#f7f8fa}
-.account-menu__trigger:focus-visible{outline:2px solid #2f5fb7;outline-offset:2px}
+.account-menu__trigger:focus-visible{outline:2px solid #315f9d;outline-offset:2px}
+
 .account-menu__avatar{
   width:26px;
   height:26px;
@@ -56,17 +51,21 @@
 .account-menu__caret{width:14px;height:14px;display:grid;place-items:center;color:#718096;transition:transform .15s ease}
 .account-menu__caret svg{width:13px;height:13px}
 .account-menu__trigger[aria-expanded="true"] .account-menu__caret{transform:rotate(180deg)}
+
 .account-menu__panel{
   position:absolute;
   top:42px;
   right:0;
   width:188px;
-  overflow:hidden;
+  max-width:calc(100vw - 24px);
+  max-height:min(360px,calc(100dvh - 72px));
+  overflow-x:hidden;
+  overflow-y:auto;
   padding:5px;
   border:1px solid #d8dde5;
-  border-radius:8px;
+  border-radius:6px;
   background:#fff;
-  box-shadow:0 14px 36px rgba(16,33,59,.14);
+  box-shadow:0 10px 24px rgba(13,27,61,.12);
 }
 .account-menu__panel>a,.account-menu__panel>button{
   width:100%;
@@ -77,7 +76,7 @@
   gap:9px;
   padding:0 9px;
   border:0;
-  border-radius:5px;
+  border-radius:4px;
   background:transparent;
   color:#34445b;
   -webkit-text-fill-color:#34445b;
@@ -93,18 +92,22 @@
 .account-menu__panel svg{width:15px;height:15px;color:#607089}
 .account-menu__separator{height:1px;margin:5px 4px;background:#e7ebf1}
 
-/* CRM: AccountMenu is physically hosted in the same action row as primary buttons and the bell. */
-.crm-global-shell .crm-global-page .crm-topbar .crm-topbar-actions>.account-menu--crm{
-  position:relative;
-  top:auto;
-  right:auto;
-  margin:0;
-  align-self:center;
+/* CRM: AccountMenu occupies the same action row as the bell and page actions. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions>.account-menu--crm{
+  position:relative!important;
+  top:auto!important;
+  right:auto!important;
+  height:36px!important;
+  min-height:36px!important;
+  margin:0!important;
+  padding:0!important;
+  align-self:center!important;
 }
 
-/* Standalone internal surfaces still reserve their fixed account slot. */
-.site-cms-topbar{padding-right:216px!important}
-.workspace-header{position:sticky;top:0;z-index:30;padding-right:calc(clamp(24px,5vw,72px) + 196px)}
+/* Standalone internal surfaces reserve the fixed AccountMenu slot explicitly.
+   Specificity is deliberate so later CMS/workspace theme files cannot erase it. */
+.site-cms-shell.site-cms-shell .site-cms-topbar.site-cms-topbar{padding-right:216px!important}
+.workspace-page.workspace-page .workspace-header.workspace-header{position:sticky;top:0;z-index:30;padding-right:calc(clamp(24px,5vw,72px) + 196px)!important}
 
 @media(max-width:1180px){
   .account-menu{width:42px}
@@ -112,13 +115,17 @@
   .account-menu__trigger{width:42px;grid-template-columns:26px;padding:4px 7px}
   .account-menu__identity,.account-menu__caret{display:none}
   .account-menu__panel{width:188px}
-  .site-cms-topbar{padding-right:70px!important}
-  .workspace-header{padding-right:calc(clamp(20px,3vw,32px) + 54px)}
+  .site-cms-shell.site-cms-shell .site-cms-topbar.site-cms-topbar{padding-right:70px!important}
+  .workspace-page.workspace-page .workspace-header.workspace-header{padding-right:calc(clamp(20px,3vw,32px) + 54px)!important}
 }
 
 @media(max-width:680px){
   .account-menu--workspace{top:18px;right:16px}
   .account-menu--cms{top:18px;right:14px}
-  .site-cms-topbar{padding-right:68px!important}
-  .workspace-header{padding-right:68px}
+  .site-cms-shell.site-cms-shell .site-cms-topbar.site-cms-topbar{padding-right:68px!important}
+  .workspace-page.workspace-page .workspace-header.workspace-header{padding-right:68px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .account-menu__trigger,.account-menu__caret{transition:none}
 }
