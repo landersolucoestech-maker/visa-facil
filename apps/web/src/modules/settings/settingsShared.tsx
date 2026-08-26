@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
 import { getSettingsAutomationMock, getSettingsCompanyMock, getSettingsRoleMocks, getSettingsUserMocks } from './mocks/settingsMockProvider';
-import './settings.css';
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
 export type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
