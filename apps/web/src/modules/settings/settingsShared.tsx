@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
-import settingsMock from '../../mocks/settings/settings.dev.json';
-import { isMockDataEnabled } from '../../shared/runtimeFlags';
+import { getSettingsAutomationMock, getSettingsCompanyMock, getSettingsRoleMocks, getSettingsUserMocks } from './mocks/settingsMockProvider';
 import './settings.css';
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
@@ -17,14 +16,13 @@ export const TABS:Array<{id:Tab;label:string;icon:string}>=[
  {id:'usuarios',label:'Usuários',icon:'♙'},
 ];
 
-const mockEnabled=isMockDataEnabled();
 const blankCompany:Company={companyName:'',fantasyName:'',cnpj:'',address:'',phone:'',responsible:'',slug:''};
 const blankAutomations:Record<AutomationKey,boolean>={email:false,push:false,newLead:false,leadFollowup:false,financeMovement:false,weeklyFinance:false,weeklyReport:false,criticalAlerts:false,operational:false,backup:false};
 
-export const INITIAL_COMPANY:Company=mockEnabled?structuredClone(settingsMock.company) as Company:blankCompany;
-export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>=mockEnabled?structuredClone(settingsMock.automations) as Record<AutomationKey,boolean>:blankAutomations;
-export const INITIAL_USERS:UserRecord[]=mockEnabled?structuredClone(settingsMock.users) as UserRecord[]:[];
-export const INITIAL_ROLES:Role[]=mockEnabled?structuredClone(settingsMock.roles) as Role[]:[];
+export const INITIAL_COMPANY:Company=getSettingsCompanyMock()??blankCompany;
+export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>=getSettingsAutomationMock()??blankAutomations;
+export const INITIAL_USERS:UserRecord[]=getSettingsUserMocks();
+export const INITIAL_ROLES:Role[]=getSettingsRoleMocks();
 
 export function base(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
 export function Bell(){return <svg className="settings-bell-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
