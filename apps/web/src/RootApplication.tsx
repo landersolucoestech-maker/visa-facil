@@ -65,7 +65,7 @@ const FinancialCategoriesApp = lazy(() => import('./modules/finance/FinancialCat
 const FinancialRulesApp = lazy(() => import('./modules/finance/FinancialRulesApp').then(module => ({ default: module.FinancialRulesApp })));
 const MarketingApp = lazy(async () => {
   const module = await import('./modules/marketing/MarketingApp');
-  await import('./modules/marketing/marketing-overrides.css');
+  await import('./modules/marketing/marketing-actions.css');
   await import('./modules/marketing/marketing-year-reference.css');
   await import('./styles/marketing-refinement.css');
   await import('./styles/marketing-overview-refinement.css');
