@@ -71,11 +71,7 @@ const MarketingApp = lazy(async () => {
   await import('./styles/marketing-campaigns-refinement.css');
   return { default: module.default };
 });
-const ReportsApp = lazy(async () => {
-  const module = await import('./modules/reports/ReportsApp');
-  await import('./styles/reports-refinement.css');
-  return { default: module.default };
-});
+const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
 const SettingsApp = lazy(async () => {
   const module = await import('./modules/settings/SettingsApp');
   await import('./styles/settings-refinement.css');
