@@ -2,72 +2,93 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './global-notification-fallback.css';
 
-function BellIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>;
-}
-
 function isNotificationButton(button: HTMLButtonElement) {
   const label = `${button.getAttribute('aria-label') ?? ''} ${button.title ?? ''}`.toLocaleLowerCase('pt-BR');
   return label.includes('notifica') || label.includes('alerta');
 }
 
 export function GlobalNotificationFallback() {
+  const [target, setTarget] = useState<HTMLButtonElement | null>(null);
   const [host, setHost] = useState<HTMLElement | null>(null);
-  const [fallbackRequired, setFallbackRequired] = useState(false);
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let createdHost: HTMLElement | null = null;
-    const resolveHost = () => {
+    const resolveTarget = () => {
       const page = document.querySelector<HTMLElement>('.crm-global-page');
-      if (!page) return null;
-      const existing = page.querySelector<HTMLElement>('.crm-topbar .crm-topbar-actions');
-      if (existing) return existing;
-      const topbar = page.querySelector<HTMLElement>('.crm-topbar');
-      if (!topbar) return null;
-      const actions = document.createElement('div');
-      actions.className = 'crm-topbar-actions global-notification-host';
-      topbar.append(actions);
-      createdHost = actions;
-      return actions;
+      if (!page) return false;
+      const buttons = Array.from(page.querySelectorAll<HTMLButtonElement>('button')).filter(isNotificationButton);
+      const functionalButton = buttons.find((button) => !button.disabled && !button.hidden);
+      const disabledButton = buttons.find((button) => button.disabled && !button.hidden);
+
+      if (functionalButton || !disabledButton) {
+        setTarget(null);
+        setHost(null);
+        return Boolean(functionalButton);
+      }
+
+      setTarget(disabledButton);
+      setHost(disabledButton.parentElement);
+      return true;
     };
 
-    const existingHost = resolveHost();
-    if (existingHost) {
-      setHost(existingHost);
-      return () => createdHost?.remove();
-    }
+    if (resolveTarget()) return;
 
     const root = document.getElementById('root') ?? document.body;
     const observer = new MutationObserver(() => {
-      const nextHost = resolveHost();
-      if (!nextHost) return;
-      setHost(nextHost);
-      observer.disconnect();
+      if (resolveTarget()) observer.disconnect();
     });
     observer.observe(root, { childList: true, subtree: true });
-    return () => {
-      observer.disconnect();
-      createdHost?.remove();
-    };
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!host) return;
-    const existingButtons = Array.from(host.querySelectorAll<HTMLButtonElement>('button')).filter(isNotificationButton);
-    const functionalButton = existingButtons.find((button) => !button.disabled && !button.hidden);
-    const disabledButtons = existingButtons.filter((button) => button.disabled);
-    disabledButtons.forEach((button) => { button.hidden = true; });
-    setFallbackRequired(!functionalButton);
-    return () => disabledButtons.forEach((button) => { button.hidden = false; });
-  }, [host]);
+    if (!target || !host) return;
+
+    const original = {
+      disabled: target.disabled,
+      title: target.getAttribute('title'),
+      ariaLabel: target.getAttribute('aria-label'),
+      ariaHaspopup: target.getAttribute('aria-haspopup'),
+      ariaExpanded: target.getAttribute('aria-expanded'),
+      ariaControls: target.getAttribute('aria-controls'),
+    };
+
+    target.disabled = false;
+    target.setAttribute('aria-label', 'Notificações');
+    target.setAttribute('aria-haspopup', 'true');
+    target.setAttribute('aria-controls', 'global-notification-panel');
+    target.removeAttribute('title');
+    host.classList.add('global-notification-panel-host');
+
+    const toggle = (event: MouseEvent) => {
+      event.stopPropagation();
+      setOpen((current) => !current);
+    };
+    target.addEventListener('click', toggle);
+
+    return () => {
+      target.removeEventListener('click', toggle);
+      target.disabled = original.disabled;
+      if (original.title === null) target.removeAttribute('title'); else target.setAttribute('title', original.title);
+      if (original.ariaLabel === null) target.removeAttribute('aria-label'); else target.setAttribute('aria-label', original.ariaLabel);
+      if (original.ariaHaspopup === null) target.removeAttribute('aria-haspopup'); else target.setAttribute('aria-haspopup', original.ariaHaspopup);
+      if (original.ariaExpanded === null) target.removeAttribute('aria-expanded'); else target.setAttribute('aria-expanded', original.ariaExpanded);
+      if (original.ariaControls === null) target.removeAttribute('aria-controls'); else target.setAttribute('aria-controls', original.ariaControls);
+      host.classList.remove('global-notification-panel-host');
+    };
+  }, [target, host]);
 
   useEffect(() => {
-    if (!open) return;
+    if (target) target.setAttribute('aria-expanded', String(open));
+  }, [target, open]);
+
+  useEffect(() => {
+    if (!open || !target) return;
     const closeOutside = (event: PointerEvent) => {
-      const target = event.target;
-      if (target instanceof Node && rootRef.current && !rootRef.current.contains(target)) setOpen(false);
+      const node = event.target;
+      if (!(node instanceof Node)) return;
+      if (!target.contains(node) && panelRef.current && !panelRef.current.contains(node)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -78,26 +99,13 @@ export function GlobalNotificationFallback() {
       document.removeEventListener('pointerdown', closeOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [open]);
+  }, [open, target]);
 
-  if (!host || !fallbackRequired) return null;
+  if (!host || !target || !open) return null;
 
-  return createPortal(<div className="global-notification-menu" ref={rootRef}>
-    <button
-      className="crm-notification-button global-notification-menu__trigger"
-      type="button"
-      aria-label="Notificações"
-      aria-haspopup="true"
-      aria-expanded={open}
-      aria-controls="global-notification-panel"
-      onClick={() => setOpen((current) => !current)}
-    >
-      <BellIcon />
-    </button>
-    {open && <div className="global-notification-menu__panel" id="global-notification-panel" role="region" aria-label="Notificações">
-      <strong>Notificações</strong>
-      <p>Nenhuma notificação no momento.</p>
-    </div>}
+  return createPortal(<div className="global-notification-menu__panel" id="global-notification-panel" ref={panelRef} role="region" aria-label="Notificações">
+    <strong>Notificações</strong>
+    <p>Nenhuma notificação no momento.</p>
   </div>, host);
 }
 
