@@ -1,5 +1,4 @@
 name: Deploy Visa Fácil Website
-# Publishes the current dev head to GitHub Pages.
 
 on:
   push:
