@@ -1,12 +1,11 @@
 import { readSessionRecords, writeSessionRecords } from '../../shared/sessionRecords';
-import type { ContractAuditEvent, ContractCategory, ContractRecord, ContractSigner, ContractTemplate, ContractVariableDefinition, ContractVersion } from './contractTypes';
+import type { ContractAuditEvent, ContractRecord, ContractSigner, ContractTemplate, ContractVariableDefinition, ContractVersion } from './contractTypes';
 import { makePlaceholder } from './contractTemplateEngine';
 
 const KEYS={
- contracts:'visa-facil.session.contracts.v2',
- templates:'visa-facil.session.contract-templates.v2',
+ contracts:'visa-facil.session.contracts.v3',
+ templates:'visa-facil.session.contract-templates.v3',
  variables:'visa-facil.session.contract-variables.v2',
- categories:'visa-facil.session.contract-categories.v2',
 } as const;
 
 function isRecord(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
@@ -27,7 +26,7 @@ function isAudit(value:unknown):value is ContractAuditEvent{return isRecord(valu
 function isParty(value:unknown){return isRecord(value)&&isString(value.id)&&typeof value.role==='string'&&['client','representative','witness','other'].includes(value.role)&&typeof value.source==='string'&&['crm','manual'].includes(value.source)&&(value.crmRecordId===undefined||isString(value.crmRecordId))&&['name','cpf','rg','passportNumber','email','phone'].every(key=>isString(value[key]))}
 
 export function isContractRecord(value:unknown):value is ContractRecord{
- if(!isRecord(value)||!isString(value.id)||!isString(value.title)||!isString(value.categoryId)||!isString(value.templateId)||typeof value.status!=='string'||!CONTRACT_STATUSES.has(value.status))return false;
+ if(!isRecord(value)||!isString(value.id)||!isString(value.title)||!isString(value.templateId)||typeof value.status!=='string'||!CONTRACT_STATUSES.has(value.status))return false;
  if(value.clientId!==undefined&&!isString(value.clientId))return false;
  if(!['serviceDescription','destination','visaType','startDate','endDate','notes','templateSnapshot','documentContent','createdAt','updatedAt'].every(key=>isString(value[key])))return false;
  if(typeof value.value!=='number'||!Number.isFinite(value.value)||value.value<0)return false;
@@ -41,20 +40,12 @@ export function isContractRecord(value:unknown):value is ContractRecord{
  return Array.isArray(value.audit)&&value.audit.every(isAudit)&&uniqueIds(value.audit as ContractAuditEvent[]);
 }
 
-export function isContractTemplate(value:unknown):value is ContractTemplate{return isRecord(value)&&isString(value.id)&&isString(value.name)&&isString(value.categoryId)&&isString(value.description)&&isString(value.content)&&isBoolean(value.active)&&isString(value.createdAt)&&isString(value.updatedAt)}
+export function isContractTemplate(value:unknown):value is ContractTemplate{return isRecord(value)&&isString(value.id)&&isString(value.name)&&isString(value.description)&&isString(value.content)&&isBoolean(value.active)&&isString(value.createdAt)&&isString(value.updatedAt)}
 export function isContractVariable(value:unknown):value is ContractVariableDefinition{return isRecord(value)&&isString(value.id)&&isString(value.group)&&isString(value.field)&&isString(value.placeholder)&&isString(value.label)&&typeof value.type==='string'&&VARIABLE_TYPES.has(value.type)&&isBoolean(value.required)&&isString(value.description)&&isString(value.createdAt)&&isString(value.updatedAt)}
-export function isContractCategory(value:unknown):value is ContractCategory{return isRecord(value)&&isString(value.id)&&isString(value.label)&&isString(value.slug)&&isString(value.description)&&isBoolean(value.active)&&isString(value.createdAt)&&isString(value.updatedAt)}
 
 function now(){return new Date().toISOString()}
 function stableId(seed:string){return `builtin-${seed}`}
 function variable(seed:string,group:string,field:string,label:string,type:ContractVariableDefinition['type']='text',required=false,description=''):ContractVariableDefinition{const stamp='2026-08-25T00:00:00.000Z';return{id:stableId(seed),group,field,placeholder:makePlaceholder(group,field),label,type,required,description,createdAt:stamp,updatedAt:stamp}}
-
-function defaultCategories():ContractCategory[]{const stamp='2026-08-25T00:00:00.000Z';return[
- {id:stableId('category-assessoria'),label:'Assessoria de Visto',slug:'assessoria-visto',description:'Prestação de assessoria para processos de visto.',active:true,createdAt:stamp,updatedAt:stamp},
- {id:stableId('category-consultoria'),label:'Consultoria',slug:'consultoria',description:'Consultoria documental, estratégica ou preparatória.',active:true,createdAt:stamp,updatedAt:stamp},
- {id:stableId('category-documental'),label:'Revisão Documental',slug:'revisao-documental',description:'Revisão, organização e conferência documental.',active:true,createdAt:stamp,updatedAt:stamp},
- {id:stableId('category-personalizado'),label:'Serviço Personalizado',slug:'servico-personalizado',description:'Categoria flexível para serviços fora das categorias padrão.',active:true,createdAt:stamp,updatedAt:stamp},
-]}
 
 function defaultVariables():ContractVariableDefinition[]{return[
  variable('empresa-nome','EMPRESA','NOME_FANTASIA','Nome fantasia da empresa','text',true),
@@ -81,7 +72,6 @@ function defaultVariables():ContractVariableDefinition[]{return[
 function defaultTemplates():ContractTemplate[]{const stamp='2026-08-25T00:00:00.000Z';return[{
  id:stableId('template-assessoria'),
  name:'Contrato de Assessoria de Visto',
- categoryId:stableId('category-assessoria'),
  description:'Modelo-base adaptável para prestação de assessoria em processo de visto.',
  active:true,
  content:`CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA\n\nCONTRATADA: {{EMPRESA.NOME_FANTASIA}}.\nCONTRATANTE: {{CLIENTE.NOME}}, CPF {{CLIENTE.CPF}}, documento de viagem {{CLIENTE.PASSAPORTE}}, e-mail {{CLIENTE.EMAIL}}.\n\nOBJETO\nA CONTRATADA prestará os seguintes serviços: {{PROCESSO.SERVICO}}, relacionados ao processo de {{PROCESSO.TIPO_VISTO}} com destino a {{PROCESSO.DESTINO}}.\n\nVALOR E VIGÊNCIA\nValor contratado: {{CONTRATO.VALOR}}. Início: {{CONTRATO.DATA_INICIO}}. Término previsto: {{CONTRATO.DATA_FIM}}.\n\nOBSERVAÇÕES\n{{CONTRATO.OBSERVACOES}}\n\nAs condições específicas, responsabilidades, limites do serviço e demais cláusulas devem ser revisadas e ajustadas antes do envio para assinatura.`,
@@ -95,8 +85,6 @@ export function getContractTemplates(){return readSessionRecords<ContractTemplat
 export function saveContractTemplates(records:ContractTemplate[]){return writeSessionRecords(KEYS.templates,records,isContractTemplate)}
 export function getContractVariables(){return readSessionRecords<ContractVariableDefinition>(KEYS.variables,defaultVariables,isContractVariable)}
 export function saveContractVariables(records:ContractVariableDefinition[]){return writeSessionRecords(KEYS.variables,records,isContractVariable)}
-export function getContractCategories(){return readSessionRecords<ContractCategory>(KEYS.categories,defaultCategories,isContractCategory)}
-export function saveContractCategories(records:ContractCategory[]){return writeSessionRecords(KEYS.categories,records,isContractCategory)}
 
 export function createAudit(type:ContractAuditEvent['type'],label:string,detail?:string):ContractAuditEvent{return{id:crypto.randomUUID(),type,label,detail,createdAt:now()}}
 export function createVersion(label:string,content:string,note:string):ContractVersion{return{id:crypto.randomUUID(),label,content,note,createdAt:now()}}
