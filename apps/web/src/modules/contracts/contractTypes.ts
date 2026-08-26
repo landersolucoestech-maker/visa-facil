@@ -56,7 +56,6 @@ export type ContractAuditEvent={
 export type ContractRecord={
  id:string;
  title:string;
- categoryId:string;
  templateId:string;
  status:ContractStatus;
  clientId?:string;
@@ -85,7 +84,6 @@ export type ContractRecord={
 export type ContractTemplate={
  id:string;
  name:string;
- categoryId:string;
  description:string;
  content:string;
  active:boolean;
@@ -106,19 +104,8 @@ export type ContractVariableDefinition={
  updatedAt:string;
 };
 
-export type ContractCategory={
- id:string;
- label:string;
- slug:string;
- description:string;
- active:boolean;
- createdAt:string;
- updatedAt:string;
-};
-
 export type ContractEditorDraft={
  title:string;
- categoryId:string;
  templateId:string;
  status:'draft'|'review';
  clientId:string;
