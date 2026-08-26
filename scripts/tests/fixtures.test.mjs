@@ -129,7 +129,7 @@ test('attendance fixtures keep conversations and message ids unique',()=>{
     assert.ok(Number.isInteger(conversation.unread)&&conversation.unread>=0);
     assert.ok(Array.isArray(conversation.messages));
     uniqueIds(conversation.messages,`Messages for ${conversation.id}`);
-    conversation.messages.forEach((message)=>assert.ok(['customer','agent','system'].includes(message.sender)));
+    conversation.messages.forEach((message)=>assert.ok(['customer','agent','team','system'].includes(message.sender)));
   }
 });
 
