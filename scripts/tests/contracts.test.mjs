@@ -16,17 +16,25 @@ test('contract placeholders are normalized, unique and resolved as plain text',(
 
 test('contracts source keeps validated stores and an empty operational seed',()=>{
   const store=read('apps/web/src/modules/contracts/contractSessionStore.ts');
-  for(const token of ['isContractRecord','isContractTemplate','isContractVariable','isContractCategory','readSessionRecords','writeSessionRecords'])assert.ok(store.includes(token),`missing ${token}`);
+  for(const token of ['isContractRecord','isContractTemplate','isContractVariable','readSessionRecords','writeSessionRecords'])assert.ok(store.includes(token),`missing ${token}`);
   assert.ok(store.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"));
   assert.ok(store.includes("value.signatureProvider===null||value.signatureProvider==='autentique'"));
+  assert.equal(store.includes('ContractCategory'),false);
+  assert.equal(store.includes('contract-categories'),false);
   assert.equal(store.toLowerCase().includes('docusign'),false);
   assert.equal(store.toLowerCase().includes('clicksign'),false);
 });
 
-test('reference adaptation keeps the visa contract model and six-step workflow',()=>{
+test('reference adaptation keeps the visa contract model and six-step workflow without redundant page tabs',()=>{
   const editor=read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
   const app=read('apps/web/src/modules/contracts/ContractsApp.tsx');
+  const types=read('apps/web/src/modules/contracts/contractTypes.ts');
   for(const step of ['Template','Partes','Variáveis','Documento','Signatários','Revisão'])assert.ok(editor.includes(step),`missing step ${step}`);
-  for(const route of ['/crm/contratos/templates','/crm/contratos/variaveis','/crm/contratos/categorias'])assert.ok(app.includes(route),`missing route ${route}`);
+  for(const route of ['/crm/contratos/templates','/crm/contratos/variaveis'])assert.ok(app.includes(route),`missing route ${route}`);
+  assert.equal(app.includes('contracts-module-tabs'),false);
+  assert.equal(app.includes('CategoriesWorkspace'),false);
+  assert.equal(app.includes('/crm/contratos/categorias'),false);
+  assert.equal(types.includes('ContractCategory'),false);
+  assert.equal(types.includes('categoryId'),false);
   for(const forbidden of ['obra musical','lançamento musical','clicksign','docusign'])assert.equal(`${editor}\n${app}`.toLowerCase().includes(forbidden),false);
 });
