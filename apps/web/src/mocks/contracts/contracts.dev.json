@@ -1,0 +1,34 @@
+{
+  "templates": [
+    {
+      "id": "builtin-template-assessoria",
+      "name": "Contrato de Assessoria de Visto",
+      "description": "Modelo-base adaptável para prestação de assessoria em processo de visto.",
+      "content": "CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE ASSESSORIA\n\nCONTRATADA: {{EMPRESA.NOME_FANTASIA}}.\nCONTRATANTE: {{CLIENTE.NOME}}, CPF {{CLIENTE.CPF}}, documento de viagem {{CLIENTE.PASSAPORTE}}, e-mail {{CLIENTE.EMAIL}}.\n\nOBJETO\nA CONTRATADA prestará os seguintes serviços: {{PROCESSO.SERVICO}}, relacionados ao processo de {{PROCESSO.TIPO_VISTO}} com destino a {{PROCESSO.DESTINO}}.\n\nVALOR E VIGÊNCIA\nValor contratado: {{CONTRATO.VALOR}}. Início: {{CONTRATO.DATA_INICIO}}. Término previsto: {{CONTRATO.DATA_FIM}}.\n\nOBSERVAÇÕES\n{{CONTRATO.OBSERVACOES}}\n\nAs condições específicas, responsabilidades, limites do serviço e demais cláusulas devem ser revisadas e ajustadas antes do envio para assinatura.",
+      "active": true,
+      "createdAt": "2026-08-25T00:00:00.000Z",
+      "updatedAt": "2026-08-25T00:00:00.000Z"
+    }
+  ],
+  "variables": [
+    {"id":"builtin-empresa-nome","group":"EMPRESA","field":"NOME_FANTASIA","placeholder":"{{EMPRESA.NOME_FANTASIA}}","label":"Nome fantasia da empresa","type":"text","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-nome","group":"CLIENTE","field":"NOME","placeholder":"{{CLIENTE.NOME}}","label":"Nome completo do cliente","type":"text","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-cpf","group":"CLIENTE","field":"CPF","placeholder":"{{CLIENTE.CPF}}","label":"CPF do cliente","type":"cpf","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-rg","group":"CLIENTE","field":"RG","placeholder":"{{CLIENTE.RG}}","label":"RG do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-passaporte","group":"CLIENTE","field":"PASSAPORTE","placeholder":"{{CLIENTE.PASSAPORTE}}","label":"Número do passaporte","type":"passport","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-email","group":"CLIENTE","field":"EMAIL","placeholder":"{{CLIENTE.EMAIL}}","label":"E-mail do cliente","type":"email","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-telefone","group":"CLIENTE","field":"TELEFONE","placeholder":"{{CLIENTE.TELEFONE}}","label":"Telefone do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-whatsapp","group":"CLIENTE","field":"WHATSAPP","placeholder":"{{CLIENTE.WHATSAPP}}","label":"WhatsApp do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-cidade","group":"CLIENTE","field":"CIDADE","placeholder":"{{CLIENTE.CIDADE}}","label":"Cidade do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-estado","group":"CLIENTE","field":"ESTADO","placeholder":"{{CLIENTE.ESTADO}}","label":"Estado do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-cliente-pais","group":"CLIENTE","field":"PAIS","placeholder":"{{CLIENTE.PAIS}}","label":"País do cliente","type":"text","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-processo-destino","group":"PROCESSO","field":"DESTINO","placeholder":"{{PROCESSO.DESTINO}}","label":"País de destino","type":"text","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-processo-visto","group":"PROCESSO","field":"TIPO_VISTO","placeholder":"{{PROCESSO.TIPO_VISTO}}","label":"Tipo de visto","type":"text","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-processo-servico","group":"PROCESSO","field":"SERVICO","placeholder":"{{PROCESSO.SERVICO}}","label":"Descrição do serviço","type":"textarea","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-contrato-titulo","group":"CONTRATO","field":"TITULO","placeholder":"{{CONTRATO.TITULO}}","label":"Título do contrato","type":"text","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-contrato-valor","group":"CONTRATO","field":"VALOR","placeholder":"{{CONTRATO.VALOR}}","label":"Valor do contrato","type":"currency","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-contrato-inicio","group":"CONTRATO","field":"DATA_INICIO","placeholder":"{{CONTRATO.DATA_INICIO}}","label":"Data de início","type":"date","required":true,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-contrato-fim","group":"CONTRATO","field":"DATA_FIM","placeholder":"{{CONTRATO.DATA_FIM}}","label":"Data de término","type":"date","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"},
+    {"id":"builtin-contrato-observacoes","group":"CONTRATO","field":"OBSERVACOES","placeholder":"{{CONTRATO.OBSERVACOES}}","label":"Observações","type":"textarea","required":false,"description":"","createdAt":"2026-08-25T00:00:00.000Z","updatedAt":"2026-08-25T00:00:00.000Z"}
+  ]
+}
