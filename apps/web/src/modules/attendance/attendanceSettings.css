@@ -41,7 +41,7 @@
   align-items:center!important;
   justify-content:flex-end!important;
   gap:8px!important;
-  flex-wrap:wrap!important;
+  flex-wrap:nowrap!important;
 }
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-actions.visachat-ref-actions .crm-btn-secondary{
   border:1px solid #d8dde5!important;
@@ -62,5 +62,43 @@
   -webkit-text-fill-color:#fff!important;
 }
 
-@media(max-width:1050px){.visachat-ref-header{flex-direction:column}.visachat-ref-actions{justify-content:flex-start}.visachat-ref-grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-menu-row,.visachat-ref-escalation-row{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-inline-actions{grid-column:1/-1}}
+/* Header controls da configuração: sino imediatamente antes do Account Menu. */
+.crm-global-page .visachat-ref-topbar-menu{position:relative;order:4;flex:0 0 36px}
+.crm-global-page .visachat-ref-actions>.account-menu--crm{order:5;flex:0 0 188px}
+.crm-global-page .visachat-ref-notification-button{
+  position:relative!important;
+  width:36px!important;
+  min-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid #d8dde5!important;
+  border-radius:5px!important;
+  background:#fff!important;
+  color:#1b365f!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+}
+.crm-global-page .visachat-ref-notification-button>svg{width:18px;height:18px;color:#1b365f;stroke:currentColor}
+.crm-global-page .visachat-ref-notification-button:hover,.crm-global-page .visachat-ref-notification-button[aria-expanded="true"]{border-color:#aeb8c7!important;background:#f7f8fa!important;color:#102a59!important}
+.crm-global-page .visachat-ref-notifications{
+  position:absolute;
+  top:calc(100% + 7px);
+  right:0;
+  z-index:95;
+  width:250px;
+  padding:13px;
+  border:1px solid #d9dee6;
+  border-radius:6px;
+  background:#fff;
+  box-shadow:0 12px 28px rgba(13,27,61,.13);
+  -webkit-text-fill-color:initial;
+}
+.crm-global-page .visachat-ref-notifications strong{display:block;color:#102a59!important;-webkit-text-fill-color:#102a59!important;font-size:12px}
+.crm-global-page .visachat-ref-notifications p{margin:7px 0 0!important;color:#6f7b8b!important;-webkit-text-fill-color:#6f7b8b!important;font-size:10.5px!important;line-height:1.45!important}
+
+@media(max-width:1180px){.crm-global-page .visachat-ref-actions>.account-menu--crm{flex-basis:42px}}
+@media(max-width:1050px){.visachat-ref-header{flex-direction:column}.visachat-ref-actions{justify-content:flex-start}.visachat-ref-grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-menu-row,.visachat-ref-escalation-row{grid-template-columns:repeat(2,minmax(0,1fr))}.visachat-ref-inline-actions{grid-column:1/-1}.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-actions.visachat-ref-actions{flex-wrap:wrap!important}}
 @media(max-width:720px){.visachat-ref-tabs{overflow-x:auto}.visachat-ref-grid2,.visachat-ref-grid4,.visachat-ref-menu-row,.visachat-ref-escalation-row,.visachat-ref-return-row{grid-template-columns:1fr}.visachat-ref-accordion-trigger{flex-wrap:wrap}.visachat-ref-accordion-trigger>b{margin-left:0}.visachat-ref-field-list>div,.visachat-ref-add-field{grid-template-columns:1fr}.visachat-ref-card>header{flex-direction:column}.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-header.visachat-ref-header{align-items:flex-start!important;gap:10px!important}.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .visachat-ref-actions.visachat-ref-actions{justify-content:flex-start!important}}
