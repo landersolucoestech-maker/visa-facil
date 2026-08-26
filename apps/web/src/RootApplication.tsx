@@ -35,7 +35,7 @@ const CrmApp = lazy(async () => {
 const CrmDashboardApp = lazy(async () => {
   const module = await import('./modules/crm/CrmDashboardApp');
   await import('./modules/crm/crm.css');
-  await import('./styles/crm-dashboard-cards.css');
+  await import('./modules/crm/crm-dashboard-cards.css');
   return { default: module.default };
 });
 const FinanceTransactionsApp = lazy(() => import('./modules/finance/FinanceTransactionsApp'));
