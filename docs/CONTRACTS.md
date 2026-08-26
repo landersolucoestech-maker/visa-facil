@@ -49,9 +49,9 @@ O único provedor de assinatura admitido pelo contrato atual é `autentique`. Um
 - templates;
 - variáveis.
 
-Todas as leituras e gravações reutilizam `shared/sessionRecords.ts`, com validação runtime e unicidade de IDs. Contratos operacionais começam vazios: não há registros fictícios de contratos para produção.
+Todas as leituras e gravações reutilizam `shared/sessionRecords.ts`, com validação runtime e unicidade de IDs. No protótipo atual, o provider de Contratos fornece registros operacionais demonstrativos centralizados e validados para exercitar listagem, visualização, edição e fluxo documental. Esses registros são apenas seeds locais: não representam contratos reais, não constituem persistência de produção e não simulam envio ou conclusão de assinatura eletrônica.
 
-Templates e variáveis possuem apenas dados-base de configuração para tornar a experiência utilizável. Esses registros não representam contratos reais de clientes.
+Os fixtures contratuais permanecem sem provedor de assinatura efetivamente acionado (`signatureProvider = null`) e com `signatureState = not_sent`. Templates e variáveis também possuem dados-base de configuração para tornar a experiência utilizável.
 
 A persistência atual usa `sessionStorage`. Portanto, ela serve ao frontend atual e à validação de UX, mas não é banco de dados, não é multiusuário e não deve ser usada para contratos reais em produção.
 

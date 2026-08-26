@@ -46,7 +46,7 @@ A implementação server-side, OAuth, tokens, webhooks, workers e credenciais ai
 
 A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = false`) enquanto não existir um provedor real. Não deve ser substituída por validação de credenciais apenas no navegador.
 
-Fixtures `*.dev.json` são permitidos somente por providers de desenvolvimento, passam por validação runtime e só são carregados quando `import.meta.env.DEV` e `VITE_CRM_MOCKS=true`. Builds publicados não devem habilitar mocks.
+Fixtures `*.dev.json` são dados demonstrativos centralizados, acessados somente por providers de domínio e validados antes de inicializar o estado local. No protótipo atual, os mocks ficam habilitados por padrão — inclusive no build do GitHub Pages — para que a interface abra com dados representativos. Defina `VITE_CRM_MOCKS=false` para desabilitar todos os datasets centralizados. Esse mecanismo não pode fabricar autenticação, autorização, conexão de integração, assinatura eletrônica, persistência remota ou qualquer sucesso externo inexistente.
 
 Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates e variáveis. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
 
@@ -73,18 +73,20 @@ A importação OFX funciona no frontend e adiciona transações à sessão atual
 
 Invoices mantêm um modelo próprio do documento fiscal/faturamento e não são somadas novamente na Contabilidade, evitando dupla contagem com Transações. Somente pagamentos `Liquidado` entram em `paid`; `Pago` e `Parcialmente pago` são derivados do ledger, e o total não pode ser reduzido abaixo do valor já liquidado.
 
-Contratos operacionais iniciam vazios, sem registros fictícios. Templates e variáveis possuem configuração inicial validada para suportar o fluxo do frontend. O **Template é simultaneamente o modelo documental e a classificação canônica do contrato**; não existe uma entidade paralela de Categoria. O wizard segue `Template → Partes → Variáveis → Documento → Signatários → Revisão`; contratos vinculados ao CRM preservam um snapshot dos dados usados no documento, e alterações no template não reescrevem silenciosamente versões existentes.
+Contratos possuem registros operacionais demonstrativos centralizados e validados para exercitar o fluxo do protótipo, além de templates e variáveis de configuração. Esses registros são apenas seeds locais e não representam contratos reais nem conclusão de assinatura externa: os fixtures permanecem com `signatureProvider = null` e `signatureState = not_sent`. O **Template é simultaneamente o modelo documental e a classificação canônica do contrato**; não existe uma entidade paralela de Categoria. O wizard segue `Template → Partes → Variáveis → Documento → Signatários → Revisão`; contratos vinculados ao CRM preservam um snapshot dos dados usados no documento, e alterações no template não reescrevem silenciosamente versões existentes.
 
 ## Desenvolvimento
 
 ```bash
 npm ci
-VITE_CRM_MOCKS=true npm run dev
+npm run dev
 ```
+
+O protótipo abre com os datasets centralizados habilitados por padrão. Para iniciar os módulos sem esses seeds demonstrativos, use `VITE_CRM_MOCKS=false npm run dev`.
 
 Para testar o frontend contra uma API backend local/configurada, defina também `VITE_API_BASE_URL` com uma URL pública apropriada ao navegador. Não coloque segredos em variáveis `VITE_*`.
 
-Sem `VITE_CRM_MOCKS=true`, os módulos que dependem de fixtures iniciam sem dados demonstrativos; registros criados durante o uso continuam restritos à sessão atual do navegador.
+Registros criados durante o uso continuam restritos à sessão atual do navegador, independentemente de os seeds demonstrativos estarem habilitados ou não.
 
 ## Validação obrigatória
 

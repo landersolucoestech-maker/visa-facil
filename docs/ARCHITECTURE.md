@@ -26,7 +26,7 @@ Principais domínios:
 - `modules/attendance` — VisaChat/atendimentos;
 - `modules/tasks` — tarefas;
 - `modules/agenda` — agenda;
-- `modules/contracts` — shell do módulo Contratos; modelo funcional definitivo aguarda arquivo de referência;
+- `modules/contracts` — gestão contratual frontend com contratos, templates, variáveis, partes, signatários, versões e histórico local;
 - `modules/finance` — transações, invoices, categorias, regras e contabilidade;
 - `modules/marketing` — marketing;
 - `modules/integrations` — registro canônico e facade frontend das integrações;
@@ -65,7 +65,7 @@ OAuth, armazenamento/renovação de tokens, callbacks, webhooks, idempotência, 
 
 `shared/operationalSessionStore.ts` centraliza os domínios que alimentam diretamente o Dashboard: Relacionamento, Tarefas, Agenda, Transações e VisaChat. Invoices utiliza `modules/finance/invoiceSessionStore.ts`. Marketing utiliza `modules/marketing/marketingSessionStore.ts`.
 
-Providers `*.dev.json` são apenas seeds de desenvolvimento. Componentes mutáveis não devem lê-los diretamente.
+Providers `*.dev.json` são apenas seeds demonstrativos centralizados. Componentes mutáveis não devem lê-los diretamente.
 
 Essa camada **não é persistência remota**. Uma nova sessão do navegador ou outro dispositivo não compartilha dados.
 
@@ -91,21 +91,25 @@ Finalizar uma campanha local não simula ativação em plataforma externa. Opera
 
 ### Contratos
 
-`/crm/contratos` existe como módulo lazy e integrado ao sidebar, mas propositalmente não contém CRUD ou operações fictícias. Campos, estados, regras, documentos, signatários, timeline e experiência operacional serão definidos após análise do arquivo de referência que o usuário fornecerá.
+`modules/contracts/contractTypes.ts` define o domínio canônico de contratos, partes, signatários, templates, variáveis, versões e histórico. `modules/contracts/contractSessionStore.ts` mantém o estado validado da sessão e usa os providers centralizados apenas como fallback demonstrativo.
 
-A integração Autentique foi preparada no registro de integrações e deverá ser ligada ao modelo canônico de Contratos somente após esse contrato de domínio ser definido.
+O Template é simultaneamente o modelo documental e a classificação estrutural do contrato; não existe entidade paralela de Categoria. O fluxo de criação possui seis etapas: `Template → Partes → Variáveis → Documento → Signatários → Revisão`.
+
+Os fixtures operacionais permitem exercitar o módulo no protótipo, mas não simulam assinatura externa: registros demonstrativos permanecem sem provedor efetivamente enviado (`signatureProvider = null`) e com `signatureState = not_sent`. Autentique é o único provedor de assinatura previsto e só poderá mudar estados externos quando existir backend, persistência real e integração conectada.
+
+Consulte `docs/CONTRACTS.md` para o contrato funcional completo.
 
 ### Fixtures de desenvolvimento
 
-Arquivos `*.dev.json` são dados de demonstração, não persistência. Só podem ser acessados por providers governados por `shared/runtimeFlags.ts` e quando:
+Arquivos `*.dev.json` são dados de demonstração, não persistência. Só podem ser acessados por providers governados por `shared/runtimeFlags.ts` e validados antes de inicializar os stores locais.
+
+No protótipo atual, os datasets centralizados ficam habilitados por padrão, inclusive no build publicado pelo GitHub Pages. Para desabilitar todos os seeds demonstrativos, defina:
 
 ```text
-import.meta.env.DEV === true
-AND
-VITE_CRM_MOCKS === "true"
+VITE_CRM_MOCKS=false
 ```
 
-Builds publicados não devem habilitar fixtures.
+Essa política não autoriza mocks de integrações externas, autenticação, autorização, assinaturas, emissão fiscal ou qualquer sucesso server-side inexistente.
 
 ## Autenticação, autorização e segurança
 
@@ -143,7 +147,7 @@ Ele executa validação arquitetural, lint estrutural, testes automatizados, aud
 
 `scripts/lint-source.mjs` protege, entre outros pontos: `any` explícito, fixtures fora de providers, sidebars concorrentes, bypass de stores canônicos, AccountMenu/loader globais, ordem do sidebar, ausência da rota Contratos, integração estática paralela, segredo em `VITE_*`, formulário público demonstrativo e regressão do contrato frontend de integrações.
 
-`scripts/tests` cobre fixtures, financeiro, CMS, OFX, session stores e o registro canônico das integrações.
+`scripts/tests` cobre fixtures, financeiro, CMS, OFX, session stores, Contratos, contrato visual do CRM e o registro canônico das integrações.
 
 ## Critérios para novas features
 

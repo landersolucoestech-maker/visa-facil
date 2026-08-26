@@ -24,7 +24,7 @@ O frontend passou por consolidação arquitetural, mas o projeto ainda não é u
 
 Criar API backend versionada, banco de dados persistente, migrations, constraints, índices, transações e estratégia de backup. Migrar os estados hoje limitados a `sessionStorage`/`localStorage` para fontes server-side quando os domínios correspondentes forem ativados para produção.
 
-Contratos deverá migrar sua fonte de sessão para tabelas/entidades persistentes de contratos, versões, templates, categorias, variáveis, partes, signatários, anexos e eventos de auditoria. O snapshot documental e o relacionamento entre versões precisam ser preservados no servidor, não apenas no navegador.
+Contratos deverá migrar sua fonte de sessão para tabelas/entidades persistentes de contratos, versões, templates, variáveis, partes, signatários, anexos e eventos de auditoria. O Template deve continuar sendo a classificação estrutural canônica do contrato; não deve ser reintroduzida uma entidade paralela de Categoria sem uma nova decisão explícita de domínio. O snapshot documental e o relacionamento entre versões precisam ser preservados no servidor, não apenas no navegador.
 
 ### Identidade e autorização
 
@@ -60,6 +60,8 @@ A suíte atual protege contratos, regras financeiras, stores e build/runtime do 
 ### GitHub Pages
 
 Pages hospeda frontend estático. Uma API real precisa ser publicada separadamente ou roteada por infraestrutura adequada. Segredos não podem existir no deployment estático.
+
+O build publicado atualmente mantém os datasets demonstrativos centralizados habilitados por padrão para suportar a validação do protótipo. Esses dados não constituem persistência nem estado real de produção e não podem representar integrações conectadas, autenticação, autorização, emissão fiscal ou assinatura concluída. Quando o ambiente deixar de ser demonstrativo, `VITE_CRM_MOCKS=false` deve ser aplicado antes da exposição a dados reais.
 
 ## Funcionalidades deliberadamente indisponíveis enquanto não houver backend
 
