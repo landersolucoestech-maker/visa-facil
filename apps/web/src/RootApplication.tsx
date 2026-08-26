@@ -18,11 +18,7 @@ const PublicSitePage = lazy(async () => {
   await import('./modules/public-site/content/cms-preview.css');
   return { default: module.PublicSitePage };
 });
-const AgendaApp = lazy(async () => {
-  const module = await import('./modules/agenda/AgendaApp');
-  await import('./styles/agenda-refinement.css');
-  return { default: module.AgendaApp };
-});
+const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp'));
 const AttendanceApp = lazy(async () => {
   const module = await import('./modules/attendance/AttendanceApp');
   await import('./styles/visachat-refinement.css');
