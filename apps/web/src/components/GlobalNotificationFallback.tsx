@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './global-notification-fallback.css';
 
+const PANEL_MAX_WIDTH = 280;
+const PANEL_GUTTER = 12;
+const PANEL_GAP = 8;
+
+type PanelPosition = { top: number; left: number; width: number };
+
 function isNotificationButton(button: HTMLButtonElement) {
   const label = `${button.getAttribute('aria-label') ?? ''} ${button.title ?? ''}`.toLocaleLowerCase('pt-BR');
   return label.includes('notifica') || label.includes('alerta');
@@ -9,8 +15,8 @@ function isNotificationButton(button: HTMLButtonElement) {
 
 export function GlobalNotificationFallback() {
   const [target, setTarget] = useState<HTMLButtonElement | null>(null);
-  const [host, setHost] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
+  const [panelPosition, setPanelPosition] = useState<PanelPosition>();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,12 +29,10 @@ export function GlobalNotificationFallback() {
 
       if (functionalButton || !disabledButton) {
         setTarget(null);
-        setHost(null);
         return Boolean(functionalButton);
       }
 
       setTarget(disabledButton);
-      setHost(disabledButton.parentElement);
       return true;
     };
 
@@ -43,7 +47,7 @@ export function GlobalNotificationFallback() {
   }, []);
 
   useEffect(() => {
-    if (!target || !host) return;
+    if (!target) return;
 
     const original = {
       disabled: target.disabled,
@@ -54,16 +58,28 @@ export function GlobalNotificationFallback() {
       ariaControls: target.getAttribute('aria-controls'),
     };
 
+    const updatePosition = () => {
+      const rect = target.getBoundingClientRect();
+      const width = Math.min(PANEL_MAX_WIDTH, Math.max(0, window.innerWidth - PANEL_GUTTER * 2));
+      const preferredLeft = rect.right - width;
+      const maxLeft = Math.max(PANEL_GUTTER, window.innerWidth - width - PANEL_GUTTER);
+      const left = Math.max(PANEL_GUTTER, Math.min(preferredLeft, maxLeft));
+      setPanelPosition({ top: Math.round(rect.bottom + PANEL_GAP), left: Math.round(left), width: Math.round(width) });
+    };
+
     target.disabled = false;
     target.setAttribute('aria-label', 'Notificações');
     target.setAttribute('aria-haspopup', 'true');
     target.setAttribute('aria-controls', 'global-notification-panel');
     target.removeAttribute('title');
-    host.classList.add('global-notification-panel-host');
 
     const toggle = (event: MouseEvent) => {
       event.stopPropagation();
-      setOpen((current) => !current);
+      setOpen((current) => {
+        const next = !current;
+        if (next) updatePosition();
+        return next;
+      });
     };
     target.addEventListener('click', toggle);
 
@@ -75,9 +91,8 @@ export function GlobalNotificationFallback() {
       if (original.ariaHaspopup === null) target.removeAttribute('aria-haspopup'); else target.setAttribute('aria-haspopup', original.ariaHaspopup);
       if (original.ariaExpanded === null) target.removeAttribute('aria-expanded'); else target.setAttribute('aria-expanded', original.ariaExpanded);
       if (original.ariaControls === null) target.removeAttribute('aria-controls'); else target.setAttribute('aria-controls', original.ariaControls);
-      host.classList.remove('global-notification-panel-host');
     };
-  }, [target, host]);
+  }, [target]);
 
   useEffect(() => {
     if (target) target.setAttribute('aria-expanded', String(open));
@@ -85,6 +100,16 @@ export function GlobalNotificationFallback() {
 
   useEffect(() => {
     if (!open || !target) return;
+
+    const updatePosition = () => {
+      const rect = target.getBoundingClientRect();
+      const width = Math.min(PANEL_MAX_WIDTH, Math.max(0, window.innerWidth - PANEL_GUTTER * 2));
+      const preferredLeft = rect.right - width;
+      const maxLeft = Math.max(PANEL_GUTTER, window.innerWidth - width - PANEL_GUTTER);
+      const left = Math.max(PANEL_GUTTER, Math.min(preferredLeft, maxLeft));
+      setPanelPosition({ top: Math.round(rect.bottom + PANEL_GAP), left: Math.round(left), width: Math.round(width) });
+    };
+
     const closeOutside = (event: PointerEvent) => {
       const node = event.target;
       if (!(node instanceof Node)) return;
@@ -93,20 +118,32 @@ export function GlobalNotificationFallback() {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
+
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
     document.addEventListener('pointerdown', closeOutside);
     document.addEventListener('keydown', closeOnEscape);
     return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
       document.removeEventListener('pointerdown', closeOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [open, target]);
 
-  if (!host || !target || !open) return null;
+  if (!target || !open || !panelPosition) return null;
 
-  return createPortal(<div className="global-notification-menu__panel" id="global-notification-panel" ref={panelRef} role="region" aria-label="Notificações">
+  return createPortal(<div
+    className="global-notification-menu__panel"
+    id="global-notification-panel"
+    ref={panelRef}
+    role="region"
+    aria-label="Notificações"
+    style={{ top: panelPosition.top, left: panelPosition.left, width: panelPosition.width }}
+  >
     <strong>Notificações</strong>
     <p>Nenhuma notificação no momento.</p>
-  </div>, host);
+  </div>, document.body);
 }
 
 export default GlobalNotificationFallback;

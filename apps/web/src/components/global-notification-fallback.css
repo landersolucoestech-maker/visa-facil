@@ -1,5 +1,3 @@
-.global-notification-panel-host{position:relative}
-.global-notification-menu__panel{position:absolute;z-index:90;top:calc(100% + 8px);right:0;width:min(280px,calc(100vw - 32px));padding:12px 14px;border:1px solid var(--vf-border,#d9dee6);border-radius:6px;background:#fff;box-shadow:var(--vf-shadow-menu,0 10px 24px rgba(13,27,61,.12));color:var(--vf-text,#172033);line-height:1.4!important}
+.global-notification-menu__panel{position:fixed;z-index:1000;max-width:calc(100vw - 24px);padding:12px 14px;border:1px solid var(--vf-border,#d9dee6);border-radius:6px;background:#fff;box-shadow:var(--vf-shadow-menu,0 10px 24px rgba(13,27,61,.12));color:var(--vf-text,#172033);line-height:1.4!important}
 .global-notification-menu__panel strong{display:block;font-size:11px;font-weight:800;line-height:1.2!important}
 .global-notification-menu__panel p{margin:6px 0 0;color:var(--vf-muted,#6f7b8b);font-size:10px;line-height:1.45!important}
-@media(max-width:720px){.global-notification-menu__panel{right:-4px}}
