@@ -1,0 +1,220 @@
+openapi: 3.1.0
+info:
+  title: Visa Fácil Integration API Contract
+  version: 1.0.0
+  description: >-
+    Contract for the future server-side API. This repository currently provides
+    the frontend consumer only; this document does not represent a deployed API.
+servers:
+  - url: https://api.example.invalid
+    description: Replace with the real backend origin per environment.
+paths:
+  /v1/integrations:
+    get:
+      operationId: listIntegrations
+      responses:
+        '200':
+          description: Canonical integration statuses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationListResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/integrations/{provider}/connect:
+    post:
+      operationId: connectIntegration
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Connection started or completed. OAuth providers may return authorizationUrl.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationActionResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/integrations/{provider}/disconnect:
+    post:
+      operationId: disconnectIntegration
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Integration disconnected/revoked when supported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationActionResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/integrations/{provider}/sync:
+    post:
+      operationId: syncIntegration
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Idempotent synchronization accepted or completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationActionResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/integrations/{provider}/oauth/callback:
+    get:
+      operationId: integrationOAuthCallback
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+        - name: code
+          in: query
+          required: false
+          schema: { type: string }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string }
+        - name: error
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '302':
+          description: Redirect to the safe frontend completion route after server-side validation.
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/webhooks/{provider}:
+    post:
+      operationId: receiveIntegrationWebhook
+      description: >-
+        Server must validate the provider-specific signature/token using the raw
+        request representation when required, deduplicate the event and enqueue
+        processing before returning success.
+      parameters:
+        - $ref: '#/components/parameters/WebhookProvider'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {}
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Valid event accepted or already processed idempotently.
+        '400': { description: Invalid payload. }
+        '401': { description: Signature/token verification failed. }
+        '429': { description: Server is temporarily rate-limiting ingestion. }
+        '503': { description: Temporary server-side processing dependency failure. }
+  /v1/public/leads:
+    post:
+      operationId: createPublicLead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicLeadRequest'
+      responses:
+        '201':
+          description: Lead accepted by the persistent backend.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicLeadResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+components:
+  parameters:
+    Provider:
+      name: provider
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/IntegrationId'
+    WebhookProvider:
+      name: provider
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [whatsapp, meta, resend, autentique, google-calendar]
+  schemas:
+    IntegrationId:
+      type: string
+      enum: [whatsapp, resend, autentique, nfse, instagram, facebook, youtube, tiktok, google-ads, google-calendar]
+    IntegrationState:
+      type: string
+      enum: [unconfigured, disconnected, connecting, connected, degraded, error]
+    IntegrationStatus:
+      type: object
+      additionalProperties: false
+      required: [id, state]
+      properties:
+        id: { $ref: '#/components/schemas/IntegrationId' }
+        state: { $ref: '#/components/schemas/IntegrationState' }
+        accountLabel: { type: string }
+        lastCheckedAt: { type: string, format: date-time }
+        lastSyncAt: { type: string, format: date-time }
+        errorCode: { type: string }
+        errorMessage: { type: string }
+    IntegrationListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/IntegrationStatus' }
+    IntegrationActionResponse:
+      type: object
+      additionalProperties: false
+      required: [integration]
+      properties:
+        integration: { $ref: '#/components/schemas/IntegrationStatus' }
+        authorizationUrl:
+          type: string
+          format: uri
+          description: Short-lived provider authorization URL generated by the backend.
+    PublicLeadRequest:
+      type: object
+      additionalProperties: false
+      required: [source, page, fields]
+      properties:
+        source:
+          type: string
+          const: public-site
+        page:
+          type: string
+          maxLength: 500
+        fields:
+          type: object
+          additionalProperties:
+            oneOf:
+              - { type: string, maxLength: 4000 }
+              - { type: boolean }
+    PublicLeadResponse:
+      type: object
+      additionalProperties: false
+      required: [leadId, receivedAt]
+      properties:
+        leadId: { type: string, minLength: 1 }
+        receivedAt: { type: string, format: date-time }
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [code, message, retryable]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+        retryable: { type: boolean }
+  responses:
+    ApiError:
+      description: Structured application/API error without provider secrets.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
