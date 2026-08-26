@@ -1,5 +1,0 @@
-/* Compatibility entrypoint.
-   Shared CRM topbar actions are owned exclusively by crm-ui-standard.css.
-   This file intentionally contains no visual declarations and remains imported
-   temporarily so the lazy shared sidebar keeps its existing stylesheet contract
-   while the project-wide UI audit removes legacy import assumptions. */
