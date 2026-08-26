@@ -1,14 +1,20 @@
+@import '../styles/tableview-surface.css';
+
 /* VISA FÁCIL — canonical account menu for every internal workspace. */
 .account-menu{
-  position:fixed;
   z-index:80;
   width:188px;
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   color:#10213b;
 }
-.account-menu--crm{top:24px;right:clamp(24px,3vw,52px)}
-.account-menu--workspace{top:24px;right:clamp(24px,5vw,72px)}
-.account-menu--cms{top:20px;right:20px}
+.account-menu--crm{
+  position:relative;
+  flex:0 0 188px;
+  width:188px;
+  align-self:center;
+}
+.account-menu--workspace{position:fixed;top:24px;right:clamp(24px,5vw,72px)}
+.account-menu--cms{position:fixed;top:20px;right:20px}
 .account-menu__trigger{
   width:188px;
   height:36px;
@@ -84,26 +90,32 @@
 .account-menu__panel svg{width:15px;height:15px;color:#607089}
 .account-menu__separator{height:1px;margin:5px 4px;background:#e7ebf1}
 
-/* Reserve the canonical account slot without allowing page actions to overlap it. */
-.crm-global-shell .crm-global-page .crm-topbar{padding-right:calc(clamp(24px,3vw,52px) + 196px)!important}
+/* CRM: AccountMenu is physically hosted in the same action row as primary buttons and the bell. */
+.crm-global-shell .crm-global-page .crm-topbar .crm-topbar-actions>.account-menu--crm{
+  position:relative;
+  top:auto;
+  right:auto;
+  margin:0;
+  align-self:center;
+}
+
+/* Standalone internal surfaces still reserve their fixed account slot. */
 .site-cms-topbar{padding-right:216px!important}
 .workspace-header{position:sticky;top:0;z-index:30;padding-right:calc(clamp(24px,5vw,72px) + 196px)}
 
 @media(max-width:1180px){
   .account-menu{width:42px}
+  .account-menu--crm{flex:0 0 42px;width:42px}
   .account-menu__trigger{width:42px;grid-template-columns:26px;padding:4px 7px}
   .account-menu__identity,.account-menu__caret{display:none}
   .account-menu__panel{width:188px}
-  .crm-global-shell .crm-global-page .crm-topbar{padding-right:calc(clamp(20px,3vw,32px) + 54px)!important}
   .site-cms-topbar{padding-right:70px!important}
   .workspace-header{padding-right:calc(clamp(20px,3vw,32px) + 54px)}
 }
 
 @media(max-width:680px){
-  .account-menu--crm{top:20px;right:14px}
   .account-menu--workspace{top:18px;right:16px}
   .account-menu--cms{top:18px;right:14px}
-  .crm-global-shell .crm-global-page .crm-topbar{padding-right:68px!important}
   .site-cms-topbar{padding-right:68px!important}
   .workspace-header{padding-right:68px}
 }
