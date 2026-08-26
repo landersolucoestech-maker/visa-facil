@@ -108,12 +108,14 @@ const contractEngine=read('apps/web/src/modules/contracts/contractTemplateEngine
 const contractEditor=read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
 const contractView=read('apps/web/src/modules/contracts/ContractViewModal.tsx');
 const contractsSources=sourceFiles.filter(path=>path.includes('/modules/contracts/')).map(read).join('\n').toLowerCase();
-for(const token of ['ContractRecord','ContractTemplate','ContractVariableDefinition','ContractCategory','ContractSigner','ContractVersion','ContractAuditEvent'])if(!contractTypes.includes(token))fail(`Canonical contracts domain is incomplete: missing ${token}.`);
-for(const token of ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','isContractCategory','visa-facil.session.contracts.v2'])if(!contractStore.includes(token))fail(`Contracts session store is incomplete: missing ${token}.`);
+for(const token of ['ContractRecord','ContractTemplate','ContractVariableDefinition','ContractSigner','ContractVersion','ContractAuditEvent'])if(!contractTypes.includes(token))fail(`Canonical contracts domain is incomplete: missing ${token}.`);
+for(const token of ['readSessionRecords','writeSessionRecords','isContractRecord','isContractTemplate','isContractVariable','visa-facil.session.contracts.v3'])if(!contractStore.includes(token))fail(`Contracts session store is incomplete: missing ${token}.`);
 if(!contractStore.includes("readSessionRecords<ContractRecord>(KEYS.contracts,()=>[]"))fail('Contracts must not seed fake operational records.');
 for(const token of ['makePlaceholder','extractTemplatePlaceholders','resolveTemplateContent','mergedVariableValues','{{CLIENTE.NOME}}','{{PROCESSO.TIPO_VISTO}}','{{CONTRATO.VALOR}}'])if(!contractEngine.includes(token)&&!contractStore.includes(token))fail(`Contracts template engine is incomplete: missing ${token}.`);
 for(const token of ['Template','Partes','Variáveis','Documento','Signatários','Revisão','Salvar rascunho','Salvar para revisão'])if(!contractEditor.includes(token))fail(`Contract wizard is incomplete: missing ${token}.`);
-for(const token of ['getCrmSessionRecords','getIntegrationStatuses','isBackendConfigured','TemplatesWorkspace','VariablesWorkspace','CategoriesWorkspace'])if(!contractsApp.includes(token))fail(`Contracts workspace is incomplete: missing ${token}.`);
+for(const token of ['getCrmSessionRecords','getIntegrationStatuses','isBackendConfigured','TemplatesWorkspace','VariablesWorkspace'])if(!contractsApp.includes(token))fail(`Contracts workspace is incomplete: missing ${token}.`);
+for(const forbidden of ['ContractCategory','CategoriesWorkspace','contracts-module-tabs','/crm/contratos/categorias','categoryId'])if(contractsApp.includes(forbidden)||contractTypes.includes(forbidden)||contractStore.includes(forbidden)||contractEditor.includes(forbidden))fail(`Contracts must classify through templates only; obsolete category/tab contract found: ${forbidden}.`);
+if(!contractsApp.includes('Todos os templates')||!contractsApp.includes('<th>Template</th>'))fail('Contracts list must filter and present the template as the canonical classification.');
 if(!contractView.includes('Autentique')||!contractView.includes('Enviar para assinatura')||!contractView.includes('disabled'))fail('Contracts signing UI must expose Autentique truthfully without simulating delivery.');
 for(const forbidden of ['clicksign','docusign','obra musical','lançamento musical','gravadora','produtor musical'])if(contractsSources.includes(forbidden))fail(`Contracts module must not retain reference-only/music-specific concept: ${forbidden}.`);
 if(contractsSources.includes('localstorage'))fail('Contracts must use the validated session store instead of a competing localStorage persistence layer.');
@@ -168,7 +170,9 @@ const afterRenderIndex=crmSidebar.indexOf('{AFTER_ITEMS.map');
 if(!(mainRenderIndex>=0&&mainRenderIndex<financeRenderIndex&&financeRenderIndex<marketingRenderIndex&&marketingRenderIndex<afterRenderIndex))fail('CRM sidebar group order must be primary navigation → Financeiro → Marketing → Relatórios/Configurações.');
 const afterNavBlock=crmSidebar.match(/const AFTER_ITEMS:[\s\S]*?\];/)?.[0]??'';
 if(!(afterNavBlock.indexOf("label: 'Relatórios'")>=0&&afterNavBlock.indexOf("label: 'Relatórios'")<afterNavBlock.indexOf("label: 'Configurações'")))fail('CRM sidebar must end with Relatórios → Configurações.');
-if(!rootApplication.includes("path==='/crm/contratos'||path.startsWith('/crm/contratos/')")||!rootApplication.includes('withSharedSidebar(<ContractsApp/>)'))fail('Contracts module and its workspaces must remain a lazy shared-shell route.');
+for(const route of ["path==='/crm/contratos'","path==='/crm/contratos/templates'","path==='/crm/contratos/variaveis'"])if(!rootApplication.includes(route))fail(`Contracts shared-shell route is missing: ${route}.`);
+if(!rootApplication.includes("path==='/crm/contratos/categorias'")||!rootApplication.includes("replacePath('/crm/contratos/templates')"))fail('Legacy contracts categories URL must redirect to Templates instead of remaining an active workspace.');
+if(!rootApplication.includes('withSharedSidebar(<ContractsApp/>)'))fail('Contracts module must remain a lazy shared-shell route.');
 
 if(!rootApplication.includes("from './components/AccountMenu'")||!rootApplication.includes("from './components/GlobalRouteLoader'"))fail('RootApplication must own the shared account menu and global lazy-route loader.');
 if(!rootApplication.includes("internal(<WorkspaceSelectorApp/>,'workspace')")||!rootApplication.includes("internal(<SiteCmsApp/>,'cms')")||!rootApplication.includes("</div>,'crm')"))fail('Every internal surface must receive the canonical AccountMenu from RootApplication.');
