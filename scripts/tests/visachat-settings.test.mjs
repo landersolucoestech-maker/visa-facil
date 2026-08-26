@@ -41,5 +41,8 @@ test('Only atendimento configuration changed; chat surface keeps its existing st
   const panel=read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
   for(const token of ['TEAM_CONVERSATION_TYPES','Conversa direta','Grupo','Canal','Nota interna','Resposta rápida']) assert.ok(app.includes(token),`AttendanceApp missing ${token}`);
   for(const token of ['Mensagens','Menu e filas','Escalonamento','Templates','Fluxo inicial','Mensagens de exceção e encerramento','Menu principal de triagem','Retorno ao menu principal','Responsáveis padrão','Regras de escalonamento','Questionários por serviço','Campos obrigatórios','Mensagem Automática','Salvar configuração','Testar escalonamento']) assert.ok(panel.includes(token),`settings panel missing ${token}`);
-  for(const extra of ['Configurações gerais','Horários de atendimento','Roteamento e SLA','Canais de atendimento','Notificações</']) assert.equal(panel.includes(extra),false,`unexpected extra settings section ${extra}`);
+  for(const extra of ['Configurações gerais','Horários de atendimento','Roteamento e SLA','Canais de atendimento']) assert.equal(panel.includes(extra),false,`unexpected extra settings section ${extra}`);
+  assert.equal(panel.includes("['notifications','Notificações']"), false, 'unexpected Notificações settings tab');
+  assert.equal(panel.includes('<h2>Notificações</h2>'), false, 'unexpected Notificações settings section');
+  assert.ok(panel.includes('aria-label="Notificações"'), 'settings header must expose the notification bell');
 });
