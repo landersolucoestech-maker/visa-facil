@@ -6,7 +6,6 @@ import './crm-sidebar.css';
 import './crm-workspace-switch.css';
 import '../styles/sidebar-v2.css';
 import '../styles/sidebar-color-fix.css';
-import '../styles/crm-header-actions-unified.css';
 
 type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
 type FinanceSection = 'transactions' | 'invoices' | 'pl';
