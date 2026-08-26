@@ -1,0 +1,15 @@
+{
+  "categories": [
+    { "id": "cat-1", "name": "Assessoria", "type": "Receita", "active": true },
+    { "id": "cat-2", "name": "Renovação", "type": "Receita", "active": true },
+    { "id": "cat-3", "name": "Taxas consulares", "type": "Despesa", "active": true },
+    { "id": "cat-4", "name": "Serviços terceiros", "type": "Despesa", "active": true },
+    { "id": "cat-5", "name": "Marketing", "type": "Despesa", "active": true },
+    { "id": "cat-6", "name": "Outros", "type": "Despesa", "active": true }
+  ],
+  "rules": [
+    { "id": "rule-1", "contains": "META ADS", "category": "Marketing", "type": "Despesa", "active": true },
+    { "id": "rule-2", "contains": "CONSULADO", "category": "Taxas consulares", "type": "Despesa", "active": true },
+    { "id": "rule-3", "contains": "VISA FACIL", "category": "Assessoria", "type": "Receita", "active": true }
+  ]
+}
