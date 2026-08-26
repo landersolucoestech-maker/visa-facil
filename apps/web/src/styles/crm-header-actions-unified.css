@@ -24,7 +24,7 @@
   color:#fff!important;
   box-shadow:none!important;
   font-size:10.5px!important;
-  line-height:1!important;
+  line-height:0!important;
   font-weight:700!important;
   letter-spacing:1!important;
   text-decoration:none!important;
@@ -58,7 +58,7 @@
   color:#1b365f!important;
   box-shadow:none!important;
   font-size:10.5px!important;
-  line-height:1!important;
+  line-height:0!important;
   font-weight:650!important;
   letter-spacing:0!important;
   text-decoration:none!important;
@@ -78,7 +78,7 @@
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
-  line-height:1!important;
+  line-height:0!important;
   vertical-align:middle!important;
 }
 
