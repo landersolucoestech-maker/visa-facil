@@ -1,0 +1,46 @@
+/* VISA FÁCIL — canonical TableView surface.
+   Table-based workspaces use a white surface/card. Calendar workspaces are
+   intentionally excluded (Agenda and Marketing > Calendário). */
+
+.crm-global-shell.crm-global-shell .crm-global-page :is(
+  .crm-directory-table,
+  .tasks-card,
+  .finance-transactions-card,
+  .invoice-list-card,
+  .accounting-report-card,
+  .finance-config-card,
+  .marketing-table-card,
+  .reports-card,
+  .contracts-panel
+){
+  background:#fff!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page .crm-directory-table{
+  overflow:visible!important;
+  border:1px solid #dfe3e8!important;
+  border-radius:7px!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page :is(
+  .crm-directory-list,
+  .tasks-table-scroll,
+  .finance-transactions-table,
+  .invoice-table-scroll,
+  .accounting-table,
+  .finance-simple-table,
+  .contracts-table-wrap
+){
+  background:#fff!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page .crm-directory-table__head{
+  border-radius:6px 6px 0 0!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page .crm-directory-list,
+.crm-global-shell.crm-global-shell .crm-global-page .crm-directory-row:last-child{
+  border-radius:0 0 6px 6px;
+}
