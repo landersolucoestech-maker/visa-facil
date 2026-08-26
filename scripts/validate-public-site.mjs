@@ -47,6 +47,7 @@ const reportsCss = read('apps/web/src/modules/reports/reports.css');
 const tasksApp = read('apps/web/src/modules/tasks/TasksApp.tsx');
 const tasksCss = read('apps/web/src/modules/tasks/tasks.css');
 const settingsShared = read('apps/web/src/modules/settings/settingsShared.tsx');
+const settingsResponsiveCss = read('apps/web/src/modules/settings/settings-responsive.css');
 const settingsMockProvider = read('apps/web/src/modules/settings/mocks/settingsMockProvider.ts');
 const uiStandard = read('apps/web/src/styles/crm-ui-standard.css');
 const allSource = [main, rootApp, publicPage, header, hero, contact, footer, interactions, schema, schemaGlobal, schemaConversion, schemaEditorial, store, cmsDocumentContract].join('\n');
@@ -115,6 +116,7 @@ assert(!contractStore.toLowerCase().includes('clicksign')&&!contractStore.toLowe
 
 assert(financeConfigStore.includes('./mocks/financeConfigMockProvider')&&!financeConfigStore.includes("{ id: 'cat-1'"), 'Finance configuration reference data must remain centralized in mocks');
 assert(settingsShared.includes('./mocks/settingsMockProvider')&&settingsMockProvider.includes('settings.dev.json')&&!settingsShared.includes("{id:'u-1'"), 'Settings demonstration users/roles must remain centralized behind a validated mock provider');
+assert(!settingsShared.includes("import './settings.css'") && !settingsResponsiveCss.includes('settings-public-') && !settingsResponsiveCss.includes('settings-billing-') && !settingsResponsiveCss.includes('settings-plans-grid') && !settingsResponsiveCss.includes('settings-invoice-table') && !settingsResponsiveCss.includes('settings-payment-row') && !settingsResponsiveCss.includes('settings-invite-row'), 'Settings must not restore obsolete public/billing/invoice/invite presentation or duplicate shared stylesheet ownership');
 assert(containsAll(uiStandard, ['--vf-control-height:36px','--vf-field-height:40px','--vf-radius-control:5px','--vf-radius-card:7px','--vf-radius-modal:8px','line-height:0!important']), 'Canonical visual tokens/buttons are incomplete');
 
 for (const forbidden of ['Pessoa Jurídica', 'personType', 'CNPJ', 'cnpj', 'legalName', 'tradeName', 'contactPerson', 'isCompany']) {
