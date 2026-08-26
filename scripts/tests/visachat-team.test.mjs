@@ -11,14 +11,16 @@ test('VisaChat exposes a separated internal team chat workspace',()=>{
   for(const token of ["type ChatMode = 'customer' | 'team'",'Atendimento','Equipe','Novo chat interno','Novo chat da equipe','Criar chat interno','Chat interno','Mensagem interna'])assert.ok(app.includes(token),`missing ${token}`);
   assert.ok(app.includes("kind: 'team'"));
   assert.ok(app.includes("getAttendanceConversationKind(item) === 'team'"));
-  assert.ok(app.includes("getAttendanceInitialConversations().filter"));
   assert.ok(app.includes("selectedKind === 'team'"));
   assert.ok(app.includes("Sincronização em tempo real entre usuários dependerá do backend compartilhado."));
+  assert.equal(app.includes('getAttendanceInitialConversations'),false);
 });
 
 test('VisaChat team conversations remain compatible with existing customer sessions',()=>{
   const provider=read('apps/web/src/modules/attendance/mocks/attendanceMockProvider.ts');
   for(const token of ["AttendanceConversationKind = 'customer' | 'team'","'customer' | 'agent' | 'team' | 'system'","value.kind === undefined","return value.kind === 'team' ? 'team' : 'customer'","'Ativo'"])assert.ok(provider.includes(token),`missing ${token}`);
+  const store=read('apps/web/src/shared/operationalSessionStore.ts');
+  for(const token of ['getAttendanceSessionConversations','teamSeeds','getAttendanceInitialConversations','getAttendanceConversationKind','knownIds'])assert.ok(store.includes(token),`missing canonical migration ${token}`);
   const fixture=read('apps/web/src/mocks/attendance/attendance.dev.json');
   assert.ok(fixture.includes('"kind": "team"'));
   assert.ok(fixture.includes('"channel": "Equipe"'));
