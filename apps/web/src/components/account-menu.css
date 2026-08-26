@@ -27,6 +27,7 @@
   border-radius:5px;
   background:#fff;
   color:#10213b;
+  -webkit-text-fill-color:#10213b;
   box-shadow:none;
   cursor:pointer;
   text-align:left;
@@ -42,6 +43,7 @@
   border-radius:50%;
   background:#102a59;
   color:#fff;
+  -webkit-text-fill-color:#fff;
   font-size:9px;
   line-height:1;
   font-weight:900;
@@ -49,8 +51,8 @@
 }
 .account-menu__identity{min-width:0;display:block}
 .account-menu__identity strong,.account-menu__identity small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.account-menu__identity strong{font-size:10.5px;line-height:1.15;font-weight:800;color:#10213b}
-.account-menu__identity small{margin-top:2px;font-size:9px;line-height:1.1;font-weight:500;color:#7d899b}
+.account-menu__identity strong{font-size:10.5px;line-height:1.15;font-weight:800;color:#10213b;-webkit-text-fill-color:#10213b}
+.account-menu__identity small{margin-top:2px;font-size:9px;line-height:1.1;font-weight:500;color:#7d899b;-webkit-text-fill-color:#7d899b}
 .account-menu__caret{width:14px;height:14px;display:grid;place-items:center;color:#718096;transition:transform .15s ease}
 .account-menu__caret svg{width:13px;height:13px}
 .account-menu__trigger[aria-expanded="true"] .account-menu__caret{transform:rotate(180deg)}
@@ -78,6 +80,7 @@
   border-radius:5px;
   background:transparent;
   color:#34445b;
+  -webkit-text-fill-color:#34445b;
   font:inherit;
   font-size:10.5px;
   line-height:1;
@@ -86,7 +89,7 @@
   text-decoration:none;
   cursor:pointer;
 }
-.account-menu__panel>a:hover,.account-menu__panel>button:hover,.account-menu__panel>a:focus-visible,.account-menu__panel>button:focus-visible{background:#f3f6fa;color:#102a59;outline:none}
+.account-menu__panel>a:hover,.account-menu__panel>button:hover,.account-menu__panel>a:focus-visible,.account-menu__panel>button:focus-visible{background:#f3f6fa;color:#102a59;-webkit-text-fill-color:#102a59;outline:none}
 .account-menu__panel svg{width:15px;height:15px;color:#607089}
 .account-menu__separator{height:1px;margin:5px 4px;background:#e7ebf1}
 
