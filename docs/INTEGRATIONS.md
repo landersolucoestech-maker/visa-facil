@@ -107,7 +107,7 @@ Objetivo: criar, enviar, acompanhar e assinar contratos/documentos.
 
 Configuração externa: conta, token de API, organization ID quando aplicável e configuração de webhook/assinatura disponível no provedor.
 
-O adapter deve mapear documento, signatários, status e eventos para o modelo canônico do futuro módulo Contratos. A definição desse modelo aguarda o arquivo de referência do módulo.
+O adapter deve mapear documento, signatários, status e eventos para o modelo canônico já definido em `modules/contracts/contractTypes.ts`. O frontend atual não envia documentos ao provedor nem fabrica estados de assinatura; a ativação depende de persistência e autorização server-side, endpoint de envio e webhook verificado conforme `docs/CONTRACTS.md`.
 
 ### NFS-e / Nota Fiscal de Serviço
 
@@ -160,7 +160,7 @@ O backend deve persistir IDs do evento local/remoto, ETag/updated timestamp, syn
 Frontend público:
 
 - `VITE_API_BASE_URL` — único endereço público da API backend;
-- `VITE_CRM_MOCKS` — apenas desenvolvimento local, já protegido pelos gates.
+- `VITE_CRM_MOCKS` — flag pública do protótipo para datasets demonstrativos centralizados; `false` desabilita os seeds. Não contém credenciais e não representa estado real de integração.
 
 Credenciais dos provedores devem existir somente no ambiente backend/secret manager. Nomes possíveis para organização interna incluem IDs/client IDs públicos e referências de secrets, mas nenhum valor privado deve entrar em `.env` versionado, frontend ou GitHub Pages.
 
