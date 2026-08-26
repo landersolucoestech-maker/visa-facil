@@ -1,9 +1,11 @@
 import raw from '../../../mocks/attendance/attendance.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
+export type AttendanceConversationKind = 'customer' | 'team';
+
 export type AttendanceMessage = {
   id: string;
-  sender: 'customer' | 'agent' | 'system';
+  sender: 'customer' | 'agent' | 'team' | 'system';
   author: string;
   body: string;
   time: string;
@@ -11,6 +13,7 @@ export type AttendanceMessage = {
 
 export type AttendanceConversation = {
   id: string;
+  kind?: AttendanceConversationKind;
   customer: string;
   handle: string;
   email: string;
@@ -30,12 +33,16 @@ export type AttendanceConversation = {
   messages: AttendanceMessage[];
 };
 
-const SENDERS = new Set<AttendanceMessage['sender']>(['customer', 'agent', 'system']);
-const STATUSES = new Set(['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Resolvida', 'Arquivada']);
+const SENDERS = new Set<AttendanceMessage['sender']>(['customer', 'agent', 'team', 'system']);
+const KINDS = new Set<AttendanceConversationKind>(['customer', 'team']);
+const STATUSES = new Set(['Aguardando atendimento', 'Em atendimento', 'Aguardando cliente', 'Resolvida', 'Arquivada', 'Ativo']);
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
+export function getAttendanceConversationKind(value: Pick<AttendanceConversation, 'kind'>): AttendanceConversationKind {
+  return value.kind === 'team' ? 'team' : 'customer';
+}
 export function isAttendanceMessage(value: unknown): value is AttendanceMessage {
   if (!isObject(value)) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
@@ -47,6 +54,7 @@ export function isAttendanceMessage(value: unknown): value is AttendanceMessage 
 export function isAttendanceConversation(value: unknown): value is AttendanceConversation {
   if (!isObject(value)) return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
+    && (value.kind === undefined || (typeof value.kind === 'string' && KINDS.has(value.kind as AttendanceConversationKind)))
     && typeof value.customer === 'string' && value.customer.trim().length > 0
     && isText(value.handle)
     && isText(value.email)
