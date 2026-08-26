@@ -1,0 +1,189 @@
+/* VISA FÁCIL — canonical CRM page geometry.
+   Every route mounted through .crm-global-shell uses the same horizontal rhythm.
+   This file owns page/content width and outer padding only; module-specific
+   grids, tables, calendars and internal card padding remain local concerns. */
+
+.crm-global-shell.crm-global-shell{
+  --crm-page-gutter:18px;
+  --crm-page-top:16px;
+  --crm-page-bottom:24px;
+}
+
+/* The shared sidebar already reserves its own width. The routed page and its
+   local workspace must consume all remaining horizontal space without an
+   additional max-width or centered container. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page{
+  min-width:0!important;
+  max-width:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page > .crm-shell,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page > :is(
+  .attendance-shell,
+  .agenda-shell,
+  .contracts-shell,
+  .finance-shell,
+  .finance-transactions-shell,
+  .invoice-workspace,
+  .accounting-workspace,
+  .marketing-shell,
+  .reports-shell,
+  .settings-shell
+){
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-workspace,
+  .finance-transactions-workspace,
+  .invoice-workspace-main,
+  .accounting-workspace-main
+){
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Header and content now share the exact same left/right edge. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-topbar.crm-topbar{
+  padding-left:var(--crm-page-gutter)!important;
+  padding-right:var(--crm-page-gutter)!important;
+  box-sizing:border-box!important;
+}
+
+/* Canonical page body. These are the outer content wrappers used by every CRM
+   route currently registered in RootApplication. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-content,
+  .tasks-content,
+  .attendance-content,
+  .agenda-content,
+  .contracts-content,
+  .finance-content,
+  .finance-transactions-content,
+  .invoice-content,
+  .accounting-content,
+  .marketing-content,
+  .reports-content,
+  .settings-content
+){
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:var(--crm-page-top) var(--crm-page-gutter) var(--crm-page-bottom)!important;
+  box-sizing:border-box!important;
+}
+
+/* The first-level content surface/card must fill the page body's usable width.
+   This removes historical max-width/auto-margin differences between modules
+   without changing the internal layout of cards or calendar grids. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-content,
+  .tasks-content,
+  .attendance-content,
+  .agenda-content,
+  .contracts-content,
+  .finance-content,
+  .finance-transactions-content,
+  .invoice-content,
+  .accounting-content,
+  .marketing-content,
+  .reports-content,
+  .settings-content
+) > *{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Explicitly normalize the main operational surfaces as a second guard against
+   legacy module styles that used max-width or width:max-content. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-directory,
+  .crm-kpi-grid,
+  .crm-dashboard-grid,
+  .crm-relationship-card,
+  .tasks-stats,
+  .tasks-card,
+  .attendance-stats,
+  .attendance-inbox,
+  .agenda-toolbar,
+  .agenda-calendar,
+  .agenda-day-view,
+  .agenda-week-view,
+  .agenda-year-view,
+  .contracts-kpis,
+  .contracts-panel,
+  .finance-stats,
+  .finance-card,
+  .finance-config-card,
+  .finance-section-nav,
+  .finance-transaction-stats,
+  .finance-transactions-card,
+  .invoice-kpis,
+  .invoice-list-card,
+  .accounting-kpis,
+  .accounting-toolbar,
+  .accounting-report-card,
+  .marketing-kpis,
+  .marketing-grid,
+  .marketing-table-card,
+  .marketing-calendar-toolbar,
+  .marketing-day-view,
+  .marketing-week-view,
+  .marketing-month-view,
+  .marketing-year-grid,
+  .reports-card,
+  .settings-surface,
+  .settings-tabs,
+  .settings-tab-content
+){
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  box-sizing:border-box!important;
+}
+
+/* Keep horizontal scrolling local to wide table/calendar internals instead of
+   making the entire CRM page wider than the available workspace. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page :is(
+  .crm-directory-table,
+  .tasks-card,
+  .agenda-calendar,
+  .contracts-panel,
+  .finance-card,
+  .finance-config-card,
+  .finance-transactions-card,
+  .invoice-list-card,
+  .marketing-table-card,
+  .marketing-week-view,
+  .reports-card,
+  .settings-surface
+){
+  max-width:100%!important;
+}
+
+@media(max-width:900px){
+  .crm-global-shell.crm-global-shell{
+    --crm-page-gutter:16px;
+    --crm-page-top:16px;
+    --crm-page-bottom:24px;
+  }
+}
+
+@media(max-width:680px){
+  .crm-global-shell.crm-global-shell{
+    --crm-page-gutter:14px;
+    --crm-page-top:14px;
+    --crm-page-bottom:24px;
+  }
+}
