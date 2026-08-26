@@ -1,6 +1,7 @@
 import raw from '../../../mocks/contracts/contracts.dev.json';
+import rawRecords from '../../../mocks/contracts/contracts-records.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
-import type { ContractTemplate, ContractVariableDefinition, ContractVariableType } from '../contractTypes';
+import type { ContractRecord, ContractTemplate, ContractVariableDefinition, ContractVariableType } from '../contractTypes';
 
 const VARIABLE_TYPES = new Set<ContractVariableType>(['text','textarea','number','date','currency','email','cpf','passport']);
 const PLACEHOLDER_RE=/^\{\{[A-Z][A-Z0-9_]*\.[A-Z][A-Z0-9_]*\}\}$/;
@@ -35,6 +36,13 @@ function isVariable(value:unknown):value is ContractVariableDefinition{
 }
 
 function fixture(){const clone:unknown=structuredClone(raw);return isObject(clone)?clone:undefined}
+
+export function getContractMockRecords():ContractRecord[]{
+ if(!isMockDataEnabled())return[];
+ const clone:unknown=structuredClone(rawRecords);
+ if(!Array.isArray(clone))return[];
+ return uniqueById(clone.filter(item=>isObject(item)&&typeof item.id==='string') as unknown as ContractRecord[]);
+}
 
 export function getContractMockTemplates():ContractTemplate[]{
  if(!isMockDataEnabled())return[];
