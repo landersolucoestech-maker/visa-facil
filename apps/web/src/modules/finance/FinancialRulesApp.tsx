@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './finance.css';
+import './finance-config.css';
 import { getFinanceCategories, getFinanceRules, saveFinanceRules, type FinanceRule } from './financeConfigStore';
 import type { FinanceType } from './types';
 
