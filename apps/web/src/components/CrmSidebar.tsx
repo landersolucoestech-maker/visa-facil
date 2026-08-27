@@ -20,7 +20,7 @@ const MAIN_ITEMS:NavItem[] = [
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
   {label:'Transações',href:'/crm/financeiro/transacoes',section:'transactions'},
-  {label:'Notas Fiscais',href:'/crm/financeiro/invoices',section:'invoices'},
+  {label:'Faturamento',href:'/crm/financeiro/invoices',section:'invoices'},
   {label:'Contabilidade',href:'/crm/financeiro/pl',section:'pl'},
 ];
 
