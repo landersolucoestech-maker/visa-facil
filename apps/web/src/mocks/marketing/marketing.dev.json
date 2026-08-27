@@ -10,5 +10,70 @@
     {"id":"cnt-4","date":"2026-08-27","time":"11:00","title":"Carrossel: erros na entrevista","channel":"Facebook","type":"Carrossel","status":"Revisão","owner":"Conteúdo","copy":"Erros frequentes que podem prejudicar uma entrevista consular."},
     {"id":"cnt-5","date":"2026-08-28","time":"16:00","title":"Vídeo: como funciona nossa assessoria","channel":"YouTube","type":"Vídeo","status":"Agendado","owner":"Marketing","copy":"Apresentação do fluxo de atendimento da Visa Fácil."},
     {"id":"cnt-7","date":"2026-08-31","time":"18:00","title":"Reels: perguntas frequentes sobre visto","channel":"Instagram","type":"Reels","status":"Agendado","owner":"Conteúdo","copy":"FAQ rápido sobre dúvidas mais comuns de novos leads."}
+  ],
+  "briefings": [
+    {
+      "id":"brf-001",
+      "title":"Captação B1/B2 — Setembro",
+      "objective":"Gerar leads qualificados interessados em assessoria para visto americano B1/B2.",
+      "audience":"Brasileiros de 25 a 44 anos planejando viagem aos Estados Unidos nos próximos 12 meses.",
+      "channels":["Instagram","Facebook"],
+      "owner":"Administrador",
+      "ownerUserId":"u-1",
+      "dueDate":"2026-09-02",
+      "status":"Em elaboração",
+      "keyMessage":"Planejamento antecipado ajuda a organizar documentos, prazos e etapas do processo.",
+      "deliverables":"1 carrossel, 2 Reels, 4 Stories e variações de copy para campanha.",
+      "notes":"Planejamento interno de demonstração; qualquer publicação externa depende da integração oficial do canal.",
+      "createdAt":"2026-08-26T10:00:00-03:00",
+      "updatedAt":"2026-08-27T16:30:00-03:00"
+    },
+    {
+      "id":"brf-002",
+      "title":"Série de conteúdo — entrevista consular",
+      "objective":"Educar leads sobre preparação e comportamento esperado na entrevista consular.",
+      "audience":"Leads em fase de diagnóstico e clientes com entrevista prevista para os próximos meses.",
+      "channels":["Instagram","YouTube"],
+      "owner":"Equipe Comercial",
+      "ownerUserId":"u-2",
+      "dueDate":"2026-09-05",
+      "status":"Em revisão",
+      "keyMessage":"Preparação e coerência das informações são essenciais para chegar à entrevista com segurança.",
+      "deliverables":"1 vídeo principal, 2 Shorts, 1 carrossel e roteiro de Stories com perguntas frequentes.",
+      "notes":"Revisar linguagem para não prometer aprovação de visto ou resultado consular.",
+      "createdAt":"2026-08-25T09:15:00-03:00",
+      "updatedAt":"2026-08-28T09:20:00-03:00"
+    },
+    {
+      "id":"brf-003",
+      "title":"Renovação de visto — campanha de relacionamento",
+      "objective":"Reativar contatos interessados em renovação e direcioná-los para diagnóstico comercial.",
+      "audience":"Contatos com visto vencido ou próximo do vencimento e histórico de interesse em renovação.",
+      "channels":["Facebook","Instagram"],
+      "owner":"Administrador",
+      "ownerUserId":"u-1",
+      "dueDate":"2026-09-08",
+      "status":"Aprovado",
+      "keyMessage":"Antecipar a renovação permite organizar o atendimento e os documentos sem correria.",
+      "deliverables":"Sequência de 3 peças de feed, 3 Stories e uma peça para campanha de tráfego.",
+      "notes":"Briefing aprovado internamente; execução externa continua condicionada às integrações oficiais.",
+      "createdAt":"2026-08-22T14:00:00-03:00",
+      "updatedAt":"2026-08-27T18:10:00-03:00"
+    },
+    {
+      "id":"brf-004",
+      "title":"TikTok — dúvidas rápidas sobre vistos",
+      "objective":"",
+      "audience":"",
+      "channels":["TikTok"],
+      "owner":"",
+      "dueDate":"2026-09-12",
+      "status":"Rascunho",
+      "keyMessage":"",
+      "deliverables":"",
+      "notes":"Rascunho para organizar uma futura série de vídeos curtos.",
+      "createdAt":"2026-08-28T08:30:00-03:00",
+      "updatedAt":"2026-08-28T08:30:00-03:00"
+    }
   ]
 }
