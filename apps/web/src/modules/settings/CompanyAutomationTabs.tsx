@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { reportSessionPersistenceError } from '../../shared/sessionPersistence';
-import { INITIAL_COMPANY, INITIAL_AUTOMATIONS, type AutomationKey, type Company, Card, Field, Toggle, SettingRow, SettingsGroup, base } from './settingsShared';
+import { INITIAL_COMPANY, INITIAL_AUTOMATIONS, type AutomationKey, type Company, Card, Field, Toggle, SettingRow, SettingsGroup } from './settingsShared';
 
 const MAX_LOGO_BYTES=5*1024*1024;
 const ALLOWED_LOGO_TYPES=new Set(['image/png','image/jpeg','image/webp']);
@@ -76,7 +76,7 @@ export function CompanyTab(){
     <label className="settings-logo-picker" title="Alterar logo"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={event=>chooseLogo(event.target.files?.[0])}/>{logo?<img src={logo} alt="Logo da empresa"/>:<span>VF</span>}<i>⌁</i></label>
     <button type="button" className="settings-btn settings-btn-outline" onClick={()=>document.querySelector<HTMLInputElement>('.settings-logo-picker input')?.click()}>Alterar foto</button>
     <small className="settings-upload-help">PNG, JPG ou WEBP · Máx. 5 MB</small>{logoError&&<p className="settings-security-notice" role="alert">{logoError}</p>}
-    <h3>{company.fantasyName||company.companyName}</h3><code>/cadastro/{company.slug||'seu-slug'}</code>
+    <h3>{company.fantasyName||company.companyName}</h3><code>Identificador: {company.slug||'não definido'}</code>
     <div className="settings-identity-meta"><div><span>CNPJ:</span><b>{company.cnpj||'Não informado'}</b></div><div><span>Telefone:</span><b>{company.phone||'Não informado'}</b></div><div><span>Responsável:</span><b>{company.responsible||'Não informado'}</b></div></div>
    </div>
   </Card>
@@ -88,7 +88,7 @@ export function CompanyTab(){
     <Field label="Endereço Completo" help="Endereço utilizado em documentos e dados institucionais."><input disabled={!editing} value={company.address} placeholder="Rua, número, bairro, cidade/UF, CEP" onChange={event=>setCompany(current=>({...current,address:event.target.value}))}/></Field>
     <Field label="Telefone/WhatsApp"><input disabled={!editing} placeholder="(00) 00000-0000" value={company.phone} onChange={event=>setCompany(current=>({...current,phone:event.target.value}))}/></Field>
     <Field label="Responsável"><input disabled={!editing} value={company.responsible} onChange={event=>setCompany(current=>({...current,responsible:event.target.value}))}/></Field>
-    <Field label="Slug da organização" help={`Link de cadastro: ${window.location.origin}${base()}/cadastro/${company.slug||'seu-slug'}`}><input disabled={!editing} value={company.slug} onChange={event=>setCompany(current=>({...current,slug:event.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-')}))}/></Field>
+    <Field label="Identificador da organização" help="Identificador local de referência. A rota pública de cadastro por organização ainda não existe neste protótipo."><input disabled={!editing} value={company.slug} onChange={event=>setCompany(current=>({...current,slug:event.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')}))}/></Field>
    </div>
    {editing&&<div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={save}>Aplicar nesta sessão</button><button className="settings-btn settings-btn-outline" onClick={cancel}>Cancelar</button></div>}
    {saved&&<div className="settings-inline-success" role="status">✓ Dados preservados no sessionStorage deste navegador. Não há persistência remota de empresa.</div>}
