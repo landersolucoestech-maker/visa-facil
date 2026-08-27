@@ -25,22 +25,22 @@
   outline:0!important;
 }
 
-/* Contract, template and variable action trigger: plain three dots, no button chrome. */
+/* Contract, template and variable action trigger: canonical row-action button chrome. */
 .contracts-actions-trigger,
 .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger,
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger{
-  width:30px!important;
-  min-width:30px!important;
-  max-width:30px!important;
-  height:30px!important;
-  min-height:30px!important;
-  max-height:30px!important;
+  width:var(--vf-row-action-size,30px)!important;
+  min-width:var(--vf-row-action-size,30px)!important;
+  max-width:var(--vf-row-action-size,30px)!important;
+  height:var(--vf-row-action-size,30px)!important;
+  min-height:var(--vf-row-action-size,30px)!important;
+  max-height:var(--vf-row-action-size,30px)!important;
   display:grid!important;
   place-items:center!important;
   padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
+  border:1px solid var(--vf-border,#d9dee6)!important;
+  border-radius:var(--vf-radius-control,5px)!important;
+  background:#fff!important;
   background-image:none!important;
   color:#435166!important;
   box-shadow:none!important;
@@ -58,15 +58,15 @@
 .contracts-actions-trigger[aria-expanded="true"],
 .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger:hover,
 .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger[aria-expanded="true"]{
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  color:#172033!important;
+  border:1px solid #b8c1cc!important;
+  border-radius:var(--vf-radius-control,5px)!important;
+  background:#f6f7f9!important;
+  color:var(--vf-text,#172033)!important;
   box-shadow:none!important;
   filter:none!important;
 }
 
-/* Keep the action list functional, but completely flat: no popover border or shadow. */
+/* Keep the action list functional, but flat: no popover border or shadow. */
 .contracts-actions-dropdown,
 .crm-global-page.crm-global-page .contracts-actions-dropdown.contracts-actions-dropdown{
   position:absolute;
