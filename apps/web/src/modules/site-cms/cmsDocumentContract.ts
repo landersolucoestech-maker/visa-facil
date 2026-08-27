@@ -67,6 +67,8 @@ export function cmsMediaReferenceCount(document:CmsDocument,url:string){
 export function cmsPublicationIssues(document:CmsDocument){
  const issues:string[]=[];
  const seenSlugs=new Map<string,string>();
+ if(!document.settings.siteName.trim())issues.push('Informe o nome do site antes de publicar.');
+ if(document.settings.siteUrl.trim()&&!isSafeCmsExternalUrl(document.settings.siteUrl))issues.push('A URL principal do site deve usar HTTP ou HTTPS.');
  if(!document.pages.some(page=>normalizeCmsSlug(page.slug)==='/'))issues.push('O site precisa manter uma página inicial no slug /.');
  for(const page of document.pages){
   const label=page.name.trim()||page.id;
@@ -77,8 +79,11 @@ export function cmsPublicationIssues(document:CmsDocument){
   const duplicate=seenSlugs.get(slugKey);
   if(duplicate)issues.push(`As páginas “${duplicate}” e “${label}” usam o mesmo slug “${normalized}”.`);else seenSlugs.set(slugKey,label);
   if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
+  if(page.seo.canonicalUrl.trim()&&!isSafeCmsExternalUrl(page.seo.canonicalUrl))issues.push(`A Canonical URL da página “${label}” deve usar HTTP ou HTTPS.`);
   const seenSectionTypes=new Set<string>();
   for(const section of page.sections){if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type)}
  }
+ const seenGlobalTypes=new Set<string>();
+ for(const section of document.globals){if(seenGlobalTypes.has(section.type))issues.push(`Existe mais de um bloco global do tipo “${section.label}”.`);else seenGlobalTypes.add(section.type)}
  return issues;
 }
