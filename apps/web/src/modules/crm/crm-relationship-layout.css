@@ -12,13 +12,16 @@
 .crm-directory-tabs small{min-width:22px;height:22px;display:grid;place-items:center;padding:0 4px;border-radius:999px;background:#eef2f7;color:#68778e;font-size:10px}
 .crm-directory-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}
 .crm-directory-search{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid var(--crm-border);border-radius:8px;background:#fff}
-.crm-directory-search>span{color:#7e8ca1;font-size:13px}
+.crm-directory-search>span{position:relative;width:14px;height:14px;flex:0 0 14px;color:#7e8ca1;font-size:0}
+.crm-directory-search>span:before{content:"";position:absolute;left:1px;top:1px;width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%}
+.crm-directory-search>span:after{content:"";position:absolute;left:9px;top:10px;width:5px;height:1.5px;border-radius:1px;background:currentColor;transform:rotate(45deg);transform-origin:left center}
 .crm-directory-search input{width:100%;border:0;outline:0;background:transparent;color:var(--crm-text);font:inherit;font-size:13px}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-directory-search>input[type="search"]{min-width:0!important;min-height:0!important;height:auto!important;flex:1 1 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:0!important}
 .crm-directory-toolbar select{height:38px;padding:0 11px;border:1px solid var(--crm-border);border-radius:8px;background:#fff;color:var(--crm-text);font:inherit;font-size:13px}
 .crm-directory-list{min-height:360px;padding:18px 2px;color:#7e8999;font-size:13px}
 .crm-directory-list p{margin:0;font-style:italic}
 .crm-content:has(.crm-directory){padding-top:22px}
-.crm-workspace:has(#crm-directory-tab-leads[aria-selected="true"]) .crm-topbar-primary{color:var(--crm-blue)!important;-webkit-text-fill-color:var(--crm-blue)!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-workspace:has(#crm-directory-tab-leads[aria-selected="true"]) .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary{color:var(--vf-blue,#315f9d)!important;-webkit-text-fill-color:var(--vf-blue,#315f9d)!important}
 
 @media(max-width:1200px){
  .crm-directory-summary{grid-template-columns:repeat(3,1fr)}
