@@ -32,8 +32,10 @@ test('Meta is one technical provider while Facebook Instagram Messenger and Meta
   assert.ok(meta.capabilities.includes('comments-moderation'));
   assert.ok(meta.capabilities.includes('ads'));
   assert.ok(meta.capabilities.includes('analytics'));
-  assert.ok(settingsSource.includes('Produtos / canais: Facebook · Instagram · Messenger · Meta Ads'));
-  assert.ok(settingsSource.includes('Meta App ID, Meta App Secret, OAuth, tokens, webhook, Graph API e estado geral pertencem ao provider Meta'));
+  assert.equal(meta.description,'Integração oficial via OAuth para atendimento, mensagens, conteúdo, comentários, anúncios, métricas e demais recursos autorizados pelas APIs da Meta.');
+  assert.ok(settingsSource.includes('Meta — Facebook, Instagram, Messenger e Ads'));
+  assert.equal(settingsSource.includes('Produtos / canais: Facebook · Instagram · Messenger · Meta Ads'),false);
+  assert.equal(settingsSource.includes('Meta App ID, Meta App Secret, OAuth, tokens, webhook, Graph API e estado geral pertencem ao provider Meta'),false);
   assert.ok(settingsSource.includes("meta:'M'"));
   assert.equal(settingsSource.includes("instagram:'IG'"),false);
   assert.equal(settingsSource.includes("facebook:'FB'"),false);
