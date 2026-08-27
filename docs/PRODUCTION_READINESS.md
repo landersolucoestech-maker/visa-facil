@@ -15,7 +15,7 @@ O frontend passou por consolidação arquitetural, mas o projeto ainda não é u
 | Integrações externas | Contratos frontend preparados | Backend, credenciais, OAuth, webhooks, workers e secret manager |
 | Telefonia e SMS | Contrato agnóstico de provider preparado | Provider adapter, conta/contrato, credenciais server-side, linhas/números, roteamento e webhooks/gateway reais |
 | Automações | Preferências modeladas | Worker/jobs/filas inexistentes |
-| Relatórios | Templates/validação local | Importação/exportação operacional persistente exige fonte de dados compartilhada |
+| Relatórios | XLSX operacional/configuração no navegador | Persistência compartilhada e multiusuário exige fonte de dados server-side |
 | Contratos | Frontend funcional em sessão | Persistência server-side, anexos duráveis, auditoria imutável, RBAC e assinatura Autentique real exigem backend |
 | NFS-e | Apenas arquitetura de integração | Provedor fiscal, homologação, certificado/dados fiscais e backend |
 
@@ -41,6 +41,13 @@ Telefonia/SMS deverá ter permissões próprias para configuração de provider,
 
 Implementar os adapters descritos em `docs/INTEGRATIONS.md` e `docs/COMMUNICATIONS.md`, armazenamento seguro de credenciais/tokens, OAuth/callbacks, verificação de webhook, idempotência, filas, retries, DLQ/replay, logs e health checks. A UI nunca deve inferir `connected` sem confirmação do backend.
 
+A hierarquia frontend já está consolidada para evitar providers duplicados:
+
+- **Meta** é o provider técnico único de Facebook, Instagram, Messenger e Meta Ads;
+- **Google** é o provider técnico único de YouTube, Google Ads e Google Calendar;
+- **WhatsApp**, **TikTok**, **Autentique**, **NFS-e** e **Telefonia/SMS** permanecem providers/domínios próprios conforme seus contratos;
+- **Resend** permanece infraestrutura interna exclusivamente server-side e não aparece como integração conectável pelo navegador.
+
 Para Contratos, Autentique permanece o único provedor de assinatura eletrônica previsto. O frontend não envia documentos nem fabrica estados de assinatura. O backend deverá criar/enviar o documento, persistir o identificador externo e processar webhooks verificados para atualizar signatários, documento e trilha de auditoria. Resend poderá ser utilizado para notificações operacionais, também exclusivamente server-side.
 
 Para Telefonia/SMS, Vivo, TIM, Claro, Twilio, Dialpad, RingCentral e fornecedores equivalentes são apenas targets de adapters. A disponibilidade efetiva de SMS, voz, números, sender IDs, delivery receipts ou webhooks depende do contrato/plano/API de cada fornecedor. A implementação real deve usar `CommunicationProviderAdapter` e o modelo canônico, sem inserir SDKs específicos dentro do CRM/VisaChat.
@@ -55,9 +62,11 @@ Telefonia/SMS deverá medir pelo menos provider, rota, latência, tentativas, ta
 
 ### Testes
 
-A suíte atual protege contratos, regras financeiras, stores, contratos de integrações, arquitetura de telefonia/SMS, build/runtime e renderização das rotas críticas do frontend. Ainda serão necessários para operação real:
+A suíte atual protege contratos, regras financeiras, stores, contratos de integrações, arquitetura de telefonia/SMS, Relatórios XLSX, build/runtime e renderização/interações selecionadas das rotas críticas do frontend em navegador headless.
 
-- testes E2E de interação em navegador dos fluxos críticos;
+Ainda serão necessários para operação real:
+
+- testes E2E completos de fluxos críticos ponta a ponta, além do smoke de interação já existente;
 - testes de API e banco;
 - testes de autorização/RBAC;
 - testes de integração em sandboxes dos provedores;
@@ -79,11 +88,13 @@ O build publicado atualmente mantém os datasets demonstrativos centralizados ha
 - autenticação real e operações de segurança da conta;
 - persistência multiusuário dos módulos operacionais;
 - execução real das preferências de automação;
-- conexão real com WhatsApp, Resend, Autentique, NFS-e, Meta, YouTube, TikTok, Google Ads e Google Calendar;
+- conexão real com WhatsApp, Meta, Google, TikTok, Autentique e NFS-e;
+- habilitação real dos produtos Facebook, Instagram, Messenger e Meta Ads dentro do provider Meta;
+- habilitação real dos serviços YouTube, Google Ads e Google Calendar dentro do provider Google;
 - conexão real com Vivo, TIM, Claro, Twilio, Dialpad, RingCentral ou qualquer outro provedor de telefonia/SMS;
 - envio/recebimento real de SMS, chamadas, provisionamento de linhas/números e atualização real de delivery receipts;
 - emissão fiscal real;
-- importação/exportação operacional persistente de relatórios;
+- importação/exportação operacional persistente e compartilhada de relatórios;
 - persistência multiusuário de contratos, anexos duráveis e auditoria legal/imutável;
 - envio real de contratos para assinatura, callbacks/webhooks e sincronização de estado do Autentique;
 - sincronização compartilhada do CMS.
