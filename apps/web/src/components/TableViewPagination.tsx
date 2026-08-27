@@ -100,6 +100,9 @@ export function TableViewPagination() {
         }
         setTotal(rows.length);
         applyPage(rows, nextPage);
+        if (paginationMount && paginationMount.parentElement === container && paginationMount !== container.lastElementChild) {
+          container.appendChild(paginationMount);
+        }
       };
 
       sync();
