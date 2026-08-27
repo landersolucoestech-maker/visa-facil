@@ -41,8 +41,8 @@ test('marketing store migrates known legacy records and rejects arbitrary lifecy
 });
 
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
-  assert.ok(store.includes('safeWriteSessionRecords<ContentItem>'));
-  assert.ok(store.includes('safeWriteSessionRecords<Campaign>'));
+  assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
+  assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
 });
 
 test('safe session persistence reports quota failures without crashing the calling UI',()=>{
