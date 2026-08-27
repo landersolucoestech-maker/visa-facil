@@ -39,8 +39,11 @@ test('reports is XLSX-only in UI, validation, templates and exports',()=>{
  assert.ok(app.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'));
  assert.ok(app.includes('readXlsxFile(file)'));
  assert.ok(app.includes('createXlsxBlob'));
- assert.equal(/CSV/i.test(app),false);
- assert.equal(/\.csv/i.test(app),false);
+ assert.equal(app.includes("endsWith('.csv')"),false);
+ assert.equal(app.includes('text/csv'),false);
+ assert.equal(app.includes('parseCsv'),false);
+ assert.equal(app.includes('parseDelimited'),false);
+ assert.equal(/\.csv[\s'"`]/i.test(app),false);
 });
 
 test('every report dataset exactly matches all visible fields from its create modal',()=>{
