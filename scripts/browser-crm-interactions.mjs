@@ -87,6 +87,13 @@ try{
  await assertBrowser(`(()=>{const label=[...document.querySelectorAll('[role="dialog"] label')].find(item=>item.querySelector(':scope > span')?.textContent?.trim()==='Área');const select=label?.querySelector('select');return select?.disabled===true&&select.value==='Marketing'})()`,'marketing task area locked to Marketing');
  await assertBrowser(`[...document.querySelectorAll('[role="dialog"] label > span')].some(item=>item.textContent?.trim()==='Contato / Lead relacionado')`,'marketing tasks retain canonical CRM relationship selector');
 
+ await navigate('/crm/marketing/calendario');
+ await clickButton('Novo Conteúdo');
+ await waitFor(`!!document.querySelector('.marketing-content-modal[role="dialog"]')`,'marketing content dialog');
+ await assertBrowser(`(()=>{const label=[...document.querySelectorAll('.marketing-content-modal label')].find(item=>item.querySelector(':scope > span')?.textContent?.trim()==='Campanha vinculada');const select=label?.querySelector('select');return !!select&&!select.disabled&&select.options.length>1})()`,'marketing content links to canonical local campaigns');
+ await assertBrowser(`!document.querySelector('.marketing-content-modal')?.textContent?.includes('Nenhuma persistência compartilhada')`,'marketing content no longer claims local campaigns lack shared persistence');
+ await assertBrowser(`(()=>{const label=[...document.querySelectorAll('.marketing-content-modal label')].find(item=>item.querySelector(':scope > span')?.textContent?.trim()==='Conta integrada');return label?.querySelector('select')?.disabled===true})()`,'external marketing account remains blocked without backend');
+
  await navigate('/crm/atendimentos');
  await clickButton('Nova conversa');
  await waitFor(`!!document.querySelector('#visachat-new-conversation')`,'VisaChat new conversation dialog');
