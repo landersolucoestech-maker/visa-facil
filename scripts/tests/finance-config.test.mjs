@@ -100,3 +100,11 @@ test('duplicate finance categories are not persisted into the canonical configur
   saveFinanceCategories([...DEFAULT_FINANCE_CATEGORIES, { ...DEFAULT_FINANCE_CATEGORIES[0], id: 'duplicate-category' }]);
   assert.equal(getFinanceCategories().length, DEFAULT_FINANCE_CATEGORIES.length);
 }));
+
+test('the same category label may exist once for Receita and once for Despesa', () => withSessionStorage(() => {
+  saveFinanceCategories([
+    { id: 'income-other', name: 'Outros', type: 'Receita', active: true },
+    { id: 'expense-other', name: 'Outros', type: 'Despesa', active: true },
+  ]);
+  assert.deepEqual(getFinanceCategories().map((category) => `${category.type}:${category.name}`).sort(), ['Despesa:Outros','Receita:Outros']);
+}));
