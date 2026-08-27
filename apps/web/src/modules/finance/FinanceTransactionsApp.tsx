@@ -3,6 +3,7 @@ import './finance.css';
 import { activeFinanceCategories } from './financeConfigStore';
 import { type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
 import { getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
+import { localDateIso } from '../../shared/localDate';
 import { OfxImportModal } from './OfxImportModal';
 
 type Mode = 'create' | 'view' | 'edit';
@@ -41,7 +42,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
   const [draft, setDraft] = useState<Draft>(() => record ? {
     description: record.description,
     type: record.type,
-    category: categoryNames(record.type).includes(record.category) ? record.category : defaultCategory(record.type),
+    category: record.category,
     amount: record.amount,
     date: record.date,
     dueDate: record.dueDate,
@@ -52,7 +53,9 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
   } : emptyDraft());
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const changeType = (next: FinanceType) => setDraft((current) => ({ ...current, type: next, category: categoryNames(next).includes(current.category) ? current.category : defaultCategory(next), status: isValidStatus(next, current.status) ? current.status : DEFAULT_STATUS[next] }));
-  const modalCategories = categoryNames(draft.type);
+  const activeModalCategories = categoryNames(draft.type);
+  const preservesHistoricalCategory = Boolean(record && draft.type === record.type && record.category && !activeModalCategories.includes(record.category));
+  const modalCategories = preservesHistoricalCategory ? [record!.category, ...activeModalCategories] : activeModalCategories;
 
   if (mode === 'view' && record) {
     return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
@@ -79,7 +82,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
         <div className="finance-form-grid finance-transaction-form-grid">
           <label className="finance-field-wide"><span>Descrição</span><input required value={draft.description} onChange={(event) => set('description', event.target.value)} /></label>
           <label><span>Tipo</span><select value={draft.type} onChange={(event) => changeType(event.target.value as FinanceType)}><option>Receita</option><option>Despesa</option></select></label>
-          <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)} disabled={!modalCategories.length}>{modalCategories.length ? modalCategories.map((item) => <option key={item}>{item}</option>) : <option value="">Nenhuma categoria ativa</option>}</select></label>
+          <label><span>Categoria</span><select value={draft.category} onChange={(event) => set('category', event.target.value)} disabled={!modalCategories.length}>{modalCategories.length ? modalCategories.map((item) => <option key={item} value={item}>{item}{preservesHistoricalCategory && item === record?.category ? ' (inativa — histórico)' : ''}</option>) : <option value="">Nenhuma categoria ativa</option>}</select></label>
           <label><span>Valor</span><input required type="number" min="0.01" step="0.01" value={draft.amount || ''} onChange={(event) => set('amount', Number(event.target.value))} /></label>
           <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as FinanceStatus)}>{STATUS_BY_TYPE[draft.type].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label><span>Data</span><input required type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
@@ -89,6 +92,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
           <label className="finance-field-wide"><span>Observações</span><textarea rows={4} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label>
         </div>
         {invalidDueDate && <p className="finance-inline-error" role="alert">O vencimento não pode ser anterior à data da transação.</p>}
+        {preservesHistoricalCategory && <p className="finance-inline-error" role="status">A categoria histórica “{record?.category}” está inativa e foi preservada. Ela só será substituída se você alterar explicitamente o tipo ou a categoria.</p>}
         {!modalCategories.length && <p className="finance-inline-error" role="alert">Não existe categoria financeira ativa para {draft.type.toLowerCase()}. Cadastre uma categoria antes de salvar.</p>}
         <footer><button type="button" className="crm-btn-secondary" onClick={close}>Cancelar</button><button type="submit" className="crm-btn-primary" disabled={invalid}>Salvar transação</button></footer>
       </form>
@@ -110,7 +114,7 @@ export function FinanceTransactionsApp() {
   const [notifications, setNotifications] = useState(false);
   useEffect(() => { saveFinanceSessionRecords(records); }, [records]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateIso();
   const activeCategories = activeFinanceCategories();
   const filterCategories = useMemo(() => ['Todas', ...Array.from(new Set([...activeCategories.map((item) => item.name), ...records.map((record) => record.category).filter(Boolean)]))], [records, activeCategories]);
   const invalidPeriod = Boolean(start && end && end < start);
