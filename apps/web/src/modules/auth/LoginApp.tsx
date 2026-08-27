@@ -33,8 +33,6 @@ export function LoginApp({previewOnly=false}:{previewOnly?:boolean}={}){
       <div className="auth-visual-copy">
         <span className="auth-eyebrow">ACESSO ADMINISTRATIVO</span>
         <h1>Um único acesso.<br/><em>Todos os workspaces.</em></h1>
-        <p>Área reservada para a futura autenticação centralizada dos workspaces internos do VISA FÁCIL.</p>
-        <div className="auth-visual-points"><span>CRM</span><span>Site / Website</span><span>Mais workspaces no futuro</span></div>
       </div>
       <small className="auth-visual-footer">VISA FÁCIL · Gestão centralizada</small>
     </section>
