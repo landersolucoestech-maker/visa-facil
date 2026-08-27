@@ -14,6 +14,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
+function isOptionalText(value: unknown): value is string | undefined { return value === undefined || typeof value === 'string'; }
 function isFinanceType(value: unknown): value is FinanceType { return value === 'Receita' || value === 'Despesa'; }
 function isFinanceStatus(value: unknown): value is FinanceStatus { return value === 'Recebido' || value === 'A receber' || value === 'Pago' || value === 'A pagar'; }
 export function isFinanceRecord(value: unknown): value is FinanceRecord {
@@ -26,6 +27,7 @@ export function isFinanceRecord(value: unknown): value is FinanceRecord {
     && typeof value.dueDate === 'string' && (value.dueDate === '' || DATE_RE.test(value.dueDate))
     && isText(value.paymentMethod)
     && isText(value.relatedName)
+    && isOptionalText(value.relatedRecordId)
     && isText(value.notes);
 }
 
