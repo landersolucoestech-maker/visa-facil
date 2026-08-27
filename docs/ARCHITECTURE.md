@@ -30,7 +30,7 @@ Principais domínios:
 - `modules/finance` — transações, invoices, categorias, regras e contabilidade;
 - `modules/marketing` — marketing;
 - `modules/integrations` — registro canônico e facade frontend das integrações;
-- `modules/reports` — templates e validação CSV; importação/exportação persistente depende de backend;
+- `modules/reports` — importação/exportação exclusivamente XLSX com validação dos schemas visíveis e persistência limitada ao navegador;
 - `modules/settings` — configurações e UI de estado real de integrações;
 - `modules/auth` — contrato de autenticação, atualmente desativado.
 
@@ -44,16 +44,31 @@ O formulário público usa `modules/public-site/services/publicLeadService.ts` e
 
 ## Integrações
 
-`modules/integrations/integrationContract.ts` é o registro canônico dos provedores e capacidades. Ele inclui WhatsApp, Resend, Autentique, NFS-e, Instagram, Facebook, YouTube, TikTok, Google Ads e Google Calendar.
+`modules/integrations/integrationContract.ts` é o registro canônico dos **provedores técnicos configuráveis pelo frontend**. A hierarquia atual é:
+
+- `whatsapp` — WhatsApp Business Platform;
+- `telephony-sms` — camada agnóstica para telefonia/SMS;
+- `autentique` — assinatura eletrônica;
+- `nfse` — NFS-e/Nota Fiscal de Serviço;
+- `meta` — provider único para Facebook, Instagram, Messenger e Meta Ads;
+- `google` — provider único para YouTube, Google Ads e Google Calendar;
+- `tiktok` — TikTok.
+
+Facebook, Instagram, Messenger e Meta Ads não são providers independentes. Eles são produtos/canais internos da integração Meta. Da mesma forma, YouTube, Google Ads e Google Calendar não são integrações técnicas independentes: são serviços internos do provider Google. Isso evita duplicação de OAuth, credenciais, tokens, estado de conexão e configuração de backend para serviços pertencentes ao mesmo ecossistema.
+
+Resend é infraestrutura interna exclusivamente server-side para e-mail transacional e não pertence ao registry configurável do navegador.
 
 `modules/integrations/integrationApi.ts` define o contrato frontend:
 
 - `GET /v1/integrations`;
 - `POST /v1/integrations/:id/connect`;
+- `POST /v1/integrations/:id/reconnect`;
 - `POST /v1/integrations/:id/disconnect`;
 - `POST /v1/integrations/:id/sync`.
 
 A UI de Configurações consulta esses endpoints quando `VITE_API_BASE_URL` existe. Sem backend, todos os provedores ficam `unconfigured`. O navegador só mostra `connected` se o backend retornar esse estado após validar conta/credencial.
+
+WhatsApp e Meta usam o fluxo oficial da Meta quando aplicável; Google usa o fluxo oficial Google OAuth; TikTok usa o fluxo oficial TikTok OAuth. O frontend não cria telas próprias que imitem login, senha, seleção de conta ou consentimento desses provedores.
 
 OAuth, armazenamento/renovação de tokens, callbacks, webhooks, idempotência, filas, retries, observabilidade e adapters externos são responsabilidades da futura camada backend. Consulte `docs/INTEGRATIONS.md`.
 
@@ -87,7 +102,7 @@ NFS-e real não existe neste frontend. Emissão fiscal de produção depende do 
 
 Campanhas e conteúdos persistem durante a sessão por `marketingSessionStore.ts`. Os modelos ricos usados pela UI são validados em runtime. Fixtures são convertidos uma única vez pela fronteira de seed.
 
-Finalizar uma campanha local não simula ativação em plataforma externa. Operações reais de mídia dependem dos adapters de integração.
+Finalizar uma campanha local não simula ativação em plataforma externa. Operações reais de mídia dependem dos adapters de integração. Meta Ads pertence ao provider Meta; Google Ads pertence ao provider Google; TikTok Ads continua condicionado às APIs/permissões oficiais disponibilizadas ao provider TikTok.
 
 ### Contratos
 
@@ -133,7 +148,7 @@ O CMS mantém draft/publicação em armazenamento local enquanto não existe API
 
 ## Relatórios
 
-Templates CSV e validação estrutural são funções reais do frontend. Importação/exportação operacional persistente permanece indisponível até existir fonte de dados durável compartilhada.
+Relatórios opera exclusivamente com arquivos `.xlsx`. Os schemas de importação/exportação acompanham exatamente os campos visíveis dos respectivos modais, incluindo datasets operacionais e de configuração. IDs técnicos não são expostos como colunas artificiais e relacionamentos visíveis são resolvidos para IDs canônicos antes de persistir. A persistência continua limitada ao navegador enquanto não existir fonte de dados compartilhada.
 
 ## Qualidade e validação
 
@@ -143,11 +158,11 @@ O comando canônico é:
 npm run check
 ```
 
-Ele executa validação arquitetural, lint estrutural, testes automatizados, auditoria npm, TypeScript e build. CI acrescenta smoke runtime; Pages repete os gates antes da publicação.
+Ele executa validação arquitetural, lint estrutural, testes automatizados, auditoria npm, TypeScript e build. CI acrescenta smoke runtime e smoke de interação/renderização em navegador headless para rotas críticas do CRM; Pages repete os gates antes da publicação.
 
 `scripts/lint-source.mjs` protege, entre outros pontos: `any` explícito, fixtures fora de providers, sidebars concorrentes, bypass de stores canônicos, AccountMenu/loader globais, ordem do sidebar, ausência da rota Contratos, integração estática paralela, segredo em `VITE_*`, formulário público demonstrativo e regressão do contrato frontend de integrações.
 
-`scripts/tests` cobre fixtures, financeiro, CMS, OFX, session stores, Contratos, contrato visual do CRM e o registro canônico das integrações.
+`scripts/tests` cobre fixtures, financeiro, CMS, OFX, session stores, Contratos, Relatórios XLSX, contrato visual do CRM, telefonia/SMS e o registro canônico das integrações. `scripts/browser-crm-interactions.mjs` valida no navegador fluxos e estruturas críticas que não devem regressar silenciosamente.
 
 ## Critérios para novas features
 
