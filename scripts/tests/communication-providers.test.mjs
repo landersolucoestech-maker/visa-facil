@@ -39,11 +39,15 @@ test('communication records can link back to CRM and VisaChat while provider cre
   assert.equal(source.includes('sessionStorage'),false);
   assert.ok(integrations.includes("id:'telephony-sms'"));
   assert.ok(integrations.includes("authMode:'hybrid'"));
-  assert.ok(integrations.includes("description:'Integração agnóstica com operadoras e provedores IP para SMS, voz, linhas/números, roteamento e atendimento integrado ao CRM e VisaChat por meio de APIs.'"));
-  assert.ok(settings.includes("item.id==='telephony-sms'"));
-  assert.equal(settings.includes('Operadoras tradicionais previstas:'),false);
-  assert.equal(settings.includes('Provedores IP/Internet previstos:'),false);
-  assert.equal(settings.includes('Credenciais, linhas/números, remetentes, rotas e webhooks serão configurados por provider adapter no backend'),false);
+  assert.ok(integrations.includes("description:'Camada de integração agnóstica para conexão com operadoras de telefonia e provedores de comunicação via internet, permitindo centralizar recursos de SMS, voz e números telefônicos no CRM e no VisaChat.'"));
+});
+
+test('telephony integration page names future carrier and IP targets while remaining provider-agnostic',()=>{
+  assert.ok(settings.includes('A arquitetura deverá permitir a conexão futura com operadoras como Vivo, TIM, Claro e outros provedores compatíveis, além de plataformas IP como Twilio, Dialpad, RingCentral e similares, sempre por meio das APIs oficiais disponíveis.'));
+  for(const name of requiredProviders)assert.ok(settings.includes(name),`${name} must be visible in the telephony integration description`);
+  for(const resource of ['SMS','Voz','Linhas e números','Recebimento e envio de mensagens','Roteamento','Atendimento','Histórico de comunicação'])assert.ok(settings.includes(`'${resource}'`)||settings.includes(resource));
+  assert.ok(settings.includes("item.id==='telephony-sms'")||settings.includes("'telephony-sms'"));
+  assert.ok(settings.includes("'Backend necessário'"));
 });
 
 test('catalog capability declarations remain provider-dependent rather than pretending connections are live',()=>{
