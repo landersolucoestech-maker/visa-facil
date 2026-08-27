@@ -99,6 +99,7 @@ test('task fixtures use canonical statuses, priorities and valid scheduling fiel
     assert.ok(['Pendente','Em andamento','Concluída'].includes(item.status));
     assert.ok(['Baixa','Média','Alta'].includes(item.priority));
     assert.ok(['Contato','Lead'].includes(item.relatedType));
+    assert.ok(['Geral','Marketing'].includes(item.area??'Geral'));
     assert.match(item.dueDate,DATE_RE);
     assert.match(item.dueTime,TIME_RE);
     assert.ok(Number.isFinite(Date.parse(item.createdAt)));
@@ -133,15 +134,18 @@ test('attendance fixtures keep conversations and message ids unique',()=>{
   }
 });
 
-test('marketing fixtures expose only supported content and paid campaign contracts',()=>{
+test('marketing fixtures expose supported content campaigns and briefing contracts',()=>{
   const data=json('apps/web/src/mocks/marketing/marketing.dev.json');
-  assert.deepEqual(Object.keys(data).sort(),['campaigns','contents']);
+  assert.deepEqual(Object.keys(data).sort(),['briefings','campaigns','contents']);
   assert.ok(Array.isArray(data.contents));
   assert.ok(Array.isArray(data.campaigns));
+  assert.ok(Array.isArray(data.briefings));
   uniqueIds(data.contents,'Marketing contents');
   uniqueIds(data.campaigns,'Marketing campaigns');
+  uniqueIds(data.briefings,'Marketing briefings');
   const contentChannels=['Instagram','Facebook','TikTok','YouTube','X','Threads'];
   const campaignChannels=['Meta Ads','Google Ads','YouTube','TikTok'];
+  const briefingStatuses=['Rascunho','Em elaboração','Em revisão','Aprovado','Arquivado'];
   data.contents.forEach((content)=>{
     assert.ok(contentChannels.includes(content.channel));
     assert.match(content.date,DATE_RE);
@@ -157,5 +161,18 @@ test('marketing fixtures expose only supported content and paid campaign contrac
     assert.match(campaign.startDate,DATE_RE);
     assert.match(campaign.endDate,DATE_RE);
     assert.ok(campaign.endDate>=campaign.startDate);
+  });
+  data.briefings.forEach((briefing)=>{
+    assert.ok(briefing.title.trim());
+    assert.ok(briefingStatuses.includes(briefing.status));
+    assert.ok(Array.isArray(briefing.channels));
+    briefing.channels.forEach((channel)=>assert.ok(contentChannels.includes(channel)));
+    assert.ok(briefing.dueDate===''||DATE_RE.test(briefing.dueDate));
+    assert.ok(Number.isFinite(Date.parse(briefing.createdAt)));
+    assert.ok(Number.isFinite(Date.parse(briefing.updatedAt)));
+    if(briefing.status!=='Rascunho'){
+      assert.ok(briefing.objective.trim());
+      assert.ok(typeof briefing.ownerUserId==='string'&&briefing.ownerUserId.trim());
+    }
   });
 });
