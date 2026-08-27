@@ -2,6 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import type { CmsDocument, CmsRepeaterItem, CmsSectionInstance, CmsValue } from '../../site-cms/types';
 
 const SiteContentContext=createContext<{document:CmsDocument;pageId:string}|null>(null);
+const SAFE_LINK_PROTOCOLS=new Set(['http:','https:','mailto:','tel:']);
 
 export function SiteContentProvider({document,pageId,children}:{document:CmsDocument;pageId:string;children:ReactNode}){
  return <SiteContentContext.Provider value={{document,pageId}}>{children}</SiteContentContext.Provider>
@@ -22,3 +23,13 @@ export function cmsBool(value:CmsValue|undefined,fallback=true){return typeof va
 export function cmsList(value:CmsValue|undefined):CmsRepeaterItem[]{return Array.isArray(value)?value:[]}
 export function itemText(item:CmsRepeaterItem,key:string,fallback=''){const value=item[key];return typeof value==='string'?value:fallback}
 export function itemBool(item:CmsRepeaterItem,key:string,fallback=false){const value=item[key];if(typeof value==='boolean')return value;if(value==='true')return true;if(value==='false')return false;return fallback}
+
+export function cmsHref(value:string|undefined,fallback='#'){
+ const href=(value??'').trim();
+ if(!href)return fallback;
+ if(href.startsWith('#')||href.startsWith('/')||href.startsWith('./')||href.startsWith('../'))return href;
+ if(!/^[a-z][a-z0-9+.-]*:/i.test(href))return href;
+ try{return SAFE_LINK_PROTOCOLS.has(new URL(href).protocol)?href:fallback}catch{return fallback}
+}
+
+export function cmsTarget(value:string|undefined){return value==='_blank'?'_blank':'_self'}
