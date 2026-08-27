@@ -3,7 +3,7 @@ import { getSettingsAutomationMock, getSettingsCompanyMock, getSettingsRoleMocks
 
 export type Tab='empresa'|'automacoes'|'seguranca'|'integracoes'|'usuarios';
 export type Company={companyName:string;fantasyName:string;cnpj:string;address:string;phone:string;responsible:string;slug:string};
-export type AutomationKey='email'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
+export type AutomationKey='email'|'sms'|'push'|'newLead'|'leadFollowup'|'financeMovement'|'weeklyFinance'|'weeklyReport'|'criticalAlerts'|'operational'|'backup';
 export type UserRecord={id:string;name:string;email:string;role:string;status:'Ativo'|'Inativo'|'Pendente'};
 export type Role={id:string;name:string;description:string;permissions:string[];system?:boolean};
 
@@ -16,7 +16,7 @@ export const TABS:Array<{id:Tab;label:string;icon:string}>=[
 ];
 
 const blankCompany:Company={companyName:'',fantasyName:'',cnpj:'',address:'',phone:'',responsible:'',slug:''};
-const blankAutomations:Record<AutomationKey,boolean>={email:false,push:false,newLead:false,leadFollowup:false,financeMovement:false,weeklyFinance:false,weeklyReport:false,criticalAlerts:false,operational:false,backup:false};
+const blankAutomations:Record<AutomationKey,boolean>={email:false,sms:false,push:false,newLead:false,leadFollowup:false,financeMovement:false,weeklyFinance:false,weeklyReport:false,criticalAlerts:false,operational:false,backup:false};
 
 export const INITIAL_COMPANY:Company=getSettingsCompanyMock()??blankCompany;
 export const INITIAL_AUTOMATIONS:Record<AutomationKey,boolean>=getSettingsAutomationMock()??blankAutomations;
