@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ApiClientError, isBackendConfigured } from '../../shared/apiClient';
 import { CAPABILITY_LABELS, GOOGLE_PRODUCTS, INTEGRATION_REGISTRY, META_PRODUCTS, integrationById, type IntegrationConnectionState, type IntegrationId, type IntegrationRuntimeStatus, type MetaProductConnectionState, type OfficialAuthorizationProvider } from '../integrations/integrationContract';
 import { connectIntegration, disconnectIntegration, getIntegrationStatuses, reconnectIntegration, syncIntegration } from '../integrations/integrationApi';
+import { officialAuthorizationUrl } from '../integrations/officialAuthorization';
 import { Card } from './settingsShared';
 import { AUTHENTICATION_ENABLED } from '../auth/auth';
 
@@ -9,11 +10,6 @@ const STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não
 const PROVIDER_STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não configurado',disconnected:'Configuração incompleta',connecting:'Configuração incompleta',connected:'Conectado',degraded:'Atenção necessária',error:'Erro de autorização'};
 const PRODUCT_STATUS_LABEL:Record<MetaProductConnectionState,string>={unconfigured:'Não configurado',disconnected:'Não conectado',connected:'Conectado',unavailable:'Indisponível',degraded:'Atenção necessária',error:'Erro'};
 const ICONS:Record<IntegrationId,string>={whatsapp:'WA','telephony-sms':'SMS',autentique:'A',nfse:'NF',meta:'M',google:'G',tiktok:'TT'};
-const AUTH_HOSTS:Record<OfficialAuthorizationProvider,readonly string[]>={
- meta:['www.facebook.com','business.facebook.com'],
- google:['accounts.google.com'],
- tiktok:['www.tiktok.com'],
-};
 const AUTH_PROVIDER_LABEL:Record<OfficialAuthorizationProvider,string>={meta:'Meta',google:'Google',tiktok:'TikTok'};
 
 type IntegrationServicePresentation={name:string;description:string;resources:string[]};
@@ -82,14 +78,6 @@ const PRESENTATION:Record<IntegrationId,IntegrationPresentation>={
 
 function statusClass(state:IntegrationConnectionState){return `settings-status is-${state.replace(/\s+/g,'-')}`}
 function statusLabel(id:IntegrationId,state:IntegrationConnectionState){return id==='meta'||id==='google'?PROVIDER_STATUS_LABEL[state]:STATUS_LABEL[state]}
-function safeAuthorizationRedirect(provider:OfficialAuthorizationProvider,value:string){
- try{
-  const url=new URL(value);
-  if(url.protocol!=='https:'||!AUTH_HOSTS[provider].includes(url.hostname))return false;
-  window.location.assign(url.toString());
-  return true;
- }catch{return false}
-}
 function formatDateTime(value?:string){
  if(!value)return '';
  const date=new Date(value);
@@ -136,10 +124,13 @@ export function IntegrationsTab(){
   setBusy(id);setError('');
   try{
    const response=action==='connect'?await connectIntegration(id):action==='reconnect'?await reconnectIntegration(id):action==='disconnect'?await disconnectIntegration(id):await syncIntegration(id);
-   setStatuses(current=>current.map(item=>item.id===id?response.integration:item));
    if((action==='connect'||action==='reconnect')&&definition.authMode==='oauth2'){
-    if(!definition.officialAuthorizationProvider||!response.authorizationUrl||!safeAuthorizationRedirect(definition.officialAuthorizationProvider,response.authorizationUrl))throw new Error('OFFICIAL_AUTHORIZATION_REQUIRED');
+    const redirect=definition.officialAuthorizationProvider&&response.authorizationUrl?officialAuthorizationUrl(definition.officialAuthorizationProvider,response.authorizationUrl):null;
+    if(!redirect)throw new Error('OFFICIAL_AUTHORIZATION_REQUIRED');
+    window.location.assign(redirect);
+    return;
    }
+   setStatuses(current=>current.map(item=>item.id===id?response.integration:item));
   }catch(value){
    if(value instanceof Error&&value.message==='OFFICIAL_AUTHORIZATION_REQUIRED')setError(`A conexão com ${definition.name} foi bloqueada porque o backend não retornou uma URL HTTPS do provedor oficial.`);
    else setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.');
