@@ -41,7 +41,7 @@ function href(path:string){return `${basePath()}${path}`||path}
 function go(path:string){window.location.href=href(path)}
 function currentPath(){const base=basePath();const pathname=window.location.pathname;const normalized=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return normalized.replace(/\/+$/,'')||'/'}
 function marketingSection(path:string):MarketingSection{if(path.endsWith('/campanhas'))return'campaigns';if(path.endsWith('/calendario'))return'calendar';if(path.endsWith('/metricas'))return'metrics';return'overview'}
-function financeSection(path:string):FinanceSection{if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
+function financeSection(path:string):FinanceSection|undefined{if(path==='/crm/categorias-financeiras'||path==='/crm/regras-financeiras')return undefined;if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
 function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path==='/crm';return path===itemHref||path.startsWith(`${itemHref}/`)}
 function BrandMark(){return <span className="crm-brand-mark" aria-hidden="true"><i/><b/></span>}
 
