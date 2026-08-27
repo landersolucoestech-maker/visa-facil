@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import './tasks.css';
 import { type RelatedType, type TaskPriority, type TaskRecord, type TaskStatus } from './mocks/tasksMockProvider';
-import { getTaskSessionRecords, saveTaskSessionRecords } from '../../shared/operationalSessionStore';
+import { getCrmSessionRecords, getOperationalTeamMembers, getTaskSessionRecords, saveTaskSessionRecords, type OperationalTeamMember } from '../../shared/operationalSessionStore';
+import type { CrmRecord } from '../crm/types';
 import { localDateIso } from '../../shared/localDate';
 
 const STATUS_OPTIONS: TaskStatus[] = ['Pendente', 'Em andamento', 'Concluída'];
@@ -13,7 +14,7 @@ type ModalMode = 'create' | 'view' | 'edit';
 type TaskDraft = Omit<TaskRecord, 'id' | 'createdAt' | 'updatedAt'>;
 
 const EMPTY_DRAFT: TaskDraft = {
-  title: '', description: '', relatedType: 'Contato', relatedName: '', owner: 'Administrador', priority: 'Média', status: 'Pendente', dueDate: '', dueTime: '', reminder: 'Sem lembrete',
+  title: '', description: '', relatedType: 'Contato', relatedName: '', relatedRecordId: '', owner: '', ownerUserId: '', priority: 'Média', status: 'Pendente', dueDate: '', dueTime: '', reminder: 'Sem lembrete',
 };
 
 function BellIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>; }
@@ -21,19 +22,29 @@ function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill=
 function PlusIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>; }
 function MoreIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>; }
 function formatDate(date: string) { return date ? new Date(`${date}T12:00:00`).toLocaleDateString('pt-BR') : '—'; }
+function normalized(value:string){return value.trim().toLocaleLowerCase('pt-BR')}
+function relationRecords(records:CrmRecord[],type:RelatedType){return records.filter(record=>type==='Lead'?record.kind==='lead':record.kind==='contact')}
 
-function TaskModal({ mode, task, onClose, onSave }: { mode: ModalMode; task?: TaskRecord; onClose: () => void; onSave: (draft: TaskDraft) => void }) {
+function TaskModal({ mode, task, crmRecords, members, onClose, onSave }: { mode: ModalMode; task?: TaskRecord; crmRecords:CrmRecord[]; members:OperationalTeamMember[]; onClose: () => void; onSave: (draft: TaskDraft) => void }) {
   const [draft, setDraft] = useState<TaskDraft>(() => task ? {
-    title: task.title, description: task.description, relatedType: task.relatedType, relatedName: task.relatedName, owner: task.owner,
+    title: task.title, description: task.description, relatedType: task.relatedType, relatedName: task.relatedName, relatedRecordId: task.relatedRecordId ?? '', owner: task.owner, ownerUserId: task.ownerUserId ?? '',
     priority: task.priority, status: task.status, dueDate: task.dueDate, dueTime: task.dueTime, reminder: task.dueDate ? task.reminder : 'Sem lembrete',
   } : EMPTY_DRAFT);
   const set = <K extends keyof TaskDraft>(key: K, value: TaskDraft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const changeDueDate = (value: string) => setDraft((current) => ({ ...current, dueDate: value, dueTime: value ? current.dueTime : '', reminder: value ? current.reminder : 'Sem lembrete' }));
+  const availableRelations=relationRecords(crmRecords,draft.relatedType);
+  const resolvedOwnerId=draft.ownerUserId||members.find(member=>normalized(member.name)===normalized(draft.owner)||normalized(member.email)===normalized(draft.owner))?.id||'';
+  const resolvedRelationId=draft.relatedRecordId||availableRelations.find(record=>normalized(record.fullName)===normalized(draft.relatedName))?.id||'';
+  const ownerUnavailable=Boolean(draft.owner)&&!resolvedOwnerId;
+  const relationUnavailable=Boolean(draft.relatedName)&&!resolvedRelationId;
+  const changeOwner=(id:string)=>{const member=members.find(item=>item.id===id);setDraft(current=>({...current,ownerUserId:id,owner:member?.name??(id==='__legacy__'?current.owner:'')}))};
+  const changeRelatedType=(type:RelatedType)=>setDraft(current=>({...current,relatedType:type,relatedName:'',relatedRecordId:''}));
+  const changeRelation=(id:string)=>{const record=availableRelations.find(item=>item.id===id);setDraft(current=>({...current,relatedRecordId:id,relatedName:record?.fullName??(id==='__legacy__'?current.relatedName:'')}))};
 
   if (mode === 'view' && task) {
     return <div className="tasks-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="tasks-view-modal" role="dialog" aria-modal="true" aria-labelledby="tasks-view-title">
       <header><div><span>TAREFA</span><h2 id="tasks-view-title">{task.title}</h2><p>{task.relatedType} · {task.relatedName || 'Sem vínculo'}</p></div><button type="button" onClick={onClose} aria-label="Fechar">×</button></header>
-      <section className="tasks-view-summary"><div><span>Status</span><strong>{task.status}</strong></div><div><span>Prioridade</span><strong>{task.priority}</strong></div><div><span>Prazo</span><strong>{formatDate(task.dueDate)} {task.dueTime}</strong></div><div><span>Responsável</span><strong>{task.owner}</strong></div></section>
+      <section className="tasks-view-summary"><div><span>Status</span><strong>{task.status}</strong></div><div><span>Prioridade</span><strong>{task.priority}</strong></div><div><span>Prazo</span><strong>{formatDate(task.dueDate)} {task.dueTime}</strong></div><div><span>Responsável</span><strong>{task.owner || 'Não atribuído'}</strong></div></section>
       <section className="tasks-view-body"><div className="tasks-view-grid"><div><span>Vinculado a</span><strong>{task.relatedType}: {task.relatedName || '—'}</strong></div><div><span>Lembrete</span><strong>{task.dueDate ? task.reminder : 'Sem lembrete'}</strong></div></div><div className="tasks-view-description"><span>Descrição</span><p>{task.description || 'Nenhuma descrição cadastrada.'}</p></div></section>
       <footer><div><small>Criada em {new Date(task.createdAt).toLocaleString('pt-BR')}</small><small>Atualizada em {new Date(task.updatedAt).toLocaleString('pt-BR')}</small></div><button type="button" className="crm-btn-secondary" onClick={onClose}>Fechar</button></footer>
     </div></div>;
@@ -44,9 +55,9 @@ function TaskModal({ mode, task, onClose, onSave }: { mode: ModalMode; task?: Ta
     <header><div><span>{mode === 'create' ? 'NOVA TAREFA' : 'EDITAR TAREFA'}</span><h2 id="tasks-form-title">{mode === 'create' ? 'Criar tarefa' : 'Editar tarefa'}</h2><p>Defina a atividade, o responsável e o prazo.</p></div><button type="button" onClick={onClose} aria-label="Fechar">×</button></header>
     <form onSubmit={(event) => { event.preventDefault(); if (!invalid) onSave(draft); }}><div className="tasks-form-grid">
       <label><span>Título</span><input required value={draft.title} onChange={(event) => set('title', event.target.value)} /></label>
-      <label><span>Responsável</span><input value={draft.owner} onChange={(event) => set('owner', event.target.value)} /></label>
-      <label><span>Tipo de vínculo</span><select value={draft.relatedType} onChange={(event) => set('relatedType', event.target.value as RelatedType)}>{RELATED_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
-      <label><span>Contato / Lead relacionado</span><input value={draft.relatedName} onChange={(event) => set('relatedName', event.target.value)} placeholder="Nome do contato ou lead" /></label>
+      <label><span>Responsável</span><select value={ownerUnavailable?'__legacy__':resolvedOwnerId} onChange={(event)=>changeOwner(event.target.value)}><option value="">Não atribuído</option>{ownerUnavailable&&<option value="__legacy__">{draft.owner} · legado/indisponível</option>}{members.map(member=><option key={member.id} value={member.id}>{member.name} · {member.role}</option>)}</select></label>
+      <label><span>Tipo de vínculo</span><select value={draft.relatedType} onChange={(event) => changeRelatedType(event.target.value as RelatedType)}>{RELATED_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
+      <label><span>Contato / Lead relacionado</span><select value={relationUnavailable?'__legacy__':resolvedRelationId} onChange={(event)=>changeRelation(event.target.value)}><option value="">Sem vínculo</option>{relationUnavailable&&<option value="__legacy__">{draft.relatedName} · legado/indisponível</option>}{availableRelations.map(record=><option key={record.id} value={record.id}>{record.fullName}{record.email?` · ${record.email}`:''}</option>)}</select></label>
       <label><span>Prioridade</span><select value={draft.priority} onChange={(event) => set('priority', event.target.value as TaskPriority)}>{PRIORITY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label><span>Status</span><select value={draft.status} onChange={(event) => set('status', event.target.value as TaskStatus)}>{STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></label>
       <label><span>Data</span><input type="date" value={draft.dueDate} onChange={(event) => changeDueDate(event.target.value)} /></label>
@@ -65,6 +76,8 @@ export function TasksApp() {
   const [modal, setModal] = useState<{ mode: ModalMode; task?: TaskRecord }>();
   const [openActionId, setOpenActionId] = useState<string>();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const crmRecords=useMemo(()=>getCrmSessionRecords(),[]);
+  const members=useMemo(()=>getOperationalTeamMembers(),[]);
   useEffect(() => { saveTaskSessionRecords(tasks); }, [tasks]);
 
   const today = localDateIso();
@@ -98,12 +111,12 @@ export function TasksApp() {
       <main className="tasks-content"><section className="tasks-stats" aria-label="Indicadores de tarefas"><article><span>Total de tarefas</span><strong>{stats.total}</strong><small>Cadastradas</small></article><article><span>Pendentes</span><strong>{stats.pending}</strong><small>Abertas ou em andamento</small></article><article><span>Para hoje</span><strong>{stats.today}</strong><small>Com prazo hoje</small></article><article className={stats.overdue ? 'is-alert' : ''}><span>Vencidas</span><strong>{stats.overdue}</strong><small>Precisam de atenção</small></article></section>
         <section className="tasks-card"><div className="tasks-filters"><label className="tasks-search"><SearchIcon /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por tarefa, vínculo ou responsável" /></label><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filtrar por status"><option>Todos</option>{STATUS_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select><select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)} aria-label="Filtrar por prioridade"><option>Todas</option>{PRIORITY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></div>
           <div className="tasks-table-scroll"><div className="tasks-table" role="table" aria-label="Lista de tarefas"><div className="tasks-table-head" role="row"><span role="columnheader">Tarefa</span><span role="columnheader">Vínculo</span><span role="columnheader">Responsável</span><span role="columnheader">Prioridade</span><span role="columnheader">Prazo</span><span role="columnheader">Status</span><span role="columnheader">Ações</span></div>
-            {filtered.length === 0 ? <div className="tasks-empty">Nenhuma tarefa encontrada.</div> : filtered.map((task) => <div className="tasks-row" key={task.id} role="row"><div className="tasks-task-cell" data-label="Tarefa" role="cell"><strong>{task.title}</strong><small>{task.description || 'Sem descrição'}</small></div><div className="tasks-related-cell" data-label="Vínculo" role="cell"><strong>{task.relatedName || '—'}</strong><small>{task.relatedType}</small></div><span className="tasks-owner-cell" data-label="Responsável" role="cell">{task.owner}</span><span className="tasks-priority-cell" data-label="Prioridade" role="cell"><b className={`tasks-priority is-${task.priority.toLowerCase().replace('é', 'e')}`}>{task.priority}</b></span><div className="tasks-due-cell" data-label="Prazo" role="cell"><strong>{formatDate(task.dueDate)}</strong><small>{task.dueTime || 'Sem horário'}</small></div><span className="tasks-status-cell" data-label="Status" role="cell"><b className={`tasks-status is-${task.status.toLowerCase().replace(' ', '-').replace('í', 'i')}`}>{task.status}</b></span><div className="tasks-row-actions" data-label="Ações" role="cell" onClick={(event) => event.stopPropagation()}><button type="button" className="tasks-actions-trigger" aria-label={`Ações da tarefa ${task.title}`} aria-haspopup="menu" aria-expanded={openActionId === task.id} onClick={() => setOpenActionId((current) => current === task.id ? undefined : task.id)}><MoreIcon /></button>{openActionId === task.id && <div className="tasks-actions-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); setModal({ mode: 'view', task }); }}>Ver</button><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); setModal({ mode: 'edit', task }); }}>Editar</button><button type="button" role="menuitem" className="is-danger" onClick={() => { setOpenActionId(undefined); deleteTask(task); }}>Excluir</button></div>}</div></div>)}
+            {filtered.length === 0 ? <div className="tasks-empty">Nenhuma tarefa encontrada.</div> : filtered.map((task) => <div className="tasks-row" key={task.id} role="row"><div className="tasks-task-cell" data-label="Tarefa" role="cell"><strong>{task.title}</strong><small>{task.description || 'Sem descrição'}</small></div><div className="tasks-related-cell" data-label="Vínculo" role="cell"><strong>{task.relatedName || '—'}</strong><small>{task.relatedType}</small></div><span className="tasks-owner-cell" data-label="Responsável" role="cell">{task.owner || '—'}</span><span className="tasks-priority-cell" data-label="Prioridade" role="cell"><b className={`tasks-priority is-${task.priority.toLowerCase().replace('é', 'e')}`}>{task.priority}</b></span><div className="tasks-due-cell" data-label="Prazo" role="cell"><strong>{formatDate(task.dueDate)}</strong><small>{task.dueTime || 'Sem horário'}</small></div><span className="tasks-status-cell" data-label="Status" role="cell"><b className={`tasks-status is-${task.status.toLowerCase().replace(' ', '-').replace('í', 'i')}`}>{task.status}</b></span><div className="tasks-row-actions" data-label="Ações" role="cell" onClick={(event) => event.stopPropagation()}><button type="button" className="tasks-actions-trigger" aria-label={`Ações da tarefa ${task.title}`} aria-haspopup="menu" aria-expanded={openActionId === task.id} onClick={() => setOpenActionId((current) => current === task.id ? undefined : task.id)}><MoreIcon /></button>{openActionId === task.id && <div className="tasks-actions-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); setModal({ mode: 'view', task }); }}>Ver</button><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); setModal({ mode: 'edit', task }); }}>Editar</button><button type="button" role="menuitem" className="is-danger" onClick={() => { setOpenActionId(undefined); deleteTask(task); }}>Excluir</button></div>}</div></div>)}
           </div></div>
         </section>
       </main>
     </div>
-    {modal && <TaskModal mode={modal.mode} task={modal.task} onClose={() => setModal(undefined)} onSave={saveTask} />}
+    {modal && <TaskModal mode={modal.mode} task={modal.task} crmRecords={crmRecords} members={members} onClose={() => setModal(undefined)} onSave={saveTask} />}
   </div>;
 }
 
