@@ -33,6 +33,7 @@ export function ContractEditorModal({record,contacts,templates,variables,onClose
  const [step,setStep]=useState(0);
  const [draft,setDraft]=useState<ContractEditorDraft>(()=>initialDraft(record));
  useEffect(()=>{setStep(0);setDraft(initialDraft(record))},[record]);
+ useEffect(()=>{const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose()};document.addEventListener('keydown',closeOnEscape);return()=>document.removeEventListener('keydown',closeOnEscape)},[onClose]);
  const activeTemplates=templates.filter(item=>item.active);
  const selectedTemplate=templates.find(item=>item.id===draft.templateId);
  const selectedClient=contacts.find(item=>item.id===draft.clientId);
