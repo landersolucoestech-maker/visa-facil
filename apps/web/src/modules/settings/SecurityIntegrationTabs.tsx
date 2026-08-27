@@ -7,9 +7,25 @@ import { AUTHENTICATION_ENABLED } from '../auth/auth';
 
 const STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não configurado',disconnected:'Desconectado',connecting:'Conectando',connected:'Conectado',degraded:'Degradado',error:'Erro'};
 const ICONS:Record<IntegrationId,string>={whatsapp:'WA',resend:'R',autentique:'A',nfse:'NF',instagram:'IG',facebook:'FB',youtube:'YT',tiktok:'TT','google-ads':'GA','google-calendar':'GC'};
+const OAUTH_HOSTS:Partial<Record<IntegrationId,readonly string[]>>={
+ whatsapp:['www.facebook.com'],
+ instagram:['www.facebook.com'],
+ facebook:['www.facebook.com'],
+ youtube:['accounts.google.com'],
+ tiktok:['www.tiktok.com'],
+ 'google-ads':['accounts.google.com'],
+ 'google-calendar':['accounts.google.com'],
+};
 
 function statusClass(state:IntegrationConnectionState){return `settings-status is-${state.replace(/\s+/g,'-')}`}
-function safeAuthorizationRedirect(value:string){try{const url=new URL(value,window.location.origin);if(url.protocol==='https:'||(import.meta.env.DEV&&url.protocol==='http:'))window.location.assign(url.toString())}catch{ /* invalid authorization URL returned by backend */ }}
+function safeAuthorizationRedirect(id:IntegrationId,value:string){
+ try{
+  const url=new URL(value,window.location.origin);
+  const validProtocol=url.protocol==='https:'||(import.meta.env.DEV&&url.protocol==='http:');
+  const allowedHost=url.origin===window.location.origin||(OAUTH_HOSTS[id]?.includes(url.hostname)??false);
+  if(validProtocol&&allowedHost)window.location.assign(url.toString());
+ }catch{ /* invalid or untrusted authorization URL returned by backend */ }
+}
 
 export function SecurityTab(){
  return <Card title="Segurança da Conta" description="Estado das proteções de acesso deste ambiente" icon="◈">
@@ -41,7 +57,7 @@ export function IntegrationsTab(){
   try{
    const response=action==='connect'?await connectIntegration(id):action==='disconnect'?await disconnectIntegration(id):await syncIntegration(id);
    setStatuses(current=>current.map(item=>item.id===id?response.integration:item));
-   if(response.authorizationUrl)safeAuthorizationRedirect(response.authorizationUrl);
+   if(response.authorizationUrl)safeAuthorizationRedirect(id,response.authorizationUrl);
   }catch(value){setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.')}finally{setBusy(undefined)}
  };
  return <Card title="Integrações" description="Estado real dos conectores externos" icon="↗">
