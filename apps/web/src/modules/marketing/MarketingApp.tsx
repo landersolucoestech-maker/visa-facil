@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import './marketing.css';
 import { getMarketingSessionCampaigns, getMarketingSessionContents, saveMarketingSessionCampaigns, saveMarketingSessionContents, type Campaign, type ContentItem, type PaidPlatform, type Platform } from './marketingSessionStore';
+import { isSafeMarketingDestinationUrl } from './marketingUrl';
 import { getOperationalTeamMembers, type OperationalTeamMember } from '../../shared/operationalSessionStore';
 
 type Section='overview'|'campaigns'|'calendar'|'metrics';
@@ -32,7 +33,7 @@ function currentScheduleKey(){const now=new Date();return `${dateIso(now)}T${Str
 function shiftDate(date:Date,view:CalendarView,delta:number){const next=new Date(date);if(view==='dia')next.setDate(next.getDate()+delta);else if(view==='semana')next.setDate(next.getDate()+delta*7);else if(view==='mes')next.setMonth(next.getMonth()+delta);else next.setFullYear(next.getFullYear()+delta);return next}
 function periodLabel(date:Date,view:CalendarView){if(view==='dia')return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});if(view==='mes')return `${monthNames[date.getMonth()]} de ${date.getFullYear()}`;if(view==='ano')return String(date.getFullYear());const monday=new Date(date);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);return `${monday.getDate()} — ${sunday.getDate()} de ${monthNames[sunday.getMonth()].toLowerCase()} de ${sunday.getFullYear()}`}
 function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
-function validCampaignDraft(draft:CampaignDraft,final=false){const structural=DATE_RE.test(draft.startDate)&&DATE_RE.test(draft.endDate)&&draft.endDate>=draft.startDate&&Number.isFinite(draft.budget)&&draft.budget>=0&&Number.isFinite(draft.dailyBudget)&&draft.dailyBudget>=0;return structural&&(!final||(Boolean(draft.name.trim())&&Boolean(draft.ownerUserId)&&Boolean(draft.result.trim())&&draft.budget>0&&draft.paidPlatforms.length>0))}
+function validCampaignDraft(draft:CampaignDraft,final=false){const destinationSafe=!draft.destinationUrl.trim()||isSafeMarketingDestinationUrl(draft.destinationUrl);const structural=DATE_RE.test(draft.startDate)&&DATE_RE.test(draft.endDate)&&draft.endDate>=draft.startDate&&Number.isFinite(draft.budget)&&draft.budget>=0&&Number.isFinite(draft.dailyBudget)&&draft.dailyBudget>=0&&destinationSafe;return structural&&(!final||(Boolean(draft.name.trim())&&Boolean(draft.ownerUserId)&&Boolean(draft.result.trim())&&draft.budget>0&&draft.paidPlatforms.length>0&&isSafeMarketingDestinationUrl(draft.destinationUrl)))}
 function validContentDraft(draft:Omit<ContentItem,'id'>){return Boolean(draft.title.trim())&&DATE_RE.test(draft.date)&&TIME_RE.test(draft.time)&&draft.channels.length>0&&draft.channels.includes(draft.primaryChannel)}
 
 export function MarketingApp(){
