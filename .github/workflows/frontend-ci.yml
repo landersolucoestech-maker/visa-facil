@@ -138,3 +138,5 @@ jobs:
           render_route '/crm/marketing/tarefas' 'Tarefas de Marketing'
           render_route '/crm/relatorios' 'Relatórios'
           render_route '/crm/configuracoes' 'Configurações'
+
+          CHROME_BIN="$chrome_bin" CRM_SMOKE_BASE_URL="http://127.0.0.1:4173" node scripts/browser-crm-interactions.mjs
