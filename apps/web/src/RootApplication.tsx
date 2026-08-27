@@ -58,6 +58,7 @@ const MarketingApp = lazy(async () => {
   await import('./modules/marketing/marketing-overview-refinement.css');
   return { default: module.default };
 });
+const MarketingBriefingsApp = lazy(() => import('./modules/marketing/MarketingBriefingsApp'));
 const ReportsApp = lazy(() => import('./modules/reports/ReportsApp'));
 const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
 const ProfileApp = lazy(() => import('./modules/settings/ProfileApp'));
@@ -128,6 +129,8 @@ export function RootApplication() {
   if(path==='/crm/financeiro/invoices')return withSharedSidebar(<FinanceInvoicesApp/>);
   if(path==='/crm/financeiro/pl')return withSharedSidebar(<FinancePLApp/>);
   if(path==='/crm/financeiro'||path==='/crm/financeiro/transacoes')return withSharedSidebar(<FinanceTransactionsApp/>);
+  if(path==='/crm/marketing/briefings')return withSharedSidebar(<MarketingBriefingsApp/>);
+  if(path==='/crm/marketing/tarefas')return withSharedSidebar(<TasksApp fixedArea="Marketing"/>);
   if(path==='/crm/marketing'||path==='/crm/marketing/campanhas'||path==='/crm/marketing/calendario'||path==='/crm/marketing/metricas')return withSharedSidebar(<MarketingApp/>);
   if(path==='/crm/relatorios')return withSharedSidebar(<ReportsApp/>);
   if(path==='/crm/perfil')return withSharedSidebar(<ProfileApp/>);
