@@ -1,7 +1,7 @@
-export type IntegrationId='whatsapp'|'autentique'|'nfse'|'instagram'|'facebook'|'youtube'|'tiktok'|'google-ads'|'google-calendar';
+export type IntegrationId='whatsapp'|'telephony-sms'|'autentique'|'nfse'|'instagram'|'facebook'|'youtube'|'tiktok'|'google-ads'|'google-calendar';
 export type IntegrationCategory='Comunicação'|'Documentos'|'Fiscal'|'Social & Conteúdo'|'Publicidade'|'Produtividade';
 export type IntegrationAuthMode='oauth2'|'api-key'|'provider-token'|'certificate'|'hybrid';
-export type IntegrationCapability='messaging'|'customer-service'|'account-read'|'documents'|'electronic-signature'|'fiscal-documents'|'content-publishing'|'content-management'|'comments-moderation'|'ads'|'analytics'|'calendar-sync';
+export type IntegrationCapability='messaging'|'customer-service'|'account-read'|'sms'|'voice'|'phone-numbers'|'delivery-status'|'documents'|'electronic-signature'|'fiscal-documents'|'content-publishing'|'content-management'|'comments-moderation'|'ads'|'analytics'|'calendar-sync';
 export type IntegrationConnectionState='unconfigured'|'disconnected'|'connecting'|'connected'|'degraded'|'error';
 export type OfficialAuthorizationProvider='meta'|'google'|'tiktok';
 
@@ -47,6 +47,7 @@ export type IntegrationRuntimeStatus={
  */
 export const INTEGRATION_REGISTRY:IntegrationDefinition[]=[
   {id:'whatsapp',name:'WhatsApp',category:'Comunicação',description:'Mensagens, atendimento e gerenciamento de conversas da WhatsApp Business Platform centralizados no VisaChat.',authMode:'oauth2',officialAuthorizationProvider:'meta',capabilities:['messaging','customer-service','account-read'],serverOnlySecrets:['META_APP_SECRET','META_WEBHOOK_VERIFY_TOKEN'],externalRequirements:['Meta App','Meta Business quando exigido','WhatsApp Business Account (WABA)','Phone Number ID','OAuth/Embedded Signup oficial da Meta','Webhook HTTPS público'],apiFamilies:['WhatsApp Business Platform','Meta Graph API','Meta Webhooks'],oauthScopes:['whatsapp_business_messaging','whatsapp_business_management'],webhookSupported:true},
+  {id:'telephony-sms',name:'Telefonia e SMS',category:'Comunicação',description:'Camada agnóstica para futuras operadoras de telefonia e provedores IP, com SMS, linhas/números, roteamento e estados de entrega normalizados para CRM e VisaChat.',authMode:'hybrid',capabilities:['messaging','customer-service','sms','voice','phone-numbers','delivery-status'],serverOnlySecrets:[],externalRequirements:['Seleção de um provider adapter compatível','Conta/contrato do provedor escolhido','Credenciais ou autorização mantidas somente no backend','Linha, número virtual ou sender provisionado quando aplicável','Webhook/gateway do provedor quando houver eventos de entrada/status'],apiFamilies:['CommunicationProviderAdapter','Provider-specific telephony/SMS API or carrier gateway'],webhookSupported:true},
   {id:'autentique',name:'Autentique',category:'Documentos',description:'Criação, envio, acompanhamento e assinatura eletrônica de documentos e contratos.',authMode:'api-key',capabilities:['documents','electronic-signature'],serverOnlySecrets:['AUTENTIQUE_API_TOKEN','AUTENTIQUE_WEBHOOK_SECRET'],externalRequirements:['Conta Autentique','Token de API','Organization ID quando aplicável','Webhook HTTPS público'],webhookSupported:true},
   {id:'nfse',name:'NFS-e / Nota Fiscal de Serviço',category:'Fiscal',description:'Emissão, consulta, cancelamento e acompanhamento de NFS-e por adapter fiscal.',authMode:'certificate',capabilities:['fiscal-documents'],serverOnlySecrets:['NFSE_CERTIFICATE_SECRET','NFSE_CERTIFICATE_PASSWORD'],externalRequirements:['CNPJ e inscrição municipal','Definição do provedor/município ou Sistema Nacional NFS-e','Certificado digital e ambiente de homologação quando exigidos'],webhookSupported:false},
   {id:'instagram',name:'Instagram',category:'Social & Conteúdo',description:'Mensagens e atendimento quando autorizados, publicação e gestão de conteúdo, leitura de conta, métricas e campanhas suportadas pelo ecossistema oficial da Meta.',authMode:'oauth2',officialAuthorizationProvider:'meta',capabilities:['messaging','customer-service','account-read','content-publishing','content-management','comments-moderation','ads','analytics'],serverOnlySecrets:['META_APP_SECRET'],externalRequirements:['Meta App','Conta profissional do Instagram','Assets empresariais exigidos pela Meta','OAuth Redirect URI oficial','Webhooks HTTPS','App Review e permissões aprovadas quando exigidas','Conta de anúncios para recursos de mídia paga'],apiFamilies:['Instagram Graph API','Instagram Messaging API quando disponível para a conta','Meta Marketing API','Meta Webhooks'],webhookSupported:true},
@@ -61,6 +62,10 @@ export const CAPABILITY_LABELS:Record<IntegrationCapability,string>={
   messaging:'Mensagens',
   'customer-service':'Atendimento',
   'account-read':'Informações da conta',
+  sms:'SMS',
+  voice:'Telefonia / voz',
+  'phone-numbers':'Linhas e números',
+  'delivery-status':'Status de entrega',
   documents:'Documentos',
   'electronic-signature':'Assinatura eletrônica',
   'fiscal-documents':'Documentos fiscais',
