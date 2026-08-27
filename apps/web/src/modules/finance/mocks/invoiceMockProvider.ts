@@ -3,7 +3,7 @@ import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 
 export type InvoiceSeedStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';
 export type InvoiceSeedDirection = 'Entrada' | 'Saída';
-export type InvoiceSeedSettlementStatus = 'Liquidado' | 'Pendente';
+export type InvoiceSeedSettlementStatus = 'Liquidado' | 'Pendente' | 'Cancelado';
 
 export type InvoiceSeedPayment = {
   id: string;
@@ -13,6 +13,7 @@ export type InvoiceSeedPayment = {
   processingFee: number;
   settlementStatus: InvoiceSeedSettlementStatus;
   notes: string;
+  financeTransactionId?: string;
 };
 
 export type InvoiceSeed = {
@@ -52,7 +53,7 @@ export type InvoiceSeed = {
 
 const VALID_STATUSES = new Set<InvoiceSeedStatus>(['Rascunho', 'Pronta', 'Enviada', 'Em aberto', 'Parcialmente pago', 'Pago', 'Vencida', 'Cancelada']);
 const VALID_DIRECTIONS = new Set<InvoiceSeedDirection>(['Entrada', 'Saída']);
-const VALID_SETTLEMENT_STATUSES = new Set<InvoiceSeedSettlementStatus>(['Liquidado', 'Pendente']);
+const VALID_SETTLEMENT_STATUSES = new Set<InvoiceSeedSettlementStatus>(['Liquidado', 'Pendente', 'Cancelado']);
 const NUMERIC_FIELDS = ['quantity', 'unitValue', 'serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'taxBase', 'icms', 'ipi', 'pis', 'cofins', 'iss', 'withheldTaxes', 'freight', 'insurance', 'otherFiscalExpenses', 'paid'] as const;
 const TEXT_FIELDS = ['invoiceNumber', 'customer', 'billingContact', 'service', 'processRef', 'referenceNumbers', 'destination', 'visaType', 'processStage', 'appointmentDate', 'travelDate', 'natureOfOperation', 'series', 'fiscalNumber', 'accessKey', 'issueDate', 'operationDate', 'dueDate', 'fiscalStatus', 'issuerName', 'issuerDocument', 'issuerStateRegistration', 'issuerMunicipalRegistration', 'issuerAddress', 'issuerCity', 'issuerState', 'issuerZip', 'recipientName', 'recipientDocument', 'recipientStateRegistration', 'recipientAddress', 'recipientCity', 'recipientState', 'recipientZip', 'supplierName', 'supplierDocument', 'supplierInvoiceNumber', 'supplierSeries', 'supplierAccessKey', 'purchaseOrderRef', 'receiptDate', 'entryPurpose', 'customerOrderRef', 'deliveryAddress', 'shippingMethod', 'departureDate', 'salePurpose', 'cfop', 'serviceCode', 'ncm', 'cstCsosn', 'unit', 'paymentTerms', 'relatedDocuments', 'notes', 'instructions', 'additionalInfo'] as const;
 
@@ -77,7 +78,8 @@ function isPayment(value: unknown): value is InvoiceSeedPayment {
     && value.processingFee >= 0
     && typeof value.settlementStatus === 'string'
     && VALID_SETTLEMENT_STATUSES.has(value.settlementStatus as InvoiceSeedSettlementStatus)
-    && typeof value.notes === 'string';
+    && typeof value.notes === 'string'
+    && (value.financeTransactionId === undefined || (typeof value.financeTransactionId === 'string' && value.financeTransactionId.trim().length > 0));
 }
 
 export function isInvoiceSeed(value: unknown): value is InvoiceSeed {
@@ -98,6 +100,8 @@ export function isInvoiceSeed(value: unknown): value is InvoiceSeed {
     if (!Array.isArray(value.payments) || !value.payments.every(isPayment)) return false;
     const ids = value.payments.map((payment) => payment.id);
     if (new Set(ids).size !== ids.length) return false;
+    const transactionIds = value.payments.map((payment) => payment.financeTransactionId).filter((id): id is string => Boolean(id));
+    if (new Set(transactionIds).size !== transactionIds.length) return false;
     if (paid !== undefined) {
       const liquidated = value.payments.filter((payment) => payment.settlementStatus === 'Liquidado').reduce((sum, payment) => sum + payment.amount, 0);
       if (Math.abs(liquidated - paid) > 0.0001) return false;
