@@ -27,3 +27,33 @@ export function parseCmsDocument(raw:string|null):CmsDocument|null{
 }
 
 export function normalizeCmsPath(path:string){return path==='/'?'/':path.replace(/\/+$/,'')||'/'}
+
+export function normalizeCmsSlug(value:string){
+ const trimmed=value.trim();
+ if(!trimmed||trimmed==='/')return'/';
+ const path=trimmed.startsWith('/')?trimmed:`/${trimmed}`;
+ const segments=path.split('/').filter(Boolean).map(segment=>segment.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'')).filter(Boolean);
+ return segments.length?`/${segments.join('/')}`:'/';
+}
+
+export function isValidCmsSchedule(value:string){
+ if(!value.trim())return false;
+ return Number.isFinite(new Date(value).getTime());
+}
+
+export function cmsPublicationIssues(document:CmsDocument){
+ const issues:string[]=[];
+ const seenSlugs=new Map<string,string>();
+ if(!document.pages.some(page=>normalizeCmsSlug(page.slug)==='/'))issues.push('O site precisa manter uma página inicial no slug /.');
+ for(const page of document.pages){
+  const label=page.name.trim()||page.id;
+  if(!page.name.trim())issues.push(`A página ${page.id} precisa de um nome.`);
+  const normalized=normalizeCmsSlug(page.slug);
+  if(page.slug!==normalized)issues.push(`O slug da página “${label}” deve ser “${normalized}”.`);
+  const slugKey=normalized.toLocaleLowerCase('pt-BR');
+  const duplicate=seenSlugs.get(slugKey);
+  if(duplicate)issues.push(`As páginas “${duplicate}” e “${label}” usam o mesmo slug “${normalized}”.`);else seenSlugs.set(slugKey,label);
+  if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
+ }
+ return issues;
+}
