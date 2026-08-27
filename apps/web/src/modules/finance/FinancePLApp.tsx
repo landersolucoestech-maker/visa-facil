@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './finance-accounting.css';
 import type { FinanceRecord } from './mocks/financeMockProvider';
 import { getFinanceSessionRecords } from '../../shared/operationalSessionStore';
@@ -24,6 +24,19 @@ export function FinancePLApp() {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('Todos');
   const [notifications, setNotifications] = useState(false);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!notifications) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setNotifications(false);
+      requestAnimationFrame(() => notificationButtonRef.current?.focus());
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [notifications]);
 
   const entries = useMemo<Entry[]>(() => records
     .filter((record) => (record.type === 'Receita' && record.status === 'Recebido') || (record.type === 'Despesa' && record.status === 'Pago'))
@@ -77,7 +90,7 @@ export function FinancePLApp() {
       <header className="crm-topbar accounting-topbar">
         <div className="accounting-topbar-copy"><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Contabilidade</h1><p>Receitas, despesas e resultado derivados das Transações.</p></div>
         <div className="crm-topbar-actions accounting-topbar-actions" onClick={(event) => event.stopPropagation()}>
-          <div className="accounting-topbar-menu"><button className="accounting-notification-button" type="button" aria-label="Notificações da contabilidade" aria-expanded={notifications} onClick={() => setNotifications((current) => !current)}><BellIcon />{alerts.length > 0 && <span>{alerts.length}</span>}</button>{notifications && <div className="accounting-dropdown accounting-notification-menu"><header><strong>Notificações</strong><span>{alerts.length}</span></header>{alerts.length ? <div>{alerts.map((alert) => <article className={alert.tone === 'danger' ? 'is-danger' : ''} key={alert.id}><strong>{alert.title}</strong><small>{alert.detail}</small></article>)}</div> : <p>Nenhum alerta contábil no período.</p>}</div>}</div>
+          <div className="accounting-topbar-menu"><button ref={notificationButtonRef} className="accounting-notification-button" type="button" aria-label="Notificações da contabilidade" aria-haspopup="true" aria-expanded={notifications} aria-controls="accounting-notifications" onClick={() => setNotifications((current) => !current)}><BellIcon />{alerts.length > 0 && <span>{alerts.length}</span>}</button>{notifications && <div className="accounting-dropdown accounting-notification-menu" id="accounting-notifications" role="region" aria-label="Notificações da contabilidade"><header><strong>Notificações</strong><span>{alerts.length}</span></header>{alerts.length ? <div>{alerts.map((alert) => <article className={alert.tone === 'danger' ? 'is-danger' : ''} key={alert.id}><strong>{alert.title}</strong><small>{alert.detail}</small></article>)}</div> : <p>Nenhum alerta contábil no período.</p>}</div>}</div>
         </div>
       </header>
 
