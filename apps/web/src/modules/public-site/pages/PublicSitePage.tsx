@@ -11,7 +11,7 @@ import { PublicHeader } from '../components/PublicHeader';
 import { ServicesGridSection, ServicesIntroSection } from '../components/ServicesSection';
 import { SiteContentProvider } from '../content/SiteContentContext';
 import { usePublicSiteInteractions } from '../usePublicSiteInteractions';
-import { isSafeCmsExternalUrl } from '../../site-cms/cmsDocumentContract';
+import { canonicalCmsLocale, isSafeCmsExternalUrl } from '../../site-cms/cmsDocumentContract';
 import { findPageByPath, resolvePublicDocument } from '../../site-cms/siteStore';
 import type { CmsSectionInstance } from '../../site-cms/types';
 
@@ -52,6 +52,7 @@ export function PublicSitePage({preview=false}:{preview?:boolean}) {
 
   useEffect(()=>{
     const siteName=cmsDocument.settings.siteName||'VISA FÁCIL';
+    window.document.documentElement.lang=canonicalCmsLocale(cmsDocument.settings.locale)||'pt-BR';
     if(!page){
       window.document.title=`Página não encontrada | ${siteName}`;
       ensureMeta('description').content='';
