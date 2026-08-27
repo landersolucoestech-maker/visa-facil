@@ -69,11 +69,14 @@ test('CMS page builder prevents duplicate structural section types',()=>{
   assert.ok(pages.includes("used?' · adicionada':''"));
 });
 
-test('CMS media UI blocks unsafe URLs and removal of referenced assets',()=>{
+test('CMS media UI blocks unsafe URLs, unsafe upload formats and removal of referenced assets',()=>{
   assert.ok(resources.includes('isSafeCmsExternalUrl'));
   assert.ok(resources.includes('cmsMediaReferenceCount'));
   assert.ok(resources.includes('a mídia está em uso'));
-  assert.ok(resources.includes('Tipo de arquivo não suportado. Envie uma imagem ou PDF.'));
+  assert.ok(resources.includes("new Set(['image/png','image/jpeg','image/gif','image/webp','image/avif'])"));
+  assert.ok(resources.includes('Tipo de arquivo não suportado. Envie PNG, JPEG, GIF, WebP, AVIF ou PDF.'));
+  assert.ok(resources.includes('SAFE_MEDIA_UPLOAD_ACCEPT'));
+  assert.equal(resources.includes('accept="image/*'),false);
 });
 
 test('CMS settings and SEO surface invalid publishable metadata while editing',()=>{
