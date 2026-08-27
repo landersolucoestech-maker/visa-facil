@@ -31,6 +31,14 @@ test('CMS persisted document contract rejects malformed JSON',()=>{
   assert.equal(parseCmsDocument('{broken'),null);
 });
 
+test('CMS persisted document contract rejects unsupported schema versions',()=>{
+  const future=validDocument();
+  future.version=2;
+  assert.equal(isCmsDocument(future),false);
+  assert.equal(parseCmsDocument(JSON.stringify(future)),null);
+  assert.ok(cmsPublicationIssues(future).some(issue=>issue.includes('versão do documento CMS')));
+});
+
 test('CMS persisted document contract rejects duplicate page and section ids',()=>{
   const duplicatePage=validDocument();
   duplicatePage.pages.push({...structuredClone(duplicatePage.pages[0]),name:'Duplicada'});
@@ -39,6 +47,23 @@ test('CMS persisted document contract rejects duplicate page and section ids',()
   const duplicateSection=validDocument();
   duplicateSection.pages[0].sections.push(structuredClone(duplicateSection.pages[0].sections[0]));
   assert.equal(isCmsDocument(duplicateSection),false);
+});
+
+test('CMS persisted document contract rejects negative or duplicate structural order',()=>{
+  const negative=validDocument();
+  negative.pages[0].sections[0].order=-1;
+  assert.equal(isCmsDocument(negative),false);
+  assert.ok(cmsPublicationIssues(negative).some(issue=>issue.includes('ordem inválida')));
+
+  const duplicateOrder=validDocument();
+  duplicateOrder.pages[0].sections.push({id:'services',type:'services',label:'Serviços',visible:true,order:0,values:{}});
+  assert.equal(isCmsDocument(duplicateOrder),false);
+  assert.ok(cmsPublicationIssues(duplicateOrder).some(issue=>issue.includes('mais de uma seção na ordem 0')));
+
+  const duplicateGlobalOrder=validDocument();
+  duplicateGlobalOrder.globals[1].order=0;
+  assert.equal(isCmsDocument(duplicateGlobalOrder),false);
+  assert.ok(cmsPublicationIssues(duplicateGlobalOrder).some(issue=>issue.includes('mais de uma seção na ordem 0')));
 });
 
 test('CMS persisted document contract rejects invalid page status and media kind',()=>{
