@@ -11,6 +11,7 @@ import { PublicHeader } from '../components/PublicHeader';
 import { ServicesGridSection, ServicesIntroSection } from '../components/ServicesSection';
 import { SiteContentProvider } from '../content/SiteContentContext';
 import { usePublicSiteInteractions } from '../usePublicSiteInteractions';
+import { isSafeCmsExternalUrl } from '../../site-cms/cmsDocumentContract';
 import { findPageByPath, resolvePublicDocument } from '../../site-cms/siteStore';
 import type { CmsSectionInstance } from '../../site-cms/types';
 
@@ -52,7 +53,7 @@ export function PublicSitePage({preview=false}:{preview?:boolean}) {
     ensureMeta('og:description',true).content=page.seo.description||'';
     const image=page.seo.ogImage||cmsDocument.settings.defaultOgImage;ensureMeta('og:image',true).content=image||'';
     ensureMeta('robots').content=page.seo.noIndex?'noindex,nofollow':'index,follow';
-    const canonical=page.seo.canonicalUrl||(cmsDocument.settings.siteUrl?`${cmsDocument.settings.siteUrl.replace(/\/$/,'')}${page.slug==='/'?'':page.slug}`:'');
+    const explicitCanonical=page.seo.canonicalUrl.trim();const siteUrl=cmsDocument.settings.siteUrl.trim();const canonical=isSafeCmsExternalUrl(explicitCanonical)?explicitCanonical:isSafeCmsExternalUrl(siteUrl)?`${siteUrl.replace(/\/$/,'')}${page.slug==='/'?'':page.slug}`:'';
     let canonicalNode=window.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if(canonical){if(!canonicalNode){canonicalNode=window.document.createElement('link');canonicalNode.rel='canonical';window.document.head.appendChild(canonicalNode)}canonicalNode.href=canonical}else canonicalNode?.remove();
   },[page,cmsDocument.settings]);
