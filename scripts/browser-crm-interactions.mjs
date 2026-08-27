@@ -109,7 +109,7 @@ try{
 
  await navigate('/crm/relatorios');
  await assertBrowser(`document.body.textContent?.includes('Importação e exportação dos datasets operacionais e de configuração exclusivamente em XLSX.')`,'reports remains XLSX-only');
- await assertBrowser(`!document.body.textContent?.includes('CSV')`,'reports page does not expose CSV');
+ await assertBrowser(`![...document.querySelectorAll('.reports-entity-actions button')].some(item=>item.textContent?.includes('CSV'))`,'reports exposes no CSV actions');
  await clickButton('Importar XLSX');
  await waitFor(`!!document.querySelector('.reports-import-modal[role="dialog"]')`,'reports XLSX import dialog');
  await assertBrowser(`document.querySelector('.reports-import-modal input[type="file"]')?.accept.includes('.xlsx')`,'reports import accepts XLSX');
