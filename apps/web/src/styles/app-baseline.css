@@ -5,11 +5,29 @@ html,body{width:100%}
 body,#root{min-height:100vh;min-height:100dvh}
 #root{width:100%}
 
-/* Canonical button alignment: every button centers its visible content. */
+/* Canonical button alignment: ordinary buttons center their visible content. */
 button{
   text-align:center!important;
   justify-content:center!important;
   align-items:center!important;
+}
+
+/* Action-menu commands are the intentional exception to the global button centering rule.
+   Their labels must read from left to right starting at the menu's left edge. */
+.crm-global-page :is(
+  .crm-actions-menu,
+  .tasks-actions-menu,
+  .contracts-actions-dropdown,
+  .finance-actions-menu,
+  .invoice-actions-menu,
+  .marketing-actions-menu,
+  .marketing-action-menu,
+  .accounting-actions-menu
+) button{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  text-align:left!important;
 }
 
 /* Canonical row-action placement.
