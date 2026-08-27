@@ -44,8 +44,8 @@ export function OfxImportModal({ existingIds, close, imported }: Props) {
         return;
       }
       imported(fresh);
-    } catch {
-      setError('Não foi possível ler o arquivo OFX. Verifique se o arquivo está íntegro e tente novamente.');
+    } catch (failure) {
+      setError(failure instanceof Error&&failure.message.startsWith('O arquivo OFX excede')?failure.message:'Não foi possível ler o arquivo OFX. Verifique se o arquivo está íntegro e tente novamente.');
     } finally {
       setBusy(false);
     }
