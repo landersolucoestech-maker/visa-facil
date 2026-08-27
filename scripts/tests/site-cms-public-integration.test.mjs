@@ -21,6 +21,13 @@ test('public header and footer logos navigate to the site home instead of a page
  assert.equal(footer.includes('className="logo logo--light" href="#inicio"'),false);
 });
 
+test('global header and footer hash links resolve from the home page on every CMS page',()=>{
+ for(const source of [header,footer]){
+  assert.ok(source.includes('function globalHref'));
+  assert.ok(source.includes("safe.startsWith('#')?`${homeHref()}${safe}`:safe"));
+ }
+});
+
 test('public site continues to honor page visibility, publication state and section order',()=>{
  assert.ok(page.includes("candidate.status==='published'||scheduledReady"));
  assert.ok(page.includes('page.sections.filter(section=>section.visible).sort((a,b)=>a.order-b.order)'));
