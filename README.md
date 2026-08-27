@@ -24,7 +24,7 @@ Principais áreas:
 - `/crm/categorias-financeiras` — categorias financeiras da sessão;
 - `/crm/regras-financeiras` — regras de classificação financeira da sessão;
 - `/crm/marketing/*` — marketing;
-- `/crm/relatorios` — templates e validação CSV; importação persistente/exportação de dados permanecem indisponíveis sem uma fonte durável compartilhada;
+- `/crm/relatorios` — importação/exportação exclusivamente XLSX, com schemas completos equivalentes aos campos visíveis dos respectivos modais e persistência restrita à sessão atual do navegador;
 - `/crm/perfil` — perfil/identidade do ambiente atual;
 - `/crm/configuracoes` — configurações e estado real das integrações.
 
@@ -34,7 +34,9 @@ A navegação lateral do CRM é compartilhada por todos os módulos internos. Ro
 
 O frontend possui uma fronteira única em `shared/apiClient.ts`. A configuração pública opcional `VITE_API_BASE_URL` aponta para a futura API backend. Nenhuma credencial de provedor deve ser colocada em variável `VITE_*`, pois esse conteúdo é público no bundle.
 
-`modules/integrations/integrationContract.ts` é o registro canônico das integrações previstas: WhatsApp, Resend, Autentique, NFS-e, Instagram, Facebook, YouTube, TikTok, Google Ads e Google Calendar. `modules/integrations/integrationApi.ts` define o contrato frontend para consultar estado, conectar, desconectar e sincronizar. A interface só pode mostrar `connected` quando a API backend confirmar esse estado.
+`modules/integrations/integrationContract.ts` é o registro canônico das integrações configuráveis pelo frontend: WhatsApp, Autentique, NFS-e, Instagram, Facebook, YouTube, TikTok, Google Ads e Google Calendar. `modules/integrations/integrationApi.ts` define o contrato frontend para consultar estado, conectar, reconectar, desconectar e sincronizar. A interface só pode mostrar `connected` quando a API backend confirmar esse estado. Resend é um provedor interno/server-side e não pertence ao registry nem à interface de configuração do navegador.
+
+Instagram, Facebook, YouTube, TikTok e WhatsApp exigem autorização pela interface oficial do respectivo provedor. O frontend não deve solicitar, reproduzir ou armazenar senha, access token, refresh token ou client secret dessas contas. A futura API backend deverá iniciar o fluxo oficial, trocar o código de autorização por tokens, armazená-los com segurança e retornar ao navegador apenas metadados não secretos sobre a conexão, conta, permissões e capacidades autorizadas.
 
 O formulário público usa `POST /v1/public/leads` quando `VITE_API_BASE_URL` está configurado. Sem backend, o envio fica explicitamente indisponível e não simula sucesso.
 
@@ -48,11 +50,13 @@ A autenticação está explicitamente desativada (`AUTHENTICATION_ENABLED = fals
 
 Fixtures `*.dev.json` são dados demonstrativos centralizados, acessados somente por providers de domínio e validados antes de inicializar o estado local. No protótipo atual, os mocks ficam habilitados por padrão — inclusive no build do GitHub Pages — para que a interface abra com dados representativos. Defina `VITE_CRM_MOCKS=false` para desabilitar todos os datasets centralizados. Esse mecanismo não pode fabricar autenticação, autorização, conexão de integração, assinatura eletrônica, persistência remota ou qualquer sucesso externo inexistente.
 
-Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates e variáveis. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
+Relacionamento, Tarefas, Agenda, Transações e VisaChat compartilham a fonte operacional validada em `shared/operationalSessionStore.ts`. Tarefas e Agenda preservam vínculos com registros do CRM por IDs canônicos (`relatedRecordId`) e responsáveis por IDs de usuários ativos (`ownerUserId`), mantendo nomes apenas como representação legível/compatibilidade de registros legados. Transações financeiras também preservam o vínculo com contato/cliente por `relatedRecordId`. Invoices usa `modules/finance/invoiceSessionStore.ts` para validar também ledger, total e estados de liquidação. Marketing usa `modules/marketing/marketingSessionStore.ts` para campanhas e conteúdos. Contratos usa `modules/contracts/contractSessionStore.ts` com validadores próprios para contratos, templates e variáveis. Todas essas fontes operacionais permanecem locais ao navegador; não constituem banco de dados ou sincronização multiusuário.
 
 O CMS utiliza armazenamento local para draft/publicação enquanto não existe persistência remota. Os dados recuperados são validados antes do uso.
 
 A importação OFX funciona no frontend e adiciona transações à sessão atual. Movimentações válidas passam pelas regras financeiras configuradas na sessão; regras incompatíveis ou categorias órfãs não são aplicadas.
+
+Relatórios opera exclusivamente com arquivos `.xlsx`. Os datasets operacionais e de configuração usam exatamente os campos visíveis dos modais correspondentes; IDs técnicos não são expostos como colunas artificiais. Quando um campo visível representa um relacionamento — por exemplo responsável, contato, lead ou cliente — a importação resolve o valor para o ID canônico antes de persistir e rejeita correspondências ausentes ou ambíguas em vez de criar vínculos soltos por texto.
 
 ## Fonte canônica dos domínios
 
