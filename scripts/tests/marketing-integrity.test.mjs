@@ -52,6 +52,16 @@ test('YouTube paid inventory is canonicalized under Google Ads instead of a dupl
   assert.ok(app.includes('inventário do YouTube'));
 });
 
+test('marketing content ownership uses active canonical user ids instead of free text',()=>{
+  assert.ok(store.includes('ownerUserId?:string'));
+  assert.ok(store.includes("value.ownerUserId===undefined||typeof value.ownerUserId==='string'"));
+  assert.ok(app.includes('getOperationalTeamMembers'));
+  assert.ok(app.includes('members={members}'));
+  assert.ok(app.includes('ownerUserId:id'));
+  assert.ok(app.includes('legado/indisponível'));
+  assert.equal(app.includes('<span>Responsável</span><input value={draft.owner}'),false);
+});
+
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
