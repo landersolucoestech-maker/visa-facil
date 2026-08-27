@@ -1,4 +1,4 @@
-import { cmsHref, cmsList, cmsTarget, cmsText, itemText, useGlobalSection } from '../content/SiteContentContext';
+import { cmsHref, cmsImageSrc, cmsList, cmsTarget, cmsText, itemText, useGlobalSection } from '../content/SiteContentContext';
 
 function homeHref(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return `${base}/`||'/'}
 function globalHref(value:string|undefined,fallback='#'){const safe=cmsHref(value,fallback);return safe.startsWith('#')?`${homeHref()}${safe}`:safe}
@@ -11,7 +11,7 @@ export function PublicHeader() {
   const visaMenu=cmsList(values.visaMenu);
   const brandName=cmsText(values.brandName,'VISA FÁCIL');
   const brandTagline=cmsText(values.brandTagline,'seu visto, sem complicação');
-  const logoImage=cmsText(values.logoImage);
+  const logoImage=cmsImageSrc(cmsText(values.logoImage));
   const announcementTarget=cmsTarget(cmsText(values.announcementCtaTarget,'_self'));
   const headerCtaTarget=cmsTarget(cmsText(values.headerCtaTarget,'_self'));
   return (
