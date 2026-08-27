@@ -39,10 +39,11 @@ test('communication records can link back to CRM and VisaChat while provider cre
   assert.equal(source.includes('sessionStorage'),false);
   assert.ok(integrations.includes("id:'telephony-sms'"));
   assert.ok(integrations.includes("authMode:'hybrid'"));
+  assert.ok(integrations.includes("description:'Integração agnóstica com operadoras e provedores IP para SMS, voz, linhas/números, roteamento e atendimento integrado ao CRM e VisaChat por meio de APIs.'"));
   assert.ok(settings.includes("item.id==='telephony-sms'"));
-  assert.ok(settings.includes('Operadoras tradicionais previstas:'));
-  assert.ok(settings.includes('Provedores IP/Internet previstos:'));
-  assert.ok(settings.includes('Credenciais, linhas/números, remetentes, rotas e webhooks serão configurados por provider adapter no backend'));
+  assert.equal(settings.includes('Operadoras tradicionais previstas:'),false);
+  assert.equal(settings.includes('Provedores IP/Internet previstos:'),false);
+  assert.equal(settings.includes('Credenciais, linhas/números, remetentes, rotas e webhooks serão configurados por provider adapter no backend'),false);
 });
 
 test('catalog capability declarations remain provider-dependent rather than pretending connections are live',()=>{
