@@ -60,6 +60,14 @@ export function isSafeCmsExternalUrl(value:string){
  try{const parsed=new URL(trimmed);return parsed.protocol==='https:'||parsed.protocol==='http:'}catch{return false}
 }
 
+export function canonicalCmsLocale(value:string){
+ const trimmed=value.trim();
+ if(!trimmed)return null;
+ try{const locales=Intl.getCanonicalLocales(trimmed);return locales.length===1?locales[0]:null}catch{return null}
+}
+
+export function isValidCmsLocale(value:string){return canonicalCmsLocale(value)!==null}
+
 function cmsValueReferenceCount(value:CmsValue,url:string){
  if(typeof value==='string')return value===url?1:0;
  if(typeof value==='boolean')return 0;
@@ -113,6 +121,7 @@ export function cmsPublicationIssues(document:CmsDocument){
  if(!isDateTimeString(document.updatedAt))issues.push('A data de atualização do documento CMS é inválida.');
  if(document.publishedAt!==null&&!isDateTimeString(document.publishedAt))issues.push('A data da última publicação do CMS é inválida.');
  if(!document.settings.siteName.trim())issues.push('Informe o nome do site antes de publicar.');
+ if(!isValidCmsLocale(document.settings.locale))issues.push('O locale do site deve ser uma tag BCP-47 válida, como pt-BR ou en-US.');
  if(document.settings.siteUrl.trim()&&!isSafeCmsExternalUrl(document.settings.siteUrl))issues.push('A URL principal do site deve usar HTTP ou HTTPS.');
  if(document.settings.defaultOgImage.trim()&&!isSafeCmsExternalUrl(document.settings.defaultOgImage))issues.push('A OG Image padrão deve usar uma URL absoluta HTTP ou HTTPS.');
  if(!document.pages.some(page=>normalizeCmsSlug(page.slug)==='/'))issues.push('O site precisa manter uma página inicial no slug /.');
