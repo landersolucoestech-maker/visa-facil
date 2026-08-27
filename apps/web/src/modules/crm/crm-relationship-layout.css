@@ -20,7 +20,7 @@
 .crm-directory-list{min-height:360px;padding:18px 2px;color:#7e8999;font-size:13px}
 .crm-directory-list p{margin:0;font-style:italic}
 .crm-content:has(.crm-directory){padding-top:22px}
-.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-workspace:has(#crm-directory-tab-leads[aria-selected="true"]) .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary{color:var(--vf-blue,#315f9d)!important;-webkit-text-fill-color:var(--vf-blue,#315f9d)!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-workspace:has(#crm-directory-tab-leads[aria-selected="true"]) .crm-topbar.crm-topbar .crm-topbar-actions.crm-topbar-actions .crm-topbar-primary{color:#fff!important;-webkit-text-fill-color:#fff!important}
 
 @media(max-width:1200px){
  .crm-directory-summary{grid-template-columns:repeat(3,1fr)}
