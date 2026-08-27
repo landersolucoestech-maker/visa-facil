@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { AUTHENTICATION_ENABLED, getAuthSession, signOut } from '../modules/auth/auth';
 import './account-menu.css';
@@ -37,6 +37,7 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
   const [open, setOpen] = useState(false);
   const [crmHost, setCrmHost] = useState<HTMLElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
   const name = session?.name || 'Administrador';
   const detail = AUTHENTICATION_ENABLED ? (session?.email || 'Conta interna') : 'Autenticação desativada';
@@ -66,7 +67,10 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
       if (target instanceof Node && rootRef.current && !rootRef.current.contains(target)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === 'Escape' && open) {
+        setOpen(false);
+        requestAnimationFrame(() => triggerRef.current?.focus());
+      }
     };
     document.addEventListener('pointerdown', closeOutside);
     document.addEventListener('keydown', closeOnEscape);
@@ -74,7 +78,24 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
       document.removeEventListener('pointerdown', closeOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, []);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus());
+  }, [open]);
+
+  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    const items = Array.from(rootRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+    if (!items.length) return;
+    event.preventDefault();
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+    if (event.key === 'Home') items[0].focus();
+    else if (event.key === 'End') items[items.length - 1].focus();
+    else if (event.key === 'ArrowDown') items[(currentIndex + 1 + items.length) % items.length].focus();
+    else items[(currentIndex - 1 + items.length) % items.length].focus();
+  };
 
   const logout = () => {
     signOut();
@@ -84,6 +105,7 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
 
   const menu = <div className={`account-menu account-menu--${surface}`} ref={rootRef}>
     <button
+      ref={triggerRef}
       className="account-menu__trigger"
       type="button"
       aria-label="Abrir menu da conta"
@@ -96,7 +118,7 @@ export function AccountMenu({ surface }: { surface: AccountMenuSurface }) {
       <span className="account-menu__identity"><strong>{name}</strong><small>{detail}</small></span>
       <span className="account-menu__caret" aria-hidden="true"><ChevronIcon /></span>
     </button>
-    {open && <div className="account-menu__panel" id="global-account-menu" role="menu" aria-label="Menu da conta">
+    {open && <div className="account-menu__panel" id="global-account-menu" role="menu" aria-label="Menu da conta" onKeyDown={handleMenuKeyDown}>
       <a role="menuitem" href={href('/crm/perfil')} onClick={() => setOpen(false)}><ProfileIcon /><span>Perfil</span></a>
       <a role="menuitem" href={href('/crm/configuracoes')} onClick={() => setOpen(false)}><SettingsIcon /><span>Configurações</span></a>
       <div className="account-menu__separator" />
