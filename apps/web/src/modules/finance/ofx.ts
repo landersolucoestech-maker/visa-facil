@@ -1,6 +1,9 @@
 import type { FinanceRecord } from './types';
 
 const MAX_OFX_BYTES = 5 * 1024 * 1024;
+const MAX_OFX_SOURCE_CHARS = 5 * 1024 * 1024;
+const MAX_OFX_TRANSACTIONS = 10_000;
+const MAX_OFX_FIELD_CHARS = 4_000;
 
 export type OfxParseResult = {
   records: FinanceRecord[];
@@ -21,7 +24,8 @@ function decodeOfxText(value: string) {
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/gi, "'")
-    .trim();
+    .trim()
+    .slice(0, MAX_OFX_FIELD_CHARS);
 }
 
 function tagValue(block: string, tag: string) {
@@ -45,10 +49,16 @@ function normalizeId(value: string) {
 }
 
 function transactionBlocks(source: string) {
-  return [...source.matchAll(/<STMTTRN>([\s\S]*?)(?:<\/STMTTRN>|(?=<STMTTRN>|<\/BANKTRANLIST>|$))/gi)].map((match) => match[1]);
+  const blocks:string[]=[];
+  for(const match of source.matchAll(/<STMTTRN>([\s\S]*?)(?:<\/STMTTRN>|(?=<STMTTRN>|<\/BANKTRANLIST>|$))/gi)){
+    if(blocks.length>=MAX_OFX_TRANSACTIONS)throw new Error(`O arquivo OFX excede o limite de ${MAX_OFX_TRANSACTIONS} movimentações.`);
+    blocks.push(match[1]);
+  }
+  return blocks;
 }
 
 export function parseOfxTransactions(source: string): OfxParseResult {
+  if(source.length>MAX_OFX_SOURCE_CHARS)throw new Error('O conteúdo OFX excede o limite de processamento de 5 MB.');
   if (!source.trim() || !/<OFX[>\s]/i.test(source)) return { records: [], rejected: 0 };
 
   const records: FinanceRecord[] = [];
@@ -76,7 +86,7 @@ export function parseOfxTransactions(source: string): OfxParseResult {
     const name = tagValue(block, 'NAME');
     const memo = tagValue(block, 'MEMO');
     const transactionType = tagValue(block, 'TRNTYPE');
-    const description = name || memo || transactionType || 'Movimentação OFX';
+    const description = (name || memo || transactionType || 'Movimentação OFX').slice(0,MAX_OFX_FIELD_CHARS);
     const type = signedAmount > 0 ? 'Receita' : 'Despesa';
 
     records.push({
@@ -94,7 +104,7 @@ export function parseOfxTransactions(source: string): OfxParseResult {
         'Importado de extrato OFX.',
         transactionType ? `Tipo bancário: ${transactionType}.` : '',
         memo && memo !== description ? `Memo: ${memo}` : '',
-      ].filter(Boolean).join(' '),
+      ].filter(Boolean).join(' ').slice(0,MAX_OFX_FIELD_CHARS),
     });
   });
 
