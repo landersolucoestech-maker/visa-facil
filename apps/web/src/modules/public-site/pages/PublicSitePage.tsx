@@ -17,6 +17,8 @@ import type { CmsSectionInstance } from '../../site-cms/types';
 
 function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
 function currentPublicPath(){const base=basePath();const pathname=window.location.pathname;const clean=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return clean.replace(/\/+$/,'')||'/'}
+function ensureMeta(name:string,property=false){let node=window.document.head.querySelector<HTMLMetaElement>(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=window.document.createElement('meta');node.setAttribute(property?'property':'name',name);window.document.head.appendChild(node)}return node}
+function setCanonical(value:string){let node=window.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');if(value){if(!node){node=window.document.createElement('link');node.rel='canonical';window.document.head.appendChild(node)}node.href=value}else node?.remove()}
 
 function SectionRenderer({section}:{section:CmsSectionInstance}){
  switch(section.type){
@@ -45,18 +47,26 @@ export function PublicSitePage({preview=false}:{preview?:boolean}) {
   const page=draftPreview?candidate:(candidate&&(candidate.status==='published'||scheduledReady)?candidate:undefined);
 
   useEffect(()=>{
-    if(!page)return;
-    window.document.title=page.seo.title||cmsDocument.settings.siteName;
-    const ensureMeta=(name:string,property=false)=>{let node=window.document.head.querySelector<HTMLMetaElement>(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=window.document.createElement('meta');node.setAttribute(property?'property':'name',name);window.document.head.appendChild(node)}return node};
+    const siteName=cmsDocument.settings.siteName||'VISA FÁCIL';
+    if(!page){
+      window.document.title=`Página não encontrada | ${siteName}`;
+      ensureMeta('description').content='';
+      ensureMeta('og:title',true).content=`Página não encontrada | ${siteName}`;
+      ensureMeta('og:description',true).content='';
+      ensureMeta('og:image',true).content='';
+      ensureMeta('robots').content='noindex,nofollow';
+      setCanonical('');
+      return;
+    }
+    window.document.title=page.seo.title||siteName;
     ensureMeta('description').content=page.seo.description||'';
-    ensureMeta('og:title',true).content=page.seo.title||cmsDocument.settings.siteName;
+    ensureMeta('og:title',true).content=page.seo.title||siteName;
     ensureMeta('og:description',true).content=page.seo.description||'';
     const image=page.seo.ogImage||cmsDocument.settings.defaultOgImage;ensureMeta('og:image',true).content=image||'';
-    ensureMeta('robots').content=page.seo.noIndex?'noindex,nofollow':'index,follow';
+    ensureMeta('robots').content=draftPreview?'noindex,nofollow':page.seo.noIndex?'noindex,nofollow':'index,follow';
     const explicitCanonical=page.seo.canonicalUrl.trim();const siteUrl=cmsDocument.settings.siteUrl.trim();const canonical=isSafeCmsExternalUrl(explicitCanonical)?explicitCanonical:isSafeCmsExternalUrl(siteUrl)?`${siteUrl.replace(/\/$/,'')}${page.slug==='/'?'':page.slug}`:'';
-    let canonicalNode=window.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if(canonical){if(!canonicalNode){canonicalNode=window.document.createElement('link');canonicalNode.rel='canonical';window.document.head.appendChild(canonicalNode)}canonicalNode.href=canonical}else canonicalNode?.remove();
-  },[page,cmsDocument.settings]);
+    setCanonical(canonical);
+  },[page,cmsDocument.settings,draftPreview]);
 
   if(!page)return <main className="public-site public-site-not-found"><section className="section"><div className="container"><h1>Página não encontrada</h1></div></section></main>;
   const visible=page.sections.filter(section=>section.visible).sort((a,b)=>a.order-b.order);
