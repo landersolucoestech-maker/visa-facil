@@ -3,13 +3,15 @@ import type { CmsDocument, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionIns
 const CMS_DOCUMENT_VERSION=1;
 const VALID_PAGE_STATUSES=new Set<CmsStatus>(['draft','published','scheduled','hidden']);
 const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
-const SAFE_RASTER_DATA_URL=/^data:image\/(?:png|jpeg|gif|webp|avif);base64,[A-Za-z0-9+/]+={0,2}$/;
-const SAFE_PDF_DATA_URL=/^data:application\/pdf;base64,[A-Za-z0-9+/]+={0,2}$/;
+const SAFE_RASTER_DATA_URL=/^data:image\/(?:png|jpeg|gif|webp|avif);base64,[A-Za-z0-9+/]+={0,2}$/i;
+const SAFE_PDF_DATA_URL=/^data:application\/pdf;base64,[A-Za-z0-9+/]+={0,2}$/i;
 const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
 const KNOWN_GLOBAL_SECTION_TYPES=new Set(['header','footer']);
 const VALID_PUBLIC_FORM_FIELD_TYPES=new Set(['text','tel','email','select','textarea']);
 const VALID_PUBLIC_FORM_FIELD_NAME=/^[A-Za-z][A-Za-z0-9_-]{0,79}$/;
 const RESERVED_PUBLIC_FORM_FIELD_NAMES=new Set(['consent']);
+const MAX_PUBLIC_FORM_FIELDS=30;
+const MAX_PUBLIC_SELECT_OPTIONS=100;
 
 export class CmsPublicationError extends Error{
  readonly issues:string[];
@@ -108,19 +110,27 @@ function appendOrderIssues(issues:string[],sections:CmsSectionInstance[],scope:s
 function appendPublicFormIssues(issues:string[],section:CmsSectionInstance,pageLabel:string){
  const formFields=section.values.formFields;
  if(!Array.isArray(formFields)){issues.push(`O formulário da página “${pageLabel}” precisa manter uma lista válida de campos.`);return}
+ if(formFields.length>MAX_PUBLIC_FORM_FIELDS)issues.push(`O formulário da página “${pageLabel}” excede o limite de ${MAX_PUBLIC_FORM_FIELDS} campos.`);
  const seenNames=new Set<string>();
  for(const [index,item] of formFields.entries()){
   const position=index+1;
   const name=typeof item.name==='string'?item.name.trim():'';
   const nameKey=name.toLowerCase();
+  const label=typeof item.label==='string'?item.label.trim():'';
   const type=typeof item.type==='string'?item.type.trim().toLowerCase():'';
+  const required=item.required;
   if(!VALID_PUBLIC_FORM_FIELD_NAME.test(name)||RESERVED_PUBLIC_FORM_FIELD_NAMES.has(nameKey))issues.push(`O campo ${position} do formulário da página “${pageLabel}” possui nome técnico inválido ou reservado.`);
   else if(seenNames.has(nameKey))issues.push(`O formulário da página “${pageLabel}” possui o nome técnico duplicado “${name}”.`);
   else seenNames.add(nameKey);
+  if(!label)issues.push(`O campo “${name||position}” do formulário da página “${pageLabel}” precisa de um label.`);
   if(!VALID_PUBLIC_FORM_FIELD_TYPES.has(type))issues.push(`O campo “${name||position}” do formulário da página “${pageLabel}” usa um tipo não suportado.`);
+  if(!(typeof item.placeholder==='string'))issues.push(`O campo “${name||position}” da página “${pageLabel}” possui placeholder inválido.`);
+  if(!(typeof required==='boolean'||required==='true'||required==='false'))issues.push(`O campo “${name||position}” da página “${pageLabel}” possui configuração de obrigatoriedade inválida.`);
+  if(!(typeof item.options==='string'))issues.push(`O campo “${name||position}” da página “${pageLabel}” possui configuração de opções inválida.`);
   if(type==='select'){
    const options=typeof item.options==='string'?item.options.split('\n').map(value=>value.trim()).filter(Boolean):[];
    if(options.length===0)issues.push(`O campo de seleção “${name||position}” da página “${pageLabel}” precisa ter pelo menos uma opção.`);
+   if(options.length>MAX_PUBLIC_SELECT_OPTIONS)issues.push(`O campo de seleção “${name||position}” da página “${pageLabel}” excede o limite de ${MAX_PUBLIC_SELECT_OPTIONS} opções.`);
   }
  }
 }
