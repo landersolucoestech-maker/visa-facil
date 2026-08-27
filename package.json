@@ -9,7 +9,7 @@
     "dev": "npm --workspace @visa-facil/web run dev",
     "build": "npm --workspace @visa-facil/web run build",
     "typecheck": "npm --workspace @visa-facil/web run typecheck",
-    "validate": "node scripts/validate-public-site.mjs",
+    "validate": "node scripts/validate-public-site.mjs && node scripts/validate-site-cms-style-ownership.mjs",
     "lint": "node scripts/lint-source.mjs",
     "test": "node --test scripts/tests/*.test.mjs",
     "audit": "npm audit --audit-level=high",
