@@ -9,6 +9,7 @@ import { currentView, go, href } from './siteCmsUtils';
 import './site-cms-base.css';
 import './site-cms-editor.css';
 import './site-cms-responsive.css';
+import './site-cms-product.css';
 
 export function SiteCmsApp(){
  const view=currentView();const [document,setDocumentState]=useState<CmsDocument>(()=>loadDraft());const [dirty,setDirty]=useState(false);const [selectedPageId,setSelectedPageId]=useState(document.pages[0]?.id||'');const [notice,setNotice]=useState('');
