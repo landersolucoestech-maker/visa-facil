@@ -8,6 +8,8 @@ export type ContentItem={id:string;date:string;time:string;title:string;channels
 export type Campaign={
  id:string;
  name:string;
+ owner:string;
+ ownerUserId?:string;
  objective:string;
  result:string;
  status:string;
@@ -80,7 +82,7 @@ export function isMarketingContent(value:unknown):value is ContentItem{
 }
 
 export function isMarketingCampaign(value:unknown):value is Campaign{
- if(!isObject(value)||typeof value.id!=='string'||!value.id.trim()||typeof value.name!=='string'||typeof value.objective!=='string'||!CAMPAIGN_OBJECTIVES.has(value.objective)||typeof value.result!=='string'||!RESULTS_BY_OBJECTIVE[value.objective]?.includes(value.result)||typeof value.status!=='string'||!CAMPAIGN_STATUSES.has(value.status))return false;
+ if(!isObject(value)||typeof value.id!=='string'||!value.id.trim()||typeof value.name!=='string'||typeof value.owner!=='string'||(value.ownerUserId!==undefined&&typeof value.ownerUserId!=='string')||typeof value.objective!=='string'||!CAMPAIGN_OBJECTIVES.has(value.objective)||typeof value.result!=='string'||!RESULTS_BY_OBJECTIVE[value.objective]?.includes(value.result)||typeof value.status!=='string'||!CAMPAIGN_STATUSES.has(value.status))return false;
  if(!Array.isArray(value.paidPlatforms)||!value.paidPlatforms.every(platform=>typeof platform==='string'&&PAID_PLATFORMS.has(platform as PaidPlatform))||!unique(value.paidPlatforms as string[]))return false;
  for(const key of ['budget','dailyBudget','spent'] as const){const number=value[key];if(typeof number!=='number'||!Number.isFinite(number)||number<0)return false}
  for(const key of ['leads','conversions'] as const){const number=value[key];if(typeof number!=='number'||!Number.isInteger(number)||number<0)return false}
@@ -98,7 +100,7 @@ function paidPlatform(channel:MarketingMockCampaign['channel']):PaidPlatform{
  return'Meta Ads';
 }
 function seedContent(content:MarketingMockContent):ContentItem{return{id:content.id,date:content.date,time:content.time,title:content.title,channels:[content.channel],primaryChannel:content.channel,type:content.type,status:content.status,owner:content.owner,copy:content.copy}}
-function seedCampaign(campaign:MarketingMockCampaign):Campaign{const objective=normalizeObjective(campaign.objective);return{id:campaign.id,name:campaign.name,objective,result:normalizeResult(objective,undefined),status:campaign.status,paidPlatforms:[paidPlatform(campaign.channel)],budget:campaign.budget,dailyBudget:Math.round(campaign.budget/30),spent:campaign.spent,leads:campaign.leads,conversions:campaign.conversions,startDate:campaign.startDate,endDate:campaign.endDate,audience:'Brasileiros interessados em assessoria de vistos',location:'Brasil',ageRange:'25–34',gender:'Todos',languages:'Português',interests:'Viagens, Estados Unidos, turismo, intercâmbio, negócios',destinationUrl:'https://visafacil.com.br',internalDescription:'',placements:['Feed','Stories'],creativeName:'Criativo principal',creativeFileName:'',headline:campaign.name,primaryCopy:objective,cta:'Saiba mais',bidStrategy:'Menor custo'}}
+function seedCampaign(campaign:MarketingMockCampaign):Campaign{const objective=normalizeObjective(campaign.objective);return{id:campaign.id,name:campaign.name,owner:'',objective,result:normalizeResult(objective,undefined),status:campaign.status,paidPlatforms:[paidPlatform(campaign.channel)],budget:campaign.budget,dailyBudget:Math.round(campaign.budget/30),spent:campaign.spent,leads:campaign.leads,conversions:campaign.conversions,startDate:campaign.startDate,endDate:campaign.endDate,audience:'Brasileiros interessados em assessoria de vistos',location:'Brasil',ageRange:'25–34',gender:'Todos',languages:'Português',interests:'Viagens, Estados Unidos, turismo, intercâmbio, negócios',destinationUrl:'https://visafacil.com.br',internalDescription:'',placements:['Feed','Stories'],creativeName:'Criativo principal',creativeFileName:'',headline:campaign.name,primaryCopy:objective,cta:'Saiba mais',bidStrategy:'Menor custo'}}
 function fixture(){return getMarketingMockFixture()}
 
 function upgradeStoredContent(value:unknown):unknown{
@@ -114,6 +116,8 @@ function upgradeStoredCampaign(value:unknown):unknown{
  const paidPlatforms=Array.from(new Set(rawPlatforms.map(normalizePaidPlatform).filter((platform):platform is PaidPlatform=>Boolean(platform))));
  return {
   ...value,
+  owner:typeof value.owner==='string'?value.owner:'',
+  ownerUserId:typeof value.ownerUserId==='string'?value.ownerUserId:undefined,
   objective,
   result:normalizeResult(objective,value.result),
   paidPlatforms,
