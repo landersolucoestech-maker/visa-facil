@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 const root=process.cwd();
 const read=path=>readFileSync(resolve(root,path),'utf8');
 const context=read('apps/web/src/modules/public-site/content/SiteContentContext.tsx');
+const safety=read('apps/web/src/modules/public-site/content/publicContentSafety.ts');
 const linkSurfaces=[
  'apps/web/src/modules/public-site/components/PublicHeader.tsx',
  'apps/web/src/modules/public-site/components/PublicFooter.tsx',
@@ -17,10 +18,13 @@ const linkSurfaces=[
 ];
 
 test('CMS public link sanitizer allows only explicitly supported absolute protocols',()=>{
- assert.ok(context.includes("new Set(['http:','https:','mailto:','tel:'])"));
- assert.ok(context.includes("href.startsWith('#')||href.startsWith('/')||href.startsWith('./')||href.startsWith('../')"));
- assert.ok(context.includes('SAFE_LINK_PROTOCOLS.has(new URL(href).protocol)'));
- assert.ok(context.includes("value==='_blank'?'_blank':'_self'"));
+ assert.ok(context.includes("export { cmsHref, cmsImageSrc, cmsTarget } from './publicContentSafety'"));
+ assert.ok(safety.includes("new Set(['http:','https:','mailto:','tel:'])"));
+ assert.ok(safety.includes("href.startsWith('#')"));
+ assert.ok(safety.includes("new URL(href,URL_BASE)"));
+ assert.ok(safety.includes('SAFE_LINK_PROTOCOLS.has(parsed.protocol)'));
+ assert.ok(safety.includes('parsed.origin===URL_BASE_ORIGIN'));
+ assert.ok(safety.includes("value==='_blank'?'_blank':'_self'"));
 });
 
 test('editable CMS hrefs are routed through the canonical public link sanitizer',()=>{
