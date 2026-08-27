@@ -15,8 +15,12 @@ import { isSafeCmsExternalUrl } from '../../site-cms/cmsDocumentContract';
 import { findPageByPath, resolvePublicDocument } from '../../site-cms/siteStore';
 import type { CmsSectionInstance } from '../../site-cms/types';
 
-function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
-function currentPublicPath(){const base=basePath();const pathname=window.location.pathname;const clean=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return clean.replace(/\/+$/,'')||'/'}
+function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base==='/'?'':base}
+function currentPublicPath(){
+ const base=basePath();const pathname=window.location.pathname;
+ const clean=!base?pathname:pathname===base?'/':pathname.startsWith(`${base}/`)?pathname.slice(base.length)||'/':pathname;
+ return clean.replace(/\/+$/,'')||'/';
+}
 function ensureMeta(name:string,property=false){let node=window.document.head.querySelector<HTMLMetaElement>(`meta[${property?'property':'name'}="${name}"]`);if(!node){node=window.document.createElement('meta');node.setAttribute(property?'property':'name',name);window.document.head.appendChild(node)}return node}
 function setCanonical(value:string){let node=window.document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');if(value){if(!node){node=window.document.createElement('link');node.rel='canonical';window.document.head.appendChild(node)}node.href=value}else node?.remove()}
 
@@ -62,7 +66,7 @@ export function PublicSitePage({preview=false}:{preview?:boolean}) {
     ensureMeta('description').content=page.seo.description||'';
     ensureMeta('og:title',true).content=page.seo.title||siteName;
     ensureMeta('og:description',true).content=page.seo.description||'';
-    const image=page.seo.ogImage||cmsDocument.settings.defaultOgImage;ensureMeta('og:image',true).content=image||'';
+    const pageImage=page.seo.ogImage.trim();const defaultImage=cmsDocument.settings.defaultOgImage.trim();const image=isSafeCmsExternalUrl(pageImage)?pageImage:isSafeCmsExternalUrl(defaultImage)?defaultImage:'';ensureMeta('og:image',true).content=image;
     ensureMeta('robots').content=draftPreview?'noindex,nofollow':page.seo.noIndex?'noindex,nofollow':'index,follow';
     const explicitCanonical=page.seo.canonicalUrl.trim();const siteUrl=cmsDocument.settings.siteUrl.trim();const canonical=isSafeCmsExternalUrl(explicitCanonical)?explicitCanonical:isSafeCmsExternalUrl(siteUrl)?`${siteUrl.replace(/\/$/,'')}${page.slug==='/'?'':page.slug}`:'';
     setCanonical(canonical);
