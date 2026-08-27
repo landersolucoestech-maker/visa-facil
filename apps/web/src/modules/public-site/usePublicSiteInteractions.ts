@@ -11,10 +11,17 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
     const dropdown = root.querySelector<HTMLElement>('.nav__dropdown');
     const dropdownTrigger = root.querySelector<HTMLButtonElement>('.nav__trigger');
 
+    const closeDropdown = () => {
+      dropdown?.classList.remove('is-open');
+      dropdownTrigger?.setAttribute('aria-expanded', 'false');
+    };
+
     const closeMenu = () => {
       nav?.classList.remove('is-open');
       document.body.classList.remove('menu-open');
       menuButton?.setAttribute('aria-expanded', 'false');
+      menuButton?.setAttribute('aria-label', 'Abrir menu');
+      closeDropdown();
     };
 
     if (menuButton && nav) {
@@ -22,6 +29,8 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
         const open = nav.classList.toggle('is-open');
         document.body.classList.toggle('menu-open', open);
         menuButton.setAttribute('aria-expanded', String(open));
+        menuButton.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+        if (!open) closeDropdown();
       };
       menuButton.addEventListener('click', onMenuClick);
       cleanup.push(() => menuButton.removeEventListener('click', onMenuClick));
@@ -29,7 +38,9 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
 
     if (dropdownTrigger && dropdown) {
       const onDropdownClick = () => {
-        if (window.innerWidth <= 1050) dropdown.classList.toggle('is-open');
+        if (window.innerWidth > 1050) return;
+        const open = dropdown.classList.toggle('is-open');
+        dropdownTrigger.setAttribute('aria-expanded', String(open));
       };
       dropdownTrigger.addEventListener('click', onDropdownClick);
       cleanup.push(() => dropdownTrigger.removeEventListener('click', onDropdownClick));
@@ -43,14 +54,41 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
     root.querySelectorAll<HTMLButtonElement>('.accordion__item button').forEach((button) => {
       const onAccordionClick = () => {
         const item = button.closest('.accordion__item');
-        root.querySelectorAll('.accordion__item').forEach((other) => {
-          if (other !== item) other.classList.remove('is-open');
+        if (!item) return;
+        const willOpen = !item.classList.contains('is-open');
+        root.querySelectorAll<HTMLElement>('.accordion__item').forEach((other) => {
+          const otherButton = other.querySelector<HTMLButtonElement>('button');
+          const open = other === item && willOpen;
+          other.classList.toggle('is-open', open);
+          otherButton?.setAttribute('aria-expanded', String(open));
         });
-        item?.classList.toggle('is-open');
       };
       button.addEventListener('click', onAccordionClick);
       cleanup.push(() => button.removeEventListener('click', onAccordionClick));
     });
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const menuWasOpen = Boolean(nav?.classList.contains('is-open'));
+      const dropdownWasOpen = Boolean(dropdown?.classList.contains('is-open'));
+      closeMenu();
+      if (menuWasOpen) menuButton?.focus();
+      else if (dropdownWasOpen) dropdownTrigger?.focus();
+    };
+    document.addEventListener('keydown', onEscape);
+    cleanup.push(() => document.removeEventListener('keydown', onEscape));
+
+    const onResize = () => {
+      if (window.innerWidth > 1050) {
+        nav?.classList.remove('is-open');
+        document.body.classList.remove('menu-open');
+        menuButton?.setAttribute('aria-expanded', 'false');
+        menuButton?.setAttribute('aria-label', 'Abrir menu');
+        closeDropdown();
+      }
+    };
+    window.addEventListener('resize', onResize);
+    cleanup.push(() => window.removeEventListener('resize', onResize));
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
