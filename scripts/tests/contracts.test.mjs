@@ -40,6 +40,18 @@ test('reference adaptation keeps the visa contract model and six-step workflow w
   for(const forbidden of ['obra musical','lançamento musical','clicksign','docusign'])assert.equal(`${editor}\n${app}`.toLowerCase().includes(forbidden),false);
 });
 
+test('CRM-linked contract parties only accept canonical clients while explicit manual parties remain supported',()=>{
+  const editor=read('apps/web/src/modules/contracts/ContractEditorModal.tsx');
+  assert.ok(editor.includes("record.kind==='contact'&&record.relationship==='Cliente'"));
+  assert.ok(editor.includes('const canonicalClients=contacts.filter(isCanonicalClient)'));
+  assert.ok(editor.includes('const contact=canonicalClients.find(item=>item.id===id)'));
+  assert.ok(editor.includes('Leads precisam ser convertidos em Cliente no CRM antes de serem vinculados ao contrato.'));
+  assert.ok(editor.includes('<option value="manual">Preenchimento manual</option>'));
+  assert.ok(editor.includes('vínculo legado/indisponível'));
+  assert.ok(editor.includes('Cliente CRM'));
+  assert.equal(editor.includes("{contacts.map(contact=><option"),false);
+});
+
 test('contracts table uses the standard three-dot action menu with view edit and delete',()=>{
   const app=read('apps/web/src/modules/contracts/ContractsApp.tsx');
   const actionsCss=read('apps/web/src/modules/contracts/contract-table-actions.css');
