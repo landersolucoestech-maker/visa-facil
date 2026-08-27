@@ -11,3 +11,82 @@ button{
   justify-content:center!important;
   align-items:center!important;
 }
+
+/* Canonical row-action placement.
+   Fallback keeps every menu aligned to the trigger's right edge and opening downward.
+   Browsers with CSS Anchor Positioning promote the menu to fixed positioning so table
+   overflow containers cannot create scrollbars when the menu opens. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-row-actions .crm-actions-menu.crm-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .tasks-row-actions .tasks-actions-menu.tasks-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-menu .contracts-actions-dropdown.contracts-actions-dropdown,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .finance-row-actions .finance-actions-menu.finance-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .invoice-row-actions .invoice-actions-menu.invoice-actions-menu{
+  left:auto!important;
+  right:0!important;
+  bottom:auto!important;
+  transform:none!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-row-actions .crm-actions-menu.crm-actions-menu{top:36px!important}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .tasks-row-actions .tasks-actions-menu.tasks-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-menu .contracts-actions-dropdown.contracts-actions-dropdown,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .finance-row-actions .finance-actions-menu.finance-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .invoice-row-actions .invoice-actions-menu.invoice-actions-menu{top:34px!important}
+
+@supports (anchor-name:--vf-row-action){
+  .crm-global-page .crm-actions-trigger[aria-expanded="true"]{anchor-name:--vf-crm-row-action}
+  .crm-global-page .tasks-actions-trigger[aria-expanded="true"]{anchor-name:--vf-tasks-row-action}
+  .crm-global-page .contracts-actions-trigger[aria-expanded="true"]{anchor-name:--vf-contracts-row-action}
+  .crm-global-page .finance-actions-trigger[aria-expanded="true"]{anchor-name:--vf-finance-row-action}
+  .crm-global-page .invoice-action-trigger[aria-expanded="true"]{anchor-name:--vf-invoice-row-action}
+
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-row-actions .crm-actions-menu.crm-actions-menu{
+    position:fixed!important;
+    position-anchor:--vf-crm-row-action;
+    top:calc(anchor(bottom) + 4px)!important;
+    left:anchor(right)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translateX(-100%)!important;
+    margin:0!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .tasks-row-actions .tasks-actions-menu.tasks-actions-menu{
+    position:fixed!important;
+    position-anchor:--vf-tasks-row-action;
+    top:calc(anchor(bottom) + 4px)!important;
+    left:anchor(right)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translateX(-100%)!important;
+    margin:0!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-menu .contracts-actions-dropdown.contracts-actions-dropdown{
+    position:fixed!important;
+    position-anchor:--vf-contracts-row-action;
+    top:calc(anchor(bottom) + 4px)!important;
+    left:anchor(right)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translateX(-100%)!important;
+    margin:0!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .finance-row-actions .finance-actions-menu.finance-actions-menu{
+    position:fixed!important;
+    position-anchor:--vf-finance-row-action;
+    top:calc(anchor(bottom) + 4px)!important;
+    left:anchor(right)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translateX(-100%)!important;
+    margin:0!important;
+  }
+  .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .invoice-row-actions .invoice-actions-menu.invoice-actions-menu{
+    position:fixed!important;
+    position-anchor:--vf-invoice-row-action;
+    top:calc(anchor(bottom) + 4px)!important;
+    left:anchor(right)!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:translateX(-100%)!important;
+    margin:0!important;
+  }
+}
