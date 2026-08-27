@@ -108,11 +108,22 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
       const dots = Array.from(slider.querySelectorAll<HTMLButtonElement>('[data-hero-dot]'));
       const prev = slider.querySelector<HTMLButtonElement>('[data-hero-prev]');
       const next = slider.querySelector<HTMLButtonElement>('[data-hero-next]');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       let index = 0;
 
+      const stop = () => {
+        if (timer) window.clearInterval(timer);
+        timer = undefined;
+      };
+
       const show = (nextIndex: number) => {
+        if (!slides.length) return;
         index = (nextIndex + slides.length) % slides.length;
-        slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
+        slides.forEach((slide, i) => {
+          const active = i === index;
+          slide.classList.toggle('is-active', active);
+          slide.setAttribute('aria-hidden', String(!active));
+        });
         dots.forEach((dot, i) => {
           dot.classList.toggle('is-active', i === index);
           dot.setAttribute('aria-current', i === index ? 'true' : 'false');
@@ -120,7 +131,8 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
       };
 
       const restart = () => {
-        if (timer) window.clearInterval(timer);
+        stop();
+        if (slides.length < 2 || reducedMotion.matches || document.hidden || slider.matches(':hover') || slider.contains(document.activeElement)) return;
         timer = window.setInterval(() => show(index + 1), 6000);
       };
 
@@ -137,9 +149,30 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
         cleanup.push(() => dot.removeEventListener('click', onDot));
       });
 
+      const onPointerEnter = () => stop();
+      const onPointerLeave = () => restart();
+      const onFocusIn = () => stop();
+      const onFocusOut = (event: FocusEvent) => {
+        if (!slider.contains(event.relatedTarget as Node | null)) restart();
+      };
+      const onVisibilityChange = () => restart();
+      const onMotionChange = () => restart();
+      slider.addEventListener('mouseenter', onPointerEnter);
+      slider.addEventListener('mouseleave', onPointerLeave);
+      slider.addEventListener('focusin', onFocusIn);
+      slider.addEventListener('focusout', onFocusOut);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      reducedMotion.addEventListener('change', onMotionChange);
+      cleanup.push(() => slider.removeEventListener('mouseenter', onPointerEnter));
+      cleanup.push(() => slider.removeEventListener('mouseleave', onPointerLeave));
+      cleanup.push(() => slider.removeEventListener('focusin', onFocusIn));
+      cleanup.push(() => slider.removeEventListener('focusout', onFocusOut));
+      cleanup.push(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+      cleanup.push(() => reducedMotion.removeEventListener('change', onMotionChange));
+
       show(0);
       restart();
-      cleanup.push(() => { if (timer) window.clearInterval(timer); });
+      cleanup.push(stop);
     }
 
     return () => {
