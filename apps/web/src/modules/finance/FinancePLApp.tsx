@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import './finance-accounting.css';
 import type { FinanceRecord } from './mocks/financeMockProvider';
 import { getFinanceSessionRecords } from '../../shared/operationalSessionStore';
+import { localDateIso, localMonthStartIso } from '../../shared/localDate';
 
 type Entry = { id: string; kind: 'Receita' | 'Despesa'; category: string; description: string; amount: number; date: string };
 type AccountingAlert = { id: string; title: string; detail: string; tone: 'danger' | 'neutral' };
@@ -18,8 +19,8 @@ function SearchIcon() {
 
 export function FinancePLApp() {
   const records = useMemo<FinanceRecord[]>(() => getFinanceSessionRecords(), []);
-  const today = new Date().toISOString().slice(0, 10);
-  const [start, setStart] = useState(`${today.slice(0, 7)}-01`);
+  const today = localDateIso();
+  const [start, setStart] = useState(localMonthStartIso());
   const [end, setEnd] = useState(today);
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('Todos');
@@ -64,7 +65,9 @@ export function FinancePLApp() {
   const revenue = filtered.filter((entry) => entry.kind === 'Receita').reduce((sum, entry) => sum + entry.amount, 0);
   const expense = filtered.filter((entry) => entry.kind === 'Despesa').reduce((sum, entry) => sum + entry.amount, 0);
   const net = revenue - expense;
-  const margin = revenue ? (net / revenue) * 100 : 0;
+  const margin = revenue > 0 ? (net / revenue) * 100 : null;
+  const marginLabel = margin === null ? '—' : `${margin.toFixed(1)}%`;
+  const percentOfRevenue = (amount:number) => revenue > 0 ? `${((amount / revenue) * 100).toFixed(1)}%` : '—';
 
   const grouped = (target: 'Receita' | 'Despesa') => {
     const map = new Map<string, number>();
@@ -88,7 +91,7 @@ export function FinancePLApp() {
   return <div className="crm-shell finance-accounting-shell accounting-workspace" onClick={() => setNotifications(false)}>
     <div className="crm-workspace accounting-workspace-main">
       <header className="crm-topbar accounting-topbar">
-        <div className="accounting-topbar-copy"><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Contabilidade</h1><p>Receitas, despesas e resultado derivados das Transações.</p></div>
+        <div className="accounting-topbar-copy"><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Contabilidade</h1><p>Receitas recebidas, despesas pagas e resultado em regime de caixa.</p></div>
         <div className="crm-topbar-actions accounting-topbar-actions" onClick={(event) => event.stopPropagation()}>
           <div className="accounting-topbar-menu"><button ref={notificationButtonRef} className="accounting-notification-button" type="button" aria-label="Notificações da contabilidade" aria-haspopup="true" aria-expanded={notifications} aria-controls="accounting-notifications" onClick={() => setNotifications((current) => !current)}><BellIcon />{alerts.length > 0 && <span>{alerts.length}</span>}</button>{notifications && <div className="accounting-dropdown accounting-notification-menu" id="accounting-notifications" role="region" aria-label="Notificações da contabilidade"><header><strong>Notificações</strong><span>{alerts.length}</span></header>{alerts.length ? <div>{alerts.map((alert) => <article className={alert.tone === 'danger' ? 'is-danger' : ''} key={alert.id}><strong>{alert.title}</strong><small>{alert.detail}</small></article>)}</div> : <p>Nenhum alerta contábil no período.</p>}</div>}</div>
         </div>
@@ -99,7 +102,7 @@ export function FinancePLApp() {
           <article><span>Receita total</span><strong>{money(revenue)}</strong><small>Receitas recebidas no período</small></article>
           <article><span>Despesas totais</span><strong>{money(expense)}</strong><small>Despesas pagas no período</small></article>
           <article className={net < 0 ? 'is-alert' : ''}><span>Resultado líquido</span><strong className={net < 0 ? 'is-negative' : ''}>{net < 0 ? '-' : ''}{money(Math.abs(net))}</strong><small>Receita menos despesas</small></article>
-          <article><span>Margem líquida</span><strong>{margin.toFixed(1)}%</strong><small>Resultado líquido sobre receita</small></article>
+          <article><span>Margem líquida</span><strong>{marginLabel}</strong><small>{margin===null?'Sem receita para calcular a margem':'Resultado líquido sobre receita'}</small></article>
         </section>
 
         <section className="accounting-toolbar" aria-label="Filtros da contabilidade">
@@ -113,16 +116,16 @@ export function FinancePLApp() {
         {invalidPeriod && <div className="accounting-inline-alert" role="alert"><strong>Período inválido.</strong><span>A data inicial deve ser anterior ou igual à data final.</span></div>}
 
         <section className="accounting-report-card">
-          <header className="accounting-report-header"><div><h2>Demonstrativo de resultado</h2><p>Fonte canônica: transações recebidas e pagas.</p></div><div className="accounting-period-summary"><span>{compactDate(start)} — {compactDate(end)}</span><strong>{filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'}</strong></div></header>
+          <header className="accounting-report-header"><div><h2>Demonstrativo de resultado em caixa</h2><p>Fonte canônica: transações efetivamente recebidas e pagas.</p></div><div className="accounting-period-summary"><span>{compactDate(start)} — {compactDate(end)}</span><strong>{filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'}</strong></div></header>
           <div className="accounting-table">
             <div className="accounting-table-head"><span>Categoria</span><span>Valor</span><span>% da receita</span></div>
             <div className="accounting-group-title"><span>Receitas</span><strong>{revenueGroups.length} {revenueGroups.length === 1 ? 'categoria' : 'categorias'}</strong></div>
-            {revenueGroups.length ? revenueGroups.map((row) => <div className="accounting-table-row" key={`revenue-${row.category}`}><span>{row.category}</span><strong className="is-positive">+{money(row.amount)}</strong><span>{revenue ? ((row.amount / revenue) * 100).toFixed(1) : '0.0'}%</span></div>) : <div className="accounting-empty-row">Nenhuma receita recebida no período.</div>}
-            <div className="accounting-table-total"><strong>Receita total</strong><strong>{money(revenue)}</strong><strong>{revenue ? '100.0%' : '0.0%'}</strong></div>
+            {revenueGroups.length ? revenueGroups.map((row) => <div className="accounting-table-row" key={`revenue-${row.category}`}><span>{row.category}</span><strong className="is-positive">+{money(row.amount)}</strong><span>{percentOfRevenue(row.amount)}</span></div>) : <div className="accounting-empty-row">Nenhuma receita recebida no período.</div>}
+            <div className="accounting-table-total"><strong>Receita total</strong><strong>{money(revenue)}</strong><strong>{revenue > 0 ? '100.0%' : '—'}</strong></div>
             <div className="accounting-group-title"><span>Despesas</span><strong>{expenseGroups.length} {expenseGroups.length === 1 ? 'categoria' : 'categorias'}</strong></div>
-            {expenseGroups.length ? expenseGroups.map((row) => <div className="accounting-table-row" key={`expense-${row.category}`}><span>{row.category}</span><strong className="is-negative">-{money(row.amount)}</strong><span>{revenue ? ((row.amount / revenue) * 100).toFixed(1) : '0.0'}%</span></div>) : <div className="accounting-empty-row">Nenhuma despesa paga no período.</div>}
-            <div className="accounting-table-total"><strong>Despesas totais</strong><strong className="is-negative">-{money(expense)}</strong><strong>{revenue ? ((expense / revenue) * 100).toFixed(1) : '0.0'}%</strong></div>
-            <div className="accounting-table-net"><strong>Resultado líquido</strong><strong className={net < 0 ? 'is-negative' : 'is-positive'}>{net < 0 ? '-' : '+'}{money(Math.abs(net))}</strong><strong>{margin.toFixed(1)}%</strong></div>
+            {expenseGroups.length ? expenseGroups.map((row) => <div className="accounting-table-row" key={`expense-${row.category}`}><span>{row.category}</span><strong className="is-negative">-{money(row.amount)}</strong><span>{percentOfRevenue(row.amount)}</span></div>) : <div className="accounting-empty-row">Nenhuma despesa paga no período.</div>}
+            <div className="accounting-table-total"><strong>Despesas totais</strong><strong className="is-negative">-{money(expense)}</strong><strong>{percentOfRevenue(expense)}</strong></div>
+            <div className="accounting-table-net"><strong>Resultado líquido</strong><strong className={net < 0 ? 'is-negative' : 'is-positive'}>{net < 0 ? '-' : '+'}{money(Math.abs(net))}</strong><strong>{marginLabel}</strong></div>
           </div>
         </section>
       </main>
