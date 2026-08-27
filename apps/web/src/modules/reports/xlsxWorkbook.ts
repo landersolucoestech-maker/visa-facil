@@ -9,6 +9,7 @@ const decoder=new TextDecoder();
 
 function xml(value:string){return value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
 function concat(chunks:Uint8Array[]){const size=chunks.reduce((sum,chunk)=>sum+chunk.length,0);const output=new Uint8Array(size);let offset=0;for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.length}return output}
+function exactArrayBuffer(bytes:Uint8Array){const copy=new Uint8Array(bytes.byteLength);copy.set(bytes);return copy.buffer}
 function columnName(index:number){let value=index+1;let name='';while(value>0){const remainder=(value-1)%26;name=String.fromCharCode(65+remainder)+name;value=Math.floor((value-1)/26)}return name}
 function columnIndex(reference:string){const letters=reference.match(/^[A-Z]+/i)?.[0]?.toUpperCase()??'';let value=0;for(const letter of letters)value=value*26+(letter.charCodeAt(0)-64);return Math.max(0,value-1)}
 function dosDateTime(date=new Date()){const year=Math.max(1980,date.getFullYear());return{time:(date.getHours()<<11)|(date.getMinutes()<<5)|Math.floor(date.getSeconds()/2),date:((year-1980)<<9)|((date.getMonth()+1)<<5)|date.getDate()}}
@@ -67,7 +68,7 @@ export function createXlsxBlob(sheetName:string,headers:string[],rows:string[][]
   {name:'xl/styles.xml',data:encoder.encode(stylesXml())},
   {name:'xl/worksheets/sheet1.xml',data:encoder.encode(worksheetXml(headers,rows))},
  ];
- return new Blob([zipStore(entries)],{type:XLSX_MIME});
+ return new Blob([exactArrayBuffer(zipStore(entries))],{type:XLSX_MIME});
 }
 
 function findEocd(bytes:Uint8Array){const minimum=Math.max(0,bytes.length-65557);for(let offset=bytes.length-22;offset>=minimum;offset-=1){if(bytes[offset]===0x50&&bytes[offset+1]===0x4b&&bytes[offset+2]===0x05&&bytes[offset+3]===0x06)return offset}throw new Error('O arquivo XLSX possui estrutura ZIP inválida.')}
@@ -81,7 +82,7 @@ function readDirectory(bytes:Uint8Array){
 }
 async function inflateRaw(data:Uint8Array){
  if(typeof DecompressionStream==='undefined')throw new Error('Este navegador não oferece descompactação necessária para ler XLSX.');
- const stream=new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw' as never));
+ const stream=new Blob([exactArrayBuffer(data)]).stream().pipeThrough(new DecompressionStream('deflate-raw' as never));
  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 async function unzip(bytes:Uint8Array){
