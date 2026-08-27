@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cmsPublicationIssues, isCmsDocument, isValidCmsSchedule, normalizeCmsPath, normalizeCmsSlug, parseCmsDocument } from '../../apps/web/src/modules/site-cms/cmsDocumentContract.ts';
+import { cmsMediaReferenceCount, cmsPublicationIssues, isCmsDocument, isSafeCmsExternalUrl, isValidCmsSchedule, normalizeCmsPath, normalizeCmsSlug, parseCmsDocument } from '../../apps/web/src/modules/site-cms/cmsDocumentContract.ts';
 
 function validDocument(){
   return {
@@ -66,6 +66,26 @@ test('CMS scheduling accepts real datetime values and rejects empty or malformed
   assert.equal(isValidCmsSchedule('2026-08-27T19:00'),true);
   assert.equal(isValidCmsSchedule(''),false);
   assert.equal(isValidCmsSchedule('not-a-date'),false);
+});
+
+test('CMS external media URLs accept only HTTP and HTTPS resources',()=>{
+  assert.equal(isSafeCmsExternalUrl('https://cdn.example.com/banner.webp'),true);
+  assert.equal(isSafeCmsExternalUrl('http://example.com/file.pdf'),true);
+  assert.equal(isSafeCmsExternalUrl('javascript:alert(1)'),false);
+  assert.equal(isSafeCmsExternalUrl('data:text/html;base64,abc'),false);
+  assert.equal(isSafeCmsExternalUrl('/relative-image.webp'),false);
+});
+
+test('CMS counts media references across SEO, sections, repeaters, globals and settings',()=>{
+  const document=validDocument();
+  const url='https://cdn.example.com/shared.webp';
+  document.settings.defaultOgImage=url;
+  document.pages[0].seo.ogImage=url;
+  document.pages[0].sections[0].values.image=url;
+  document.pages[0].sections[0].values.items=[{image:url,label:'Item'}];
+  document.globals[0].values.logo=url;
+  assert.equal(cmsMediaReferenceCount(document,url),5);
+  assert.equal(cmsMediaReferenceCount(document,'https://cdn.example.com/unused.webp'),0);
 });
 
 test('CMS publication validation blocks duplicate routes, missing home and invalid schedules',()=>{
