@@ -68,7 +68,7 @@ test('CMS scheduling accepts real datetime values and rejects empty or malformed
   assert.equal(isValidCmsSchedule('not-a-date'),false);
 });
 
-test('CMS external media URLs accept only HTTP and HTTPS resources',()=>{
+test('CMS external media and metadata URLs accept only HTTP and HTTPS resources',()=>{
   assert.equal(isSafeCmsExternalUrl('https://cdn.example.com/banner.webp'),true);
   assert.equal(isSafeCmsExternalUrl('http://example.com/file.pdf'),true);
   assert.equal(isSafeCmsExternalUrl('javascript:alert(1)'),false);
@@ -105,4 +105,28 @@ test('CMS publication validation blocks duplicate routes, missing home and inval
   const withoutHome=validDocument();
   withoutHome.pages[0].slug='/home';
   assert.ok(cmsPublicationIssues(withoutHome).some(issue=>issue.includes('página inicial')));
+});
+
+test('CMS publication validation blocks invalid site metadata',()=>{
+  const blankName=validDocument();
+  blankName.settings.siteName='   ';
+  assert.ok(cmsPublicationIssues(blankName).some(issue=>issue.includes('nome do site')));
+
+  const invalidSiteUrl=validDocument();
+  invalidSiteUrl.settings.siteUrl='javascript:alert(1)';
+  assert.ok(cmsPublicationIssues(invalidSiteUrl).some(issue=>issue.includes('URL principal')));
+
+  const invalidCanonical=validDocument();
+  invalidCanonical.pages[0].seo.canonicalUrl='data:text/html;base64,abc';
+  assert.ok(cmsPublicationIssues(invalidCanonical).some(issue=>issue.includes('Canonical URL')));
+});
+
+test('CMS publication validation blocks duplicate structural page and global section types',()=>{
+  const duplicatePageSection=validDocument();
+  duplicatePageSection.pages[0].sections.push({...structuredClone(duplicatePageSection.pages[0].sections[0]),id:'hero-duplicate',order:1});
+  assert.ok(cmsPublicationIssues(duplicatePageSection).some(issue=>issue.includes('mais de uma seção')));
+
+  const duplicateGlobal=validDocument();
+  duplicateGlobal.globals.push({...structuredClone(duplicateGlobal.globals[0]),id:'global-header-duplicate',order:1});
+  assert.ok(cmsPublicationIssues(duplicateGlobal).some(issue=>issue.includes('mais de um bloco global')));
 });
