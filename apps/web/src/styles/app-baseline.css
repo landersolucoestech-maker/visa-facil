@@ -4,3 +4,10 @@ html,body,#root{margin:0;min-width:0;min-height:100%}
 html,body{width:100%}
 body,#root{min-height:100vh;min-height:100dvh}
 #root{width:100%}
+
+/* Canonical button alignment: every button centers its visible content. */
+button{
+  text-align:center!important;
+  justify-content:center!important;
+  align-items:center!important;
+}
