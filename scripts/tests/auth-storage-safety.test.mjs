@@ -26,10 +26,14 @@ test('auth storage reads and cleanup tolerate restricted browser storage',()=>{
   assert.equal(auth.includes('localStorage.removeItem(SESSION_KEY)'),false);
 });
 
-test('disabled authentication keeps credential UI disabled and internal access routed directly',()=>{
-  assert.ok(login.includes('const disabled=!AUTHENTICATION_ENABLED'));
-  assert.ok(login.includes('Nenhum provedor de autenticação real está conectado neste ambiente.'));
+test('disabled authentication keeps the real credential route blocked while exposing only a non-authenticating visual preview',()=>{
+  assert.ok(login.includes('const authDisabled=!AUTHENTICATION_ENABLED'));
+  assert.ok(login.includes('const inputDisabled=authDisabled&&!previewOnly'));
+  assert.ok(login.includes('disabled={busy||authDisabled}'));
+  assert.ok(login.includes('nenhuma credencial é enviada ou validada'));
+  assert.ok(rootApp.includes("if(path==='/login-preview')return internal(<LoginApp previewOnly/>)"));
   assert.ok(rootApp.includes("if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}"));
+  assert.equal(rootApp.includes("if(path==='/login-preview'){AUTHENTICATION_ENABLED"),false);
 });
 
 test('account menu logout remains navigable with authentication disabled',()=>{
