@@ -5,6 +5,9 @@ const VALID_PAGE_STATUSES=new Set<CmsStatus>(['draft','published','scheduled','h
 const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
 const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
 const KNOWN_GLOBAL_SECTION_TYPES=new Set(['header','footer']);
+const VALID_PUBLIC_FORM_FIELD_TYPES=new Set(['text','tel','email','select','textarea']);
+const VALID_PUBLIC_FORM_FIELD_NAME=/^[A-Za-z][A-Za-z0-9_-]{0,79}$/;
+const RESERVED_PUBLIC_FORM_FIELD_NAMES=new Set(['consent']);
 
 export class CmsPublicationError extends Error{
  readonly issues:string[];
@@ -83,6 +86,26 @@ function appendOrderIssues(issues:string[],sections:CmsSectionInstance[],scope:s
  }
 }
 
+function appendPublicFormIssues(issues:string[],section:CmsSectionInstance,pageLabel:string){
+ const formFields=section.values.formFields;
+ if(!Array.isArray(formFields)){issues.push(`O formulário da página “${pageLabel}” precisa manter uma lista válida de campos.`);return}
+ const seenNames=new Set<string>();
+ for(const [index,item] of formFields.entries()){
+  const position=index+1;
+  const name=typeof item.name==='string'?item.name.trim():'';
+  const nameKey=name.toLowerCase();
+  const type=typeof item.type==='string'?item.type.trim().toLowerCase():'';
+  if(!VALID_PUBLIC_FORM_FIELD_NAME.test(name)||RESERVED_PUBLIC_FORM_FIELD_NAMES.has(nameKey))issues.push(`O campo ${position} do formulário da página “${pageLabel}” possui nome técnico inválido ou reservado.`);
+  else if(seenNames.has(nameKey))issues.push(`O formulário da página “${pageLabel}” possui o nome técnico duplicado “${name}”.`);
+  else seenNames.add(nameKey);
+  if(!VALID_PUBLIC_FORM_FIELD_TYPES.has(type))issues.push(`O campo “${name||position}” do formulário da página “${pageLabel}” usa um tipo não suportado.`);
+  if(type==='select'){
+   const options=typeof item.options==='string'?item.options.split('\n').map(value=>value.trim()).filter(Boolean):[];
+   if(options.length===0)issues.push(`O campo de seleção “${name||position}” da página “${pageLabel}” precisa ter pelo menos uma opção.`);
+  }
+ }
+}
+
 export function cmsPublicationIssues(document:CmsDocument){
  const issues:string[]=[];
  const seenSlugs=new Map<string,string>();
@@ -108,6 +131,7 @@ export function cmsPublicationIssues(document:CmsDocument){
   for(const section of page.sections){
    if(!KNOWN_PAGE_SECTION_TYPES.has(section.type))issues.push(`A página “${label}” contém um tipo de seção não suportado: “${section.type}”.`);
    if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type);
+   if(section.type==='contact')appendPublicFormIssues(issues,section,label);
   }
  }
  for(const media of document.media)if(!isDateTimeString(media.createdAt))issues.push(`A mídia “${media.name||media.id}” possui data de criação inválida.`);
