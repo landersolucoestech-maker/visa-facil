@@ -40,6 +40,7 @@ test('VisaChat chat surface follows reference transfer and quick-reply interacti
   const app=read('apps/web/src/modules/attendance/AttendanceApp.tsx');
   const workflowCss=read('apps/web/src/modules/attendance/attendanceWorkflow.css');
   const panel=read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
+  const settingsCss=read('apps/web/src/modules/attendance/attendanceSettings.css');
   for(const token of ['TEAM_CONVERSATION_TYPES','Conversa direta','Grupo','Canal','Resposta rápida','transferSelectedCustomer','attendance-transfer-popover','Confirmar transferência','Selecionar departamento','getVisaChatSettings().menu_options','attendance-quick-replies-menu','activeTemplates.slice(0, 3)']) assert.ok(app.includes(token),`AttendanceApp missing ${token}`);
   for(const removed of ['Nota interna','Responder cliente','Salvar nota','composerMode','isInternalNote','attendance-template-select']) assert.equal(app.includes(removed),false,`AttendanceApp still contains removed or obsolete feature ${removed}`);
   assert.ok(workflowCss.includes('.attendance-transfer-popover'), 'transfer popover styling is required');
@@ -53,4 +54,6 @@ test('VisaChat chat surface follows reference transfer and quick-reply interacti
   assert.equal(panel.includes("['notifications','Notificações']"), false, 'unexpected Notificações settings tab');
   assert.equal(panel.includes('<h2>Notificações</h2>'), false, 'unexpected Notificações settings section');
   assert.ok(panel.includes('aria-label="Notificações"'), 'settings header must expose the notification bell');
+  for(const sharedClass of ['crm-topbar attendance-topbar','crm-topbar-actions attendance-topbar-actions','attendance-topbar-menu','attendance-notification-button']) assert.ok(panel.includes(sharedClass),`settings header must retain shared VisaChat class ${sharedClass}`);
+  for(const forbiddenSelector of ['.visachat-ref-header','.visachat-ref-actions','.visachat-ref-topbar-menu','.visachat-ref-notification-button']) assert.equal(settingsCss.includes(forbiddenSelector),false,`automation settings CSS must not override shared header selector ${forbiddenSelector}`);
 });
