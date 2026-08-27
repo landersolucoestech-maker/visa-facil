@@ -8,6 +8,7 @@ const app=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/Site
 const pages=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsPagesView.tsx'),'utf8');
 const resources=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsResourceViews.tsx'),'utf8');
 const overview=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsOverviewView.tsx'),'utf8');
+const editors=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsEditors.tsx'),'utf8');
 
 test('CMS user-triggered persistence failures are surfaced instead of silently succeeding',()=>{
   assert.ok(store.includes('export class CmsStorageError extends Error'));
@@ -50,9 +51,25 @@ test('CMS publication and page editing enforce canonical route and schedule inte
   assert.ok(pages.includes('Já existe outra página com esse slug.'));
 });
 
+test('CMS page builder prevents duplicate structural section types',()=>{
+  assert.ok(pages.includes('page.sections.some(section=>section.type===type)'));
+  assert.ok(pages.includes('já existe nesta página'));
+  assert.ok(pages.includes('disabled={used}'));
+  assert.ok(pages.includes("used?' · adicionada':''"));
+});
+
 test('CMS media UI blocks unsafe URLs and removal of referenced assets',()=>{
   assert.ok(resources.includes('isSafeCmsExternalUrl'));
   assert.ok(resources.includes('cmsMediaReferenceCount'));
   assert.ok(resources.includes('a mídia está em uso'));
   assert.ok(resources.includes('Tipo de arquivo não suportado. Envie uma imagem ou PDF.'));
+});
+
+test('CMS settings and SEO surface invalid publishable metadata while editing',()=>{
+  assert.ok(resources.includes('A URL principal deve usar http:// ou https://.'));
+  assert.ok(resources.includes('Informe o nome do site.'));
+  assert.ok(resources.includes('type="url"'));
+  assert.ok(editors.includes('isSafeCmsExternalUrl'));
+  assert.ok(editors.includes('A Canonical URL deve usar http:// ou https://.'));
+  assert.ok(editors.includes('role="alert"'));
 });
