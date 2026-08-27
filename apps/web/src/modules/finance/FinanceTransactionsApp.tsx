@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import './finance.css';
 import { activeFinanceCategories } from './financeConfigStore';
 import { type FinanceRecord, type FinanceStatus, type FinanceType } from './mocks/financeMockProvider';
-import { getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
+import { getCrmSessionRecords, getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
+import type { CrmRecord } from '../crm/types';
 import { localDateIso } from '../../shared/localDate';
 import { OfxImportModal } from './OfxImportModal';
 
@@ -18,13 +19,14 @@ const STATUS_BY_TYPE: Record<FinanceType, FinanceStatus[]> = {
 const DEFAULT_STATUS: Record<FinanceType, FinanceStatus> = { Receita: 'A receber', Despesa: 'A pagar' };
 function categoryNames(type: FinanceType) { return activeFinanceCategories(type).map((category) => category.name); }
 function defaultCategory(type: FinanceType) { return categoryNames(type)[0] ?? ''; }
-function emptyDraft(): Draft { return { description: '', type: 'Receita', category: defaultCategory('Receita'), amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', notes: '' }; }
+function emptyDraft(): Draft { return { description: '', type: 'Receita', category: defaultCategory('Receita'), amount: 0, date: '', dueDate: '', status: 'A receber', paymentMethod: 'Pix', relatedName: '', relatedRecordId: '', notes: '' }; }
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatDate = (value: string) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR') : '—';
 const classNamePart = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 function basePath() { return import.meta.env.BASE_URL.replace(/\/$/, ''); }
 function href(path: string) { return `${basePath()}${path}` || path; }
+function normalized(value:string){return value.trim().toLocaleLowerCase('pt-BR')}
 
 function BellIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
@@ -38,7 +40,7 @@ function isValidStatus(type: FinanceType, status: FinanceStatus) {
   return STATUS_BY_TYPE[type].includes(status);
 }
 
-function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: FinanceRecord; close: () => void; save: (draft: Draft) => void }) {
+function TransactionModal({ mode, record, crmRecords, close, save }: { mode: Mode; record?: FinanceRecord; crmRecords:CrmRecord[]; close: () => void; save: (draft: Draft) => void }) {
   const [draft, setDraft] = useState<Draft>(() => record ? {
     description: record.description,
     type: record.type,
@@ -49,6 +51,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
     status: isValidStatus(record.type, record.status) ? record.status : DEFAULT_STATUS[record.type],
     paymentMethod: record.paymentMethod,
     relatedName: record.relatedName,
+    relatedRecordId: record.relatedRecordId ?? '',
     notes: record.notes,
   } : emptyDraft());
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
@@ -56,6 +59,10 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
   const activeModalCategories = categoryNames(draft.type);
   const preservesHistoricalCategory = Boolean(record && draft.type === record.type && record.category && !activeModalCategories.includes(record.category));
   const modalCategories = preservesHistoricalCategory ? [record!.category, ...activeModalCategories] : activeModalCategories;
+  const relationRecords=crmRecords.filter(item=>item.kind==='contact');
+  const resolvedRelationId=draft.relatedRecordId||relationRecords.find(item=>normalized(item.fullName)===normalized(draft.relatedName))?.id||'';
+  const relationUnavailable=Boolean(draft.relatedName)&&!resolvedRelationId;
+  const changeRelation=(id:string)=>{const related=relationRecords.find(item=>item.id===id);setDraft(current=>({...current,relatedRecordId:id,relatedName:related?.fullName??(id==='__legacy__'?current.relatedName:'')}))};
 
   if (mode === 'view' && record) {
     return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
@@ -88,7 +95,7 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
           <label><span>Data</span><input required type="date" value={draft.date} onChange={(event) => set('date', event.target.value)} /></label>
           <label><span>Vencimento</span><input type="date" min={draft.date || undefined} value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></label>
           <label><span>Forma de pagamento</span><select value={draft.paymentMethod} onChange={(event) => set('paymentMethod', event.target.value)}><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Transferência</option><option>Dinheiro</option><option>OFX</option></select></label>
-          <label className="finance-field-wide"><span>Cliente / contato relacionado</span><input value={draft.relatedName} onChange={(event) => set('relatedName', event.target.value)} /></label>
+          <label className="finance-field-wide"><span>Cliente / contato relacionado</span><select value={relationUnavailable?'__legacy__':resolvedRelationId} onChange={(event)=>changeRelation(event.target.value)}><option value="">Sem vínculo</option>{relationUnavailable&&<option value="__legacy__">{draft.relatedName} · legado/indisponível</option>}{relationRecords.map(item=><option key={item.id} value={item.id}>{item.fullName}{item.email?` · ${item.email}`:''}</option>)}</select></label>
           <label className="finance-field-wide"><span>Observações</span><textarea rows={4} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label>
         </div>
         {invalidDueDate && <p className="finance-inline-error" role="alert">O vencimento não pode ser anterior à data da transação.</p>}
@@ -112,6 +119,7 @@ export function FinanceTransactionsApp() {
   const [menu, setMenu] = useState<string>();
   const [ofx, setOfx] = useState(false);
   const [notifications, setNotifications] = useState(false);
+  const crmRecords=useMemo(()=>getCrmSessionRecords(),[]);
   useEffect(() => { saveFinanceSessionRecords(records); }, [records]);
 
   const today = localDateIso();
@@ -198,7 +206,7 @@ export function FinanceTransactionsApp() {
       </main>
     </div>
 
-    {modal && <TransactionModal mode={modal.mode} record={modal.record} close={() => setModal(undefined)} save={save} />}
+    {modal && <TransactionModal mode={modal.mode} record={modal.record} crmRecords={crmRecords} close={() => setModal(undefined)} save={save} />}
     {ofx && <OfxImportModal existingIds={records.map((record) => record.id)} close={() => setOfx(false)} imported={(incoming) => { setRecords((current) => [...incoming, ...current]); setOfx(false); }} />}
   </div>;
 }
