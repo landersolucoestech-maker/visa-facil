@@ -7,7 +7,7 @@ function BrandMark(){return <span className="workspace-brand-mark" aria-hidden="
 
 const WORKSPACES=[
   {id:'crm',name:'CRM',eyebrow:'OPERAÇÃO & RELACIONAMENTO',description:'Gerencie leads, contatos, clientes, atendimentos, tarefas, agenda, financeiro, marketing e relatórios.',href:'/crm',icon:'◎',features:['CRM comercial','Atendimentos','Financeiro & Marketing']},
-  {id:'website',name:'Site / Website',eyebrow:'CMS & CONTEÚDO',description:'Gerencie páginas, seções, copywriting, imagens, mídia, SEO, links e publicação do site institucional.',href:'/site-admin',icon:'▦',features:['Páginas & seções','Mídia & SEO','Draft, preview & publish']},
+  {id:'website',name:'Site / Website',eyebrow:'CMS & CONTEÚDO',description:'Gerencie páginas, seções, copywriting, imagens, mídia, SEO, links, prévia e publicação local do site institucional.',href:'/site-admin',icon:'▦',features:['Páginas & seções','Mídia & SEO','Rascunho, prévia & publicação local']},
 ] as const;
 
 export function WorkspaceSelectorApp(){
