@@ -51,10 +51,14 @@ test('configuration imports write back to canonical stores and preserve computed
  assert.ok(adapter.includes('placeholder=makePlaceholder(group,field)'));
 });
 
-test('contract row action trigger cannot inherit the global popover shadow',()=>{
- assert.ok(actions.includes('.crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu{'));
- assert.ok(actions.includes('box-shadow:none!important'));
+test('contract, template and variable action controls stay completely flat',()=>{
+ assert.ok(actions.includes('.crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu'));
+ assert.ok(actions.includes('.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger'));
  assert.ok(actions.includes("content:'⋮'"));
- assert.ok(actions.includes('font-size:0!important'));
+ assert.ok(actions.includes('border:0!important'));
+ assert.ok(actions.includes('border-radius:0!important'));
+ assert.ok(actions.includes('background:transparent!important'));
+ assert.ok(actions.includes('box-shadow:none!important'));
  assert.ok(actions.includes('filter:none!important'));
+ assert.ok(actions.includes('.contracts-actions-dropdown'));
 });
