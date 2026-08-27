@@ -9,6 +9,8 @@ export class CmsStorageError extends Error{
  constructor(){super('O navegador não conseguiu salvar o CMS local. Reduza a biblioteca de mídia ou libere espaço antes de tentar novamente.');this.name='CmsStorageError'}
 }
 
+export type CmsDraftLoadState={document:CmsDocument;recoveryMessage:string};
+
 function clone<T>(value:T):T{return structuredClone(value)}
 function storage(){try{return typeof localStorage==='undefined'?null:localStorage}catch{return null}}
 function readRaw(key:string){const store=storage();if(!store)return null;try{return store.getItem(key)}catch{return null}}
@@ -37,14 +39,24 @@ function normalize(document:CmsDocument):CmsDocument{
  return{...initial,...document,pages:clone(pages),globals:clone(globals),media:clone(document.media),settings:{...initial.settings,...document.settings}};
 }
 
-export function loadDraft():CmsDocument{
- const stored=parseCmsDocument(readRaw(DRAFT_KEY));
- if(stored)return normalize(stored);
- const published=parseCmsDocument(readRaw(PUBLISHED_KEY));
+export function loadDraftState():CmsDraftLoadState{
+ const draftRaw=readRaw(DRAFT_KEY);
+ const publishedRaw=readRaw(PUBLISHED_KEY);
+ const draft=parseCmsDocument(draftRaw);
+ const published=parseCmsDocument(publishedRaw);
+ if(draft){
+  const recoveryMessage=publishedRaw!==null&&!published?'A publicação local armazenada estava inválida. O rascunho válido foi preservado; publique novamente após revisar o conteúdo.':'';
+  return{document:normalize(draft),recoveryMessage};
+ }
  const document=normalize(published||createInitialCmsDocument());
  tryPersist(DRAFT_KEY,document);
- return clone(document);
+ if(draftRaw!==null&&published)return{document:clone(document),recoveryMessage:'O rascunho local estava inválido e foi recuperado a partir da última publicação local válida.'};
+ if(draftRaw!==null)return{document:clone(document),recoveryMessage:'O rascunho local estava inválido e não havia publicação local válida; o conteúdo inicial foi restaurado.'};
+ if(publishedRaw!==null&&!published)return{document:clone(document),recoveryMessage:'A publicação local armazenada estava inválida; o CMS iniciou com o conteúdo padrão do projeto.'};
+ return{document:clone(document),recoveryMessage:''};
 }
+
+export function loadDraft():CmsDocument{return loadDraftState().document}
 
 export function saveDraft(document:CmsDocument){
  const next={...normalize(document),updatedAt:new Date().toISOString()};
