@@ -51,14 +51,14 @@ test('configuration imports write back to canonical stores and preserve computed
  assert.ok(adapter.includes('placeholder=makePlaceholder(group,field)'));
 });
 
-test('contract, template and variable action controls stay completely flat',()=>{
+test('contract, template and variable action buttons match canonical row-action chrome while wrapper stays flat',()=>{
  assert.ok(actions.includes('.crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu'));
  assert.ok(actions.includes('.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger'));
  assert.ok(actions.includes("content:'⋮'"));
- assert.ok(actions.includes('border:0!important'));
- assert.ok(actions.includes('border-radius:0!important'));
- assert.ok(actions.includes('background:transparent!important'));
+ assert.ok(actions.includes('border:1px solid var(--vf-border,#d9dee6)!important'));
+ assert.ok(actions.includes('border-radius:var(--vf-radius-control,5px)!important'));
+ assert.ok(actions.includes('background:#fff!important'));
  assert.ok(actions.includes('box-shadow:none!important'));
- assert.ok(actions.includes('filter:none!important'));
+ assert.ok(actions.includes('border:1px solid #b8c1cc!important'));
  assert.ok(actions.includes('.contracts-actions-dropdown'));
 });
