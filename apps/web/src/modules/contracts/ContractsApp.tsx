@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getCrmSessionRecords } from '../../shared/operationalSessionStore';
 import { isBackendConfigured } from '../../shared/apiClient';
 import { getIntegrationStatuses } from '../integrations/integrationApi';
@@ -31,8 +31,10 @@ function NotificationBell(){return <button type="button" aria-label="Notificaç�
 function BackButton(){return <button type="button" onClick={()=>go('/crm/contratos')}><span aria-hidden="true">←</span> Voltar</button>}
 function RowActionMenu({label,onView,onEdit,onDelete,editDisabled=false,editTitle,deleteDisabled=false,deleteTitle}:{label:string;onView:()=>void;onEdit:()=>void;onDelete:()=>void;editDisabled?:boolean;editTitle?:string;deleteDisabled?:boolean;deleteTitle?:string}){
  const [open,setOpen]=useState(false);
+ const menuRef=useRef<HTMLDivElement>(null);const triggerRef=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{if(!open)return;const closeOutside=(event:PointerEvent)=>{if(!menuRef.current?.contains(event.target as Node))setOpen(false)};const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();setOpen(false);requestAnimationFrame(()=>triggerRef.current?.focus())}};document.addEventListener('pointerdown',closeOutside);document.addEventListener('keydown',closeOnEscape);return()=>{document.removeEventListener('pointerdown',closeOutside);document.removeEventListener('keydown',closeOnEscape)}},[open]);
  const run=(action:()=>void)=>{setOpen(false);action()};
- return <div className="contracts-actions-menu"><button className="contracts-actions-trigger" type="button" aria-label={`Ações de ${label}`} aria-haspopup="menu" aria-expanded={open} onClick={()=>setOpen(current=>!current)}>⋯</button>{open&&<div className="contracts-actions-dropdown" role="menu"><button type="button" role="menuitem" onClick={()=>run(onView)}>Ver</button><button type="button" role="menuitem" disabled={editDisabled} title={editTitle} onClick={()=>run(onEdit)}>Editar</button><button type="button" role="menuitem" className="is-danger" disabled={deleteDisabled} title={deleteTitle} onClick={()=>run(onDelete)}>Excluir</button></div>}</div>;
+ return <div className="contracts-actions-menu" ref={menuRef}><button ref={triggerRef} className="contracts-actions-trigger" type="button" aria-label={`Ações de ${label}`} aria-haspopup="menu" aria-expanded={open} onClick={()=>setOpen(current=>!current)}>⋯</button>{open&&<div className="contracts-actions-dropdown" role="menu"><button type="button" role="menuitem" onClick={()=>run(onView)}>Ver</button><button type="button" role="menuitem" disabled={editDisabled} title={editTitle} onClick={()=>run(onEdit)}>Editar</button><button type="button" role="menuitem" className="is-danger" disabled={deleteDisabled} title={deleteTitle} onClick={()=>run(onDelete)}>Excluir</button></div>}</div>;
 }
 
 export function ContractsApp(){
