@@ -61,6 +61,7 @@ const RESULTS_BY_OBJECTIVE:Record<string,string[]>={
 };
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE=/^([01]\d|2[0-3]):[0-5]\d$/;
+const URL_CONTROL_OR_BACKSLASH=/[\u0000-\u001f\u007f\\]/;
 
 function isObject(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
 function isStringArray(value:unknown):value is string[]{return Array.isArray(value)&&value.every(item=>typeof item==='string')}
@@ -71,6 +72,15 @@ function normalizeResult(objective:unknown,value:unknown){const canonical=normal
 function normalizePaidPlatform(value:unknown):PaidPlatform|undefined{
  if(value==='YouTube Ads'||value==='YouTube')return'Google Ads';
  return typeof value==='string'&&PAID_PLATFORMS.has(value as PaidPlatform)?value as PaidPlatform:undefined;
+}
+
+export function isSafeMarketingDestinationUrl(value:string){
+ const candidate=value.trim();
+ if(!candidate||URL_CONTROL_OR_BACKSLASH.test(candidate))return false;
+ try{
+  const url=new URL(candidate);
+  return (url.protocol==='https:'||url.protocol==='http:')&&!url.username&&!url.password;
+ }catch{return false}
 }
 
 export function isMarketingContent(value:unknown):value is ContentItem{
@@ -88,9 +98,10 @@ export function isMarketingCampaign(value:unknown):value is Campaign{
  for(const key of ['leads','conversions'] as const){const number=value[key];if(typeof number!=='number'||!Number.isInteger(number)||number<0)return false}
  if((value.spent as number)>(value.budget as number)||(value.conversions as number)>(value.leads as number))return false;
  if(typeof value.startDate!=='string'||typeof value.endDate!=='string'||!DATE_RE.test(value.startDate)||!DATE_RE.test(value.endDate)||value.endDate<value.startDate)return false;
- for(const key of ['audience','location','ageRange','gender','languages','interests','destinationUrl','internalDescription','creativeName','creativeFileName','headline','primaryCopy','cta','bidStrategy'] as const)if(typeof value[key]!=='string')return false;
+ for(const key of ['audience','location','ageRange','gender','languages','interests','internalDescription','creativeName','creativeFileName','headline','primaryCopy','cta','bidStrategy'] as const)if(typeof value[key]!=='string')return false;
+ if(typeof value.destinationUrl!=='string'||(value.destinationUrl.trim()&&!isSafeMarketingDestinationUrl(value.destinationUrl)))return false;
  if(!isStringArray(value.placements)||!unique(value.placements))return false;
- if(value.status!=='Rascunho'&&(!(value.name as string).trim()||(value.budget as number)<=0||(value.paidPlatforms as unknown[]).length===0||!(value.result as string).trim()))return false;
+ if(value.status!=='Rascunho'&&(!(value.name as string).trim()||(value.budget as number)<=0||(value.paidPlatforms as unknown[]).length===0||!(value.result as string).trim()||!isSafeMarketingDestinationUrl(value.destinationUrl as string)))return false;
  return true;
 }
 
@@ -125,6 +136,7 @@ function upgradeStoredCampaign(value:unknown):unknown{
   gender:typeof value.gender==='string'?value.gender:'Todos',
   languages:typeof value.languages==='string'?value.languages:'Português',
   interests:typeof value.interests==='string'?value.interests:'Viagens, Estados Unidos, turismo, intercâmbio, negócios',
+  destinationUrl:typeof value.destinationUrl==='string'?value.destinationUrl:'',
   internalDescription:typeof value.internalDescription==='string'?value.internalDescription:'',
   creativeName:typeof value.creativeName==='string'?value.creativeName:'Criativo principal',
   creativeFileName:typeof value.creativeFileName==='string'?value.creativeFileName:'',
