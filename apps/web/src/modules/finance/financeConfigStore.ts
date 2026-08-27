@@ -35,7 +35,7 @@ function uniqueBy<T>(items: T[], key: (item: T) => string) {
 function sanitizeCategories(categories: FinanceCategory[]) {
   return uniqueBy(
     uniqueBy(categories.filter(isCategory).map((category) => ({ ...category, id: category.id.trim(), name: category.name.trim() })), (category) => category.id),
-    (category) => normalizeName(category.name),
+    (category) => `${category.type}::${normalizeName(category.name)}`,
   );
 }
 function sanitizeRules(rules: FinanceRule[], categories: FinanceCategory[]) {
