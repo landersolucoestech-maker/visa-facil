@@ -1,5 +1,6 @@
 import { getInvoiceMockSeeds, isInvoiceSeed, type InvoiceSeed } from './mocks/invoiceMockProvider';
-import { readSessionRecords, writeSessionRecords } from '../../shared/sessionRecords';
+import { readSessionRecords, SessionRecordPersistenceError, writeSessionRecords } from '../../shared/sessionRecords';
+import { LOCAL_PERSISTENCE_ERROR_EVENT, type LocalPersistenceErrorDetail } from '../../shared/operationalSessionStore';
 
 const INVOICE_SESSION_KEY='visa-facil.session.invoices.v2';
 const EPSILON=0.0001;
@@ -7,6 +8,17 @@ const EPSILON=0.0001;
 function number(record:InvoiceSeed,key:string){
  const value=(record as Record<string,unknown>)[key];
  return typeof value==='number'&&Number.isFinite(value)?value:0;
+}
+
+function reportPersistenceError(error:unknown){
+ if(typeof window==='undefined')return;
+ const detail:LocalPersistenceErrorDetail={
+  key:INVOICE_SESSION_KEY,
+  message:error instanceof SessionRecordPersistenceError
+   ? error.message
+   : 'Não foi possível persistir as cobranças e notas fiscais neste navegador.',
+ };
+ window.dispatchEvent(new CustomEvent<LocalPersistenceErrorDetail>(LOCAL_PERSISTENCE_ERROR_EVENT,{detail}));
 }
 
 export function invoiceSeedTotal(record:InvoiceSeed){
@@ -30,5 +42,6 @@ export function getInvoiceSessionSeeds(){
 }
 
 export function saveInvoiceSessionSeeds(records:InvoiceSeed[]){
- return writeSessionRecords<InvoiceSeed>(INVOICE_SESSION_KEY,records,isInvoiceSessionSeed);
+ try{return writeSessionRecords<InvoiceSeed>(INVOICE_SESSION_KEY,records,isInvoiceSessionSeed)}
+ catch(error){reportPersistenceError(error);return structuredClone(records)}
 }
