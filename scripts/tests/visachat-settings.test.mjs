@@ -39,6 +39,7 @@ test('VisaChat internal domain still supports direct, group and channel without 
 test('VisaChat chat surface follows reference transfer and quick-reply interactions without internal notes', () => {
   const app=read('apps/web/src/modules/attendance/AttendanceApp.tsx');
   const workflowCss=read('apps/web/src/modules/attendance/attendanceWorkflow.css');
+  const teamChatCss=read('apps/web/src/modules/attendance/attendanceTeamChat.css');
   const panel=read('apps/web/src/modules/attendance/AttendanceSettingsPanel.tsx');
   const settingsCss=read('apps/web/src/modules/attendance/attendanceSettings.css');
   for(const token of ['TEAM_CONVERSATION_TYPES','Conversa direta','Grupo','Canal','Resposta rápida','transferSelectedCustomer','attendance-transfer-popover','Confirmar transferência','Selecionar departamento','getVisaChatSettings().menu_options','attendance-quick-replies-menu','activeTemplates.slice(0, 3)']) assert.ok(app.includes(token),`AttendanceApp missing ${token}`);
@@ -47,8 +48,18 @@ test('VisaChat chat surface follows reference transfer and quick-reply interacti
   assert.ok(workflowCss.includes('width:256px'), 'transfer popover must keep the compact reference width');
   assert.ok(workflowCss.includes('.attendance-quick-replies-menu'), 'quick reply dropdown styling is required');
   assert.ok(workflowCss.includes('width:320px'), 'quick reply menu must keep the reference dropdown width');
-  assert.ok(workflowCss.includes('width:auto!important'), 'quick reply trigger must remain compact instead of becoming a wide field');
+  assert.ok(workflowCss.includes('width:auto!important'), 'quick reply trigger base layer must remain compact');
   assert.equal(workflowCss.includes('.attendance-template-select'), false, 'native wide quick-reply select must not return');
+
+  for(const token of [
+    'grid-template-columns:134px minmax(0,1fr) auto!important',
+    'width:134px!important',
+    'grid-template-columns:32px minmax(0,1fr)!important',
+    '.attendance-quick-replies-trigger,.crm-global-page .attendance-internal-composer-label,.crm-global-page .attendance-archived-composer-label',
+    'width:100%!important',
+    'justify-content:center!important',
+  ]) assert.ok(teamChatCss.includes(token), `final VisaChat composer geometry missing ${token}`);
+
   for(const token of ['Mensagens','Menu e filas','Escalonamento','Templates','Fluxo inicial','Mensagens de exceção e encerramento','Menu principal de triagem','Retorno ao menu principal','Responsáveis padrão','Regras de escalonamento','Questionários por serviço','Campos obrigatórios','Mensagem Automática','Salvar configuração','Testar escalonamento']) assert.ok(panel.includes(token),`settings panel missing ${token}`);
   for(const extra of ['Configurações gerais','Horários de atendimento','Roteamento e SLA','Canais de atendimento']) assert.equal(panel.includes(extra),false,`unexpected extra settings section ${extra}`);
   assert.equal(panel.includes("['notifications','Notificações']"), false, 'unexpected Notificações settings tab');
