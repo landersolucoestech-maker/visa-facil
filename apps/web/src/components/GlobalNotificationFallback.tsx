@@ -116,7 +116,10 @@ export function GlobalNotificationFallback() {
       if (!target.contains(node) && panelRef.current && !panelRef.current.contains(node)) setOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setOpen(false);
+      requestAnimationFrame(() => target.focus());
     };
 
     window.addEventListener('resize', updatePosition);
