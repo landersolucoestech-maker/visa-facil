@@ -19,11 +19,12 @@ export { LOCAL_PERSISTENCE_ERROR_EVENT, type LocalPersistenceErrorDetail } from 
 
 const KEYS={
  crm:'visa-facil.session.crm.v2',
- tasks:'visa-facil.session.tasks.v2',
+ tasks:'visa-facil.session.tasks.v3',
  agenda:'visa-facil.session.agenda.v2',
  finance:'visa-facil.session.finance.v2',
  attendance:'visa-facil.session.attendance.v2',
 } as const;
+const LEGACY_TASK_KEY='visa-facil.session.tasks.v2';
 
 export type OperationalTeamMember={id:string;name:string;email:string;role:string};
 
@@ -36,7 +37,20 @@ export function getOperationalTeamMembers():OperationalTeamMember[]{
 export function getCrmSessionRecords(){return readSessionRecords<CrmRecord>(KEYS.crm,getCrmInitialRecords,isCrmRecord)}
 export function saveCrmSessionRecords(records:CrmRecord[]){return writeSessionRecordsSafely(KEYS.crm,records,isCrmRecord)}
 
-export function getTaskSessionRecords(){return readSessionRecords<TaskRecord>(KEYS.tasks,getTaskInitialRecords,isTaskRecord)}
+function migrateTaskSeedRevision(){
+ if(typeof sessionStorage==='undefined'||sessionStorage.getItem(KEYS.tasks)!==null)return;
+ try{
+  const raw=sessionStorage.getItem(LEGACY_TASK_KEY);
+  if(raw===null)return;
+  const parsed:unknown=JSON.parse(raw);
+  const seen=new Set<string>();
+  const legacy=Array.isArray(parsed)?parsed.filter(isTaskRecord).filter(record=>{if(seen.has(record.id))return false;seen.add(record.id);return true}):[];
+  const seeds=getTaskInitialRecords();
+  const merged=[...legacy,...seeds.filter(record=>!seen.has(record.id))];
+  sessionStorage.setItem(KEYS.tasks,JSON.stringify(merged));
+ }catch{}
+}
+export function getTaskSessionRecords(){migrateTaskSeedRevision();return readSessionRecords<TaskRecord>(KEYS.tasks,getTaskInitialRecords,isTaskRecord)}
 export function saveTaskSessionRecords(records:TaskRecord[]){return writeSessionRecordsSafely(KEYS.tasks,records,isTaskRecord)}
 
 export function getAgendaSessionEvents(){return readSessionRecords<AgendaEvent>(KEYS.agenda,getAgendaInitialEvents,isAgendaEvent)}
