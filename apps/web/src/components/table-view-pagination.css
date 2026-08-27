@@ -8,10 +8,11 @@
   justify-content:space-between;
   gap:16px;
   min-height:48px;
-  margin-top:12px;
-  padding:8px 12px;
-  border:1px solid var(--vf-border,#d9dee6);
-  border-radius:var(--vf-radius-control,6px);
+  margin:0;
+  padding:10px 12px;
+  border:0;
+  border-top:1px solid var(--vf-border,#d9dee6);
+  border-radius:0;
   background:#fff;
   color:var(--vf-text,#1f2937);
   font-size:13px;
