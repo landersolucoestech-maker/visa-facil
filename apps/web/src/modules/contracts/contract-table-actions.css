@@ -1,1 +1,92 @@
-.contracts-table th:last-child{width:64px;min-width:64px;white-space:nowrap;text-align:center}.contracts-table td:last-child{position:relative;width:64px;min-width:64px;text-align:center;overflow:visible}.contracts-table td:last-child>.contracts-actions-menu,.contracts-actions-menu{position:relative;display:inline-flex;width:auto;height:auto;justify-content:center;align-items:center;overflow:visible;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:0!important}.crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu{position:relative!important;display:inline-flex!important;width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;outline:0!important}.contracts-actions-trigger{width:30px;height:30px;display:grid;place-items:center;padding:0;border:1px solid var(--vf-border,#d9dee6);border-radius:var(--vf-radius-control,5px);background:#fff;color:#435166;box-shadow:none!important;filter:none!important;text-shadow:none!important;font:inherit;font-size:0!important;font-weight:700;line-height:1;cursor:pointer}.contracts-actions-trigger::before{content:'⋮';display:block;color:currentColor;font-size:17px;font-weight:700;line-height:1}.contracts-actions-trigger:hover,.contracts-actions-trigger[aria-expanded="true"]{border-color:#b8c1cc;background:#f6f7f9;color:#172033;box-shadow:none!important}.contracts-actions-dropdown{position:absolute;top:34px;right:0;z-index:80;min-width:132px;padding:4px;border:1px solid var(--vf-border,#d9dee6);border-radius:var(--vf-radius-popover,6px);background:#fff;box-shadow:var(--vf-shadow-menu,0 10px 24px rgba(13,27,61,.12));text-align:left}.contracts-table tr:last-child .contracts-actions-dropdown{top:auto;bottom:34px}.contracts-actions-dropdown button{width:100%;display:flex;align-items:center;min-height:32px;padding:0 8px;border:0;border-radius:4px;background:transparent;color:var(--vf-text,#172033);font:inherit;font-size:10px;font-weight:650;text-align:left;cursor:pointer;box-shadow:none}.contracts-actions-dropdown button:hover:not(:disabled){background:#f5f7f9}.contracts-actions-dropdown button.is-danger{color:var(--vf-danger,#a62536)}.contracts-actions-dropdown button.is-danger:hover:not(:disabled){background:#fff1f3}.contracts-actions-dropdown button:disabled{opacity:.42;cursor:not-allowed}.contracts-actions-dropdown button:disabled:hover{background:transparent}
+.contracts-table th:last-child{width:64px;min-width:64px;white-space:nowrap;text-align:center}
+.contracts-table td:last-child{position:relative;width:64px;min-width:64px;text-align:center;overflow:visible}
+
+/* Row-action wrapper is only a positioning slot. It must never inherit popover chrome. */
+.contracts-table td:last-child>.contracts-actions-menu,
+.contracts-actions-menu,
+.crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-menu.contracts-actions-menu{
+  position:relative!important;
+  display:inline-flex!important;
+  width:auto!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:0!important;
+  justify-content:center!important;
+  align-items:center!important;
+  overflow:visible!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  filter:none!important;
+  outline:0!important;
+}
+
+/* Contract, template and variable action trigger: plain three dots, no button chrome. */
+.contracts-actions-trigger,
+.crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger,
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger{
+  width:30px!important;
+  min-width:30px!important;
+  max-width:30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  max-height:30px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:#435166!important;
+  box-shadow:none!important;
+  filter:none!important;
+  text-shadow:none!important;
+  outline:0!important;
+  font:inherit!important;
+  font-size:0!important;
+  font-weight:700!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.contracts-actions-trigger::before{content:'⋮';display:block;color:currentColor;font-size:18px;font-weight:700;line-height:1}
+.contracts-actions-trigger:hover,
+.contracts-actions-trigger[aria-expanded="true"],
+.crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger:hover,
+.crm-global-page.crm-global-page .contracts-actions-trigger.contracts-actions-trigger[aria-expanded="true"]{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#172033!important;
+  box-shadow:none!important;
+  filter:none!important;
+}
+
+/* Keep the action list functional, but completely flat: no popover border or shadow. */
+.contracts-actions-dropdown,
+.crm-global-page.crm-global-page .contracts-actions-dropdown.contracts-actions-dropdown{
+  position:absolute;
+  top:34px;
+  right:0;
+  z-index:80;
+  min-width:132px;
+  padding:4px;
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  filter:none!important;
+  text-align:left;
+}
+.contracts-table tr:last-child .contracts-actions-dropdown{top:auto;bottom:34px}
+.contracts-actions-dropdown button{width:100%;display:flex;align-items:center;min-height:32px;padding:0 8px;border:0!important;border-radius:0!important;background:transparent!important;color:var(--vf-text,#172033);font:inherit;font-size:10px;font-weight:650;text-align:left;cursor:pointer;box-shadow:none!important;filter:none!important}
+.contracts-actions-dropdown button:hover:not(:disabled){background:#f5f7f9!important}
+.contracts-actions-dropdown button.is-danger{color:var(--vf-danger,#a62536)}
+.contracts-actions-dropdown button.is-danger:hover:not(:disabled){background:#fff1f3!important}
+.contracts-actions-dropdown button:disabled{opacity:.42;cursor:not-allowed}
+.contracts-actions-dropdown button:disabled:hover{background:transparent!important}
