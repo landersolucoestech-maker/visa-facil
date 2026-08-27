@@ -101,12 +101,17 @@ try{
       const menu=document.querySelector(${JSON.stringify(check.menu)});
       const scroller=document.querySelector(${JSON.stringify(check.scroller)});
       if(!(trigger instanceof HTMLElement)||!(menu instanceof HTMLElement)||!(scroller instanceof HTMLElement))return null;
+      const item=menu.querySelector('button');
+      if(!(item instanceof HTMLButtonElement))return null;
       const t=trigger.getBoundingClientRect();
       const m=menu.getBoundingClientRect();
+      const itemStyle=getComputedStyle(item);
       return {
         position:getComputedStyle(menu).position,
         down:m.top>=t.bottom-1,
         left:m.left<t.left&&m.right<=t.right+1,
+        itemTextAlign:itemStyle.textAlign,
+        itemJustifyContent:itemStyle.justifyContent,
         menuTop:m.top,triggerBottom:t.bottom,menuLeft:m.left,triggerLeft:t.left,menuRight:m.right,triggerRight:t.right,
         scrollWidth:scroller.scrollWidth,scrollHeight:scroller.scrollHeight,
         documentWidth:document.documentElement.scrollWidth,documentHeight:document.documentElement.scrollHeight,
@@ -116,6 +121,8 @@ try{
     if(result.position!=='fixed')throw new Error(`${check.label}: action menu must be fixed to escape table overflow; got ${result.position}.`);
     if(!result.down)throw new Error(`${check.label}: action menu opened upward instead of downward (${result.menuTop} < ${result.triggerBottom}).`);
     if(!result.left)throw new Error(`${check.label}: action menu did not extend to the left of its trigger.`);
+    if(result.itemTextAlign!=='left')throw new Error(`${check.label}: action menu text must align left; got ${result.itemTextAlign}.`);
+    if(result.itemJustifyContent!=='flex-start')throw new Error(`${check.label}: action menu content must start at the left edge; got ${result.itemJustifyContent}.`);
     if(result.scrollWidth!==before.scrollWidth||result.scrollHeight!==before.scrollHeight){
       throw new Error(`${check.label}: opening the action menu changed the table scroll area (${before.scrollWidth}x${before.scrollHeight} -> ${result.scrollWidth}x${result.scrollHeight}).`);
     }
@@ -123,7 +130,18 @@ try{
       throw new Error(`${check.label}: opening the action menu changed document scroll dimensions.`);
     }
   }
-  console.log('Row action dropdown placement browser smoke passed.');
+
+  await navigate('/crm/marketing/briefings');
+  await waitFor(`!!document.querySelector('.marketing-action-trigger')`,'Marketing briefing action trigger');
+  const marketingClicked=await evaluate(`(()=>{const trigger=document.querySelector('.marketing-action-trigger');if(!(trigger instanceof HTMLButtonElement))return false;trigger.click();return true})()`);
+  if(!marketingClicked)throw new Error('Marketing briefings: action trigger could not be clicked.');
+  await waitFor(`!!document.querySelector('.marketing-actions-menu')`,'Marketing briefing action menu');
+  const marketingAlignment=await evaluate(`(()=>{const item=document.querySelector('.marketing-actions-menu button');if(!(item instanceof HTMLButtonElement))return null;const style=getComputedStyle(item);return {textAlign:style.textAlign,justifyContent:style.justifyContent}})()`);
+  if(!marketingAlignment||marketingAlignment.textAlign!=='left'||marketingAlignment.justifyContent!=='flex-start'){
+    throw new Error(`Marketing briefings: action menu labels must align left; got ${JSON.stringify(marketingAlignment)}.`);
+  }
+
+  console.log('Row action dropdown placement and left-alignment browser smoke passed.');
 }finally{
   try{socket.close()}catch{}
   browser.kill('SIGTERM');
