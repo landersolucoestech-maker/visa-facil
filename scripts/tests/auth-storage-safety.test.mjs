@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 const root=process.cwd();
 const auth=readFileSync(resolve(root,'apps/web/src/modules/auth/auth.ts'),'utf8');
 const login=readFileSync(resolve(root,'apps/web/src/modules/auth/LoginApp.tsx'),'utf8');
+const authCss=readFileSync(resolve(root,'apps/web/src/modules/auth/auth.css'),'utf8');
 const menu=readFileSync(resolve(root,'apps/web/src/components/AccountMenu.tsx'),'utf8');
 const rootApp=readFileSync(resolve(root,'apps/web/src/RootApplication.tsx'),'utf8');
 
@@ -34,6 +35,14 @@ test('disabled authentication keeps the real credential route blocked while expo
   assert.ok(rootApp.includes("if(path==='/login-preview')return internal(<LoginApp previewOnly/>)"));
   assert.ok(rootApp.includes("if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}"));
   assert.equal(rootApp.includes("if(path==='/login-preview'){AUTHENTICATION_ENABLED"),false);
+});
+
+test('login preview keeps credential fields the same width and removes obsolete workspace explanatory copy',()=>{
+  assert.ok(authCss.includes('.auth-card input{box-sizing:border-box;width:100%'));
+  assert.ok(authCss.includes('.auth-password{position:relative;width:100%;min-width:0}'));
+  assert.ok(authCss.includes('.auth-password input{display:block;width:100%;box-sizing:border-box'));
+  assert.equal(login.includes('Área reservada para a futura autenticação centralizada dos workspaces internos do VISA FÁCIL.'),false);
+  assert.equal(login.includes('<span>CRM</span><span>Site / Website</span><span>Mais workspaces no futuro</span>'),false);
 });
 
 test('account menu logout remains navigable with authentication disabled',()=>{
