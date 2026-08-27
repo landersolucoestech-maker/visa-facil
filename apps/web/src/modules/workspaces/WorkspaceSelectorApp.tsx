@@ -2,7 +2,7 @@ import { AUTHENTICATION_ENABLED } from '../auth/auth';
 import './workspaces.css';
 
 function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
-function go(path:string){window.location.href=`${basePath()}${path}`||path}
+function workspaceHref(path:string){return `${basePath()}${path}`||path}
 function BrandMark(){return <span className="workspace-brand-mark" aria-hidden="true"><i/><b/></span>}
 
 const WORKSPACES=[
@@ -12,10 +12,10 @@ const WORKSPACES=[
 
 export function WorkspaceSelectorApp(){
  return <main className="workspace-page">
-  <header className="workspace-header"><a className="workspace-brand" href={`${basePath()}/`}><BrandMark/><span><strong>VISA FÁCIL</strong><small>Plataforma interna</small></span></a></header>
+  <header className="workspace-header"><a className="workspace-brand" href={workspaceHref('/')}><BrandMark/><span><strong>VISA FÁCIL</strong><small>Plataforma interna</small></span></a></header>
   <section className="workspace-content">
    <div className="workspace-intro"><span>ESCOLHA O AMBIENTE</span><h1>Onde você quer trabalhar agora?</h1><p>{AUTHENTICATION_ENABLED?'Os workspaces compartilham a mesma sessão autenticada. Você pode alternar entre eles sem realizar um novo login.':'A autenticação está desativada neste ambiente. Escolha diretamente o workspace que deseja acessar.'}</p></div>
-   <div className="workspace-grid">{WORKSPACES.map((workspace,index)=><button className={`workspace-card workspace-card--${workspace.id}`} key={workspace.id} onClick={()=>go(workspace.href)}><div className="workspace-card-top"><span className="workspace-index">0{index+1}</span><span className="workspace-icon">{workspace.icon}</span></div><span className="workspace-eyebrow">{workspace.eyebrow}</span><h2>{workspace.name}</h2><p>{workspace.description}</p><div className="workspace-features">{workspace.features.map(item=><span key={item}>✓ {item}</span>)}</div><div className="workspace-enter">Acessar workspace <b>→</b></div></button>)}</div>
+   <nav className="workspace-grid" aria-label="Workspaces disponíveis">{WORKSPACES.map((workspace,index)=><a className={`workspace-card workspace-card--${workspace.id}`} key={workspace.id} href={workspaceHref(workspace.href)}><div className="workspace-card-top"><span className="workspace-index">0{index+1}</span><span className="workspace-icon">{workspace.icon}</span></div><span className="workspace-eyebrow">{workspace.eyebrow}</span><h2>{workspace.name}</h2><p>{workspace.description}</p><div className="workspace-features">{workspace.features.map(item=><span key={item}>✓ {item}</span>)}</div><div className="workspace-enter">Acessar workspace <b aria-hidden="true">→</b></div></a>)}</nav>
    <div className="workspace-footnote"><span>VISA FÁCIL</span><p>Os workspaces permanecem separados por domínio e compartilham apenas a infraestrutura frontend comum.</p></div>
   </section>
  </main>
