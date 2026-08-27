@@ -10,8 +10,25 @@ export class CmsStorageError extends Error{
 }
 
 function clone<T>(value:T):T{return structuredClone(value)}
-function persist(key:string,document:CmsDocument){try{localStorage.setItem(key,JSON.stringify(document))}catch{throw new CmsStorageError()}}
-function tryPersist(key:string,document:CmsDocument){try{localStorage.setItem(key,JSON.stringify(document));return true}catch{return false}}
+function storage(){try{return typeof localStorage==='undefined'?null:localStorage}catch{return null}}
+function readRaw(key:string){const store=storage();if(!store)return null;try{return store.getItem(key)}catch{return null}}
+function restoreRaw(key:string,value:string|null){
+ const store=storage();if(!store)return false;
+ try{
+  if(value===null)store.removeItem(key);else store.setItem(key,value);
+  return value===null?store.getItem(key)===null:store.getItem(key)===value;
+ }catch{return false}
+}
+function persist(key:string,document:CmsDocument){
+ const store=storage();
+ if(!store)throw new CmsStorageError();
+ try{
+  const raw=JSON.stringify(document);
+  store.setItem(key,raw);
+  if(store.getItem(key)!==raw)throw new Error('local storage verification failed');
+ }catch{throw new CmsStorageError()}
+}
+function tryPersist(key:string,document:CmsDocument){try{persist(key,document);return true}catch{return false}}
 
 function normalize(document:CmsDocument):CmsDocument{
  const initial=createInitialCmsDocument();
@@ -21,9 +38,9 @@ function normalize(document:CmsDocument):CmsDocument{
 }
 
 export function loadDraft():CmsDocument{
- const stored=parseCmsDocument(localStorage.getItem(DRAFT_KEY));
+ const stored=parseCmsDocument(readRaw(DRAFT_KEY));
  if(stored)return normalize(stored);
- const published=parseCmsDocument(localStorage.getItem(PUBLISHED_KEY));
+ const published=parseCmsDocument(readRaw(PUBLISHED_KEY));
  const document=normalize(published||createInitialCmsDocument());
  tryPersist(DRAFT_KEY,document);
  return clone(document);
@@ -37,7 +54,7 @@ export function saveDraft(document:CmsDocument){
 }
 
 export function loadPublished():CmsDocument{
- const stored=parseCmsDocument(localStorage.getItem(PUBLISHED_KEY));
+ const stored=parseCmsDocument(readRaw(PUBLISHED_KEY));
  if(stored)return normalize(stored);
  const initial=createInitialCmsDocument();
  tryPersist(PUBLISHED_KEY,initial);
@@ -45,13 +62,14 @@ export function loadPublished():CmsDocument{
 }
 
 export function publishDraft(document:CmsDocument){
+ const previousPublished=readRaw(PUBLISHED_KEY);
  const now=new Date().toISOString();
  const published:CmsDocument={...normalize(clone(document)),updatedAt:now,publishedAt:now};
  persist(PUBLISHED_KEY,published);
  try{
   persist(DRAFT_KEY,published);
  }catch(error){
-  try{localStorage.removeItem(PUBLISHED_KEY)}catch{}
+  restoreRaw(PUBLISHED_KEY,previousPublished);
   throw error;
  }
  window.dispatchEvent(new CustomEvent('visa-cms-updated',{detail:{source:'published'}}));
@@ -59,16 +77,19 @@ export function publishDraft(document:CmsDocument){
 }
 
 export function resetCms(){
- const previousDraft=localStorage.getItem(DRAFT_KEY);const previousPublished=localStorage.getItem(PUBLISHED_KEY);
+ const previousDraft=readRaw(DRAFT_KEY);
+ const previousPublished=readRaw(PUBLISHED_KEY);
  const initial=createInitialCmsDocument();
  try{
-  persist(DRAFT_KEY,initial);persist(PUBLISHED_KEY,initial);
+  persist(DRAFT_KEY,initial);
+  persist(PUBLISHED_KEY,initial);
   return initial;
  }catch(error){
-  try{if(previousDraft===null)localStorage.removeItem(DRAFT_KEY);else localStorage.setItem(DRAFT_KEY,previousDraft)}catch{}
-  try{if(previousPublished===null)localStorage.removeItem(PUBLISHED_KEY);else localStorage.setItem(PUBLISHED_KEY,previousPublished)}catch{}
+  restoreRaw(DRAFT_KEY,previousDraft);
+  restoreRaw(PUBLISHED_KEY,previousPublished);
   throw error;
  }
 }
+
 export function resolvePublicDocument(previewDraft=false):CmsDocument{return previewDraft?loadDraft():loadPublished()}
 export function findPageByPath(document:CmsDocument,path:string):CmsPage|undefined{const clean=normalizeCmsPath(path);return document.pages.find(page=>page.slug===clean)}
