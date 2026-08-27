@@ -45,6 +45,52 @@ export function saveAgendaSessionEvents(records:AgendaEvent[]){return writeSessi
 export function getFinanceSessionRecords(){return readSessionRecords<FinanceRecord>(KEYS.finance,getFinanceInitialRecords,isFinanceRecord)}
 export function saveFinanceSessionRecords(records:FinanceRecord[]){return writeSessionRecordsSafely(KEYS.finance,records,isFinanceRecord)}
 
+function normalizeIdentity(value:string){return value.trim().toLocaleLowerCase('pt-BR')}
+function normalizeDigits(value:string){return value.replace(/\D/g,'')}
+function attendanceCrmMatch(conversation:AttendanceConversation,crmRecords:CrmRecord[]){
+ if(conversation.kind==='team')return undefined;
+ if(conversation.crmRecordId){
+  const linked=crmRecords.find(record=>record.id===conversation.crmRecordId);
+  if(linked)return linked;
+ }
+ const name=normalizeIdentity(conversation.customer);
+ const email=normalizeIdentity(conversation.email);
+ const handleDigits=normalizeDigits(conversation.handle);
+ const matches=crmRecords.filter(record=>normalizeIdentity(record.fullName)===name||(email&&normalizeIdentity(record.email)===email)||(handleDigits&&(normalizeDigits(record.whatsapp)===handleDigits||normalizeDigits(record.phone)===handleDigits)));
+ return matches.length===1?matches[0]:undefined;
+}
+function attendanceAssigneeMatch(conversation:AttendanceConversation,members:OperationalTeamMember[]){
+ if(conversation.assigneeUserId){
+  const linked=members.find(member=>member.id===conversation.assigneeUserId);
+  if(linked)return linked;
+ }
+ const matches=members.filter(member=>normalizeIdentity(member.name)===normalizeIdentity(conversation.assignee)||normalizeIdentity(member.email)===normalizeIdentity(conversation.assignee));
+ return matches.length===1?matches[0]:undefined;
+}
+function canonicalizeAttendanceRecords(records:AttendanceConversation[],existingIds:Set<string>){
+ const crmRecords=getCrmSessionRecords();
+ const members=getOperationalTeamMembers();
+ return records.map(conversation=>{
+  const assignee=attendanceAssigneeMatch(conversation,members);
+  if(conversation.kind==='team')return assignee?{...conversation,assignee:assignee.name,assigneeUserId:assignee.id}:conversation;
+  const crmRecord=attendanceCrmMatch(conversation,crmRecords);
+  if(!crmRecord&&!existingIds.has(conversation.id))throw new Error(`Não foi possível vincular a nova conversa “${conversation.customer}” a um único Contato ou Lead do CRM.`);
+  return {
+   ...conversation,
+   ...(assignee?{assignee:assignee.name,assigneeUserId:assignee.id}:{}),
+   ...(crmRecord?{
+    crmRecordId:crmRecord.id,
+    customer:crmRecord.fullName,
+    email:crmRecord.email,
+    crmType:crmRecord.kind==='lead'?'Lead':crmRecord.relationship==='Cliente'?'Cliente':'Contato',
+    service:crmRecord.interest??'',
+    destination:crmRecord.destination??'',
+    visaType:crmRecord.visaType??'',
+   }:{}),
+  };
+ });
+}
+
 export function getAttendanceSessionConversations(){
  const seeds=getAttendanceInitialConversations();
  const records=readSessionRecords<AttendanceConversation>(KEYS.attendance,()=>seeds,isAttendanceConversation);
@@ -52,8 +98,10 @@ export function getAttendanceSessionConversations(){
  const teamSeeds=seeds.filter(item=>getAttendanceConversationKind(item)==='team');
  const knownIds=new Set(records.map(item=>item.id));
  const merged=[...records,...teamSeeds.filter(item=>!knownIds.has(item.id))];
- return sortAttendanceConversations(merged.map(item=>normalizeAttendanceConversation(item,seedById.get(item.id))));
+ return sortAttendanceConversations(canonicalizeAttendanceRecords(merged,new Set(merged.map(item=>item.id))).map(item=>normalizeAttendanceConversation(item,seedById.get(item.id))));
 }
 export function saveAttendanceSessionConversations(records:AttendanceConversation[]){
- return writeSessionRecordsSafely(KEYS.attendance,sortAttendanceConversations(records),isAttendanceConversation);
+ const existing=getAttendanceSessionConversations();
+ const canonical=canonicalizeAttendanceRecords(records,new Set(existing.map(item=>item.id)));
+ return writeSessionRecordsSafely(KEYS.attendance,sortAttendanceConversations(canonical),isAttendanceConversation);
 }
