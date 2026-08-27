@@ -37,6 +37,14 @@ test('disabled authentication keeps the real credential route blocked while expo
   assert.equal(rootApp.includes("if(path==='/login-preview'){AUTHENTICATION_ENABLED"),false);
 });
 
+test('internal-path auth guard matches route boundaries instead of string prefixes',()=>{
+  assert.ok(auth.includes("function isPathAtOrBelow(path:string,prefix:string){return path===prefix||path.startsWith(`${prefix}/`)}"));
+  assert.ok(auth.includes("isPathAtOrBelow(path,'/crm')"));
+  assert.ok(auth.includes("isPathAtOrBelow(path,'/site-admin')"));
+  assert.equal(auth.includes("path.startsWith('/crm')"),false);
+  assert.equal(auth.includes("path.startsWith('/site-admin')"),false);
+});
+
 test('login preview keeps credential fields the same width and removes obsolete workspace explanatory copy',()=>{
   assert.ok(authCss.includes('.auth-card input{box-sizing:border-box;width:100%'));
   assert.ok(authCss.includes('.auth-password{position:relative;width:100%;min-width:0}'));
