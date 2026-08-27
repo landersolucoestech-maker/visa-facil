@@ -19,9 +19,12 @@ import {
 } from './attendanceDomain';
 import {
   getAttendanceSessionConversations,
+  getCrmSessionRecords,
   getOperationalTeamMembers,
   saveAttendanceSessionConversations,
+  type OperationalTeamMember,
 } from '../../shared/operationalSessionStore';
+import type { CrmRecord } from '../crm/types';
 import { getVisaChatSettings } from './attendanceSettings';
 import { AttendanceSettingsPanel } from './AttendanceSettingsPanel';
 
@@ -29,14 +32,15 @@ type ChatMode = 'customer' | 'team';
 type TeamTypeFilter = 'all' | AttendanceTeamType;
 type NewConversationDraft = {
   customer: string;
+  crmRecordId: string;
   handle: string;
   channel: string;
   message: string;
   participantIds: string[];
   teamType: AttendanceTeamType;
 };
-const EMPTY_NEW_CONVERSATION: NewConversationDraft = { customer: '', handle: '', channel: 'WhatsApp', message: '', participantIds: [], teamType: 'group' };
-const EMPTY_TEAM_CONVERSATION: NewConversationDraft = { customer: '', handle: '', channel: 'Equipe', message: '', participantIds: [], teamType: 'group' };
+const EMPTY_NEW_CONVERSATION: NewConversationDraft = { customer: '', crmRecordId: '', handle: '', channel: 'WhatsApp', message: '', participantIds: [], teamType: 'group' };
+const EMPTY_TEAM_CONVERSATION: NewConversationDraft = { customer: '', crmRecordId: '', handle: '', channel: 'Equipe', message: '', participantIds: [], teamType: 'group' };
 
 function getBasePath() { const base = import.meta.env.BASE_URL.replace(/\/$/, ''); return base || ''; }
 function browserHref(path: string) { return `${getBasePath()}${path}` || path; }
@@ -67,9 +71,39 @@ function ArrowRightLeftIcon() { return <svg viewBox="0 0 24 24" aria-hidden="tru
 function timeNow() { return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
 function teamTypeLabel(type: AttendanceTeamType) { return type === 'direct' ? 'Conversa' : type === 'group' ? 'Grupo' : 'Canal'; }
 function normalizeChannelSlug(value: string) { return value.trim().toLowerCase().replace(/^#+/, '').replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, ''); }
+function normalizeIdentity(value:string){return value.trim().toLocaleLowerCase('pt-BR')}
+function normalizeDigits(value:string){return value.replace(/\D/g,'')}
+function recordHandle(record:CrmRecord,channel:string){
+  if(channel==='E-mail')return record.email;
+  if(channel==='WhatsApp')return record.whatsapp||record.phone||record.email;
+  return record.phone||record.whatsapp||record.email;
+}
+function conversationCrmRecord(conversation:AttendanceConversation,records:CrmRecord[]){
+  if(conversation.kind==='team')return undefined;
+  if(conversation.crmRecordId){const linked=records.find(record=>record.id===conversation.crmRecordId);if(linked)return linked}
+  const name=normalizeIdentity(conversation.customer);const email=normalizeIdentity(conversation.email);const handleDigits=normalizeDigits(conversation.handle);
+  const matches=records.filter(record=>normalizeIdentity(record.fullName)===name||(email&&normalizeIdentity(record.email)===email)||(handleDigits&&(normalizeDigits(record.whatsapp)===handleDigits||normalizeDigits(record.phone)===handleDigits)));
+  return matches.length===1?matches[0]:undefined;
+}
+function conversationAssignee(conversation:AttendanceConversation,members:OperationalTeamMember[]){
+  if(conversation.assigneeUserId){const linked=members.find(member=>member.id===conversation.assigneeUserId);if(linked)return linked}
+  const matches=members.filter(member=>normalizeIdentity(member.name)===normalizeIdentity(conversation.assignee)||normalizeIdentity(member.email)===normalizeIdentity(conversation.assignee));
+  return matches.length===1?matches[0]:undefined;
+}
+function migrateConversationLinks(items:AttendanceConversation[],records:CrmRecord[],members:OperationalTeamMember[]):AttendanceConversation[]{
+  return items.map(conversation=>{
+    const assignee=conversationAssignee(conversation,members);
+    if(conversation.kind==='team')return assignee?{...conversation,assignee:assignee.name,assigneeUserId:assignee.id}:conversation;
+    const crmRecord=conversationCrmRecord(conversation,records);
+    return {...conversation,...(assignee?{assignee:assignee.name,assigneeUserId:assignee.id}:{}),...(crmRecord?{crmRecordId:crmRecord.id,customer:crmRecord.fullName,email:crmRecord.email,crmType:crmRecord.kind==='lead'?'Lead':crmRecord.relationship==='Cliente'?'Cliente':'Contato',service:crmRecord.interest??'',destination:crmRecord.destination??'',visaType:crmRecord.visaType??''}:{})};
+  });
+}
 
 export function AttendanceApp() {
-  const [conversations, setConversations] = useState<AttendanceConversation[]>(() => getAttendanceSessionConversations());
+  const crmRecords = useMemo(() => getCrmSessionRecords(), []);
+  const crmRecordById = useMemo(() => new Map(crmRecords.map((record) => [record.id, record])), [crmRecords]);
+  const teamMembers = useMemo(() => getOperationalTeamMembers(), []);
+  const [conversations, setConversations] = useState<AttendanceConversation[]>(() => migrateConversationLinks(getAttendanceSessionConversations(), crmRecords, teamMembers));
   const [mode, setMode] = useState<ChatMode>('customer');
   const [selectedId, setSelectedId] = useState<string>(() => conversations.find((item) => getAttendanceConversationKind(item) === 'customer')?.id ?? '');
   const [query, setQuery] = useState('');
@@ -91,7 +125,6 @@ export function AttendanceApp() {
   const transferButtonRef = useRef<HTMLButtonElement>(null);
   const quickRepliesButtonRef = useRef<HTMLButtonElement>(null);
   const newConversationTriggerRef = useRef<HTMLButtonElement>(null);
-  const teamMembers = useMemo(() => getOperationalTeamMembers(), []);
   const teamMemberById = useMemo(() => new Map(teamMembers.map((member) => [member.id, member])), [teamMembers]);
   const currentMember = teamMembers.find((member) => member.role === 'Administrador') ?? teamMembers[0];
   const currentAuthor = currentMember?.name ?? 'Administrador';
@@ -180,11 +213,13 @@ export function AttendanceApp() {
     const option = transferOptions.find((item) => item.id === transferTarget);
     if (!option || option.queue === selected.queue) return;
     const priority = option.priority === 'baixa' ? 'Baixa' : option.priority === 'alta' ? 'Alta' : option.priority === 'critica' ? 'Urgente' : 'Normal';
+    const assignee = teamMemberById.get(option.defaultAssignee?.trim() ?? '');
     const updatedAt = new Date().toISOString();
     setConversations((current) => current.map((item) => item.id === selected.id && item.kind !== 'team' ? {
       ...item,
       queue: option.queue,
-      assignee: teamMemberById.get(option.defaultAssignee?.trim() ?? '')?.name ?? 'Não atribuído',
+      assignee: assignee?.name ?? 'Não atribuído',
+      assigneeUserId: assignee?.id,
       priority,
       tags: [...new Set([...item.tags, ...option.tags])],
       status: 'Em atendimento',
@@ -281,6 +316,11 @@ export function AttendanceApp() {
     }));
   };
 
+  const selectCrmRecord = (id:string) => {
+    const record=crmRecordById.get(id);
+    setNewConversation((current)=>record?{...current,crmRecordId:record.id,customer:record.fullName,handle:recordHandle(record,current.channel)}:{...current,crmRecordId:'',customer:'',handle:''});
+  };
+
   const createConversation = () => {
     const handle = newConversation.handle.trim();
     const now = timeNow();
@@ -310,6 +350,7 @@ export function AttendanceApp() {
         channel: 'Equipe',
         status: 'Ativo',
         assignee: currentAuthor,
+        assigneeUserId: currentMember?.id,
         queue: 'Equipe',
         protocol: `INT-${Date.now().toString(36).toUpperCase()}`,
         tags: ['Interno', teamTypeLabel(newConversation.teamType)],
@@ -333,19 +374,23 @@ export function AttendanceApp() {
       setNewConversationError('');
       return;
     }
-    const customer = newConversation.customer.trim();
-    if (!customer || !handle) { setNewConversationError('Informe o nome e o telefone/usuário do contato.'); return; }
+    const crmRecord=crmRecordById.get(newConversation.crmRecordId);
+    if (!crmRecord) { setNewConversationError('Selecione um Contato ou Lead válido do CRM.'); return; }
+    if (!handle) { setNewConversationError('Informe o telefone/usuário do canal.'); return; }
+    const customer=crmRecord.fullName;
     const initialMessage: AttendanceMessage[] = initialBody ? [{ id: crypto.randomUUID(), sender: 'agent', author: currentAuthor, body: initialBody, time: now, visibility: 'external', deliveryStatus: 'local' }] : [];
     const id = crypto.randomUUID();
     const record: AttendanceConversation = {
       id,
       kind: 'customer',
+      crmRecordId: crmRecord.id,
       customer,
       handle,
-      email: '',
+      email: crmRecord.email,
       channel: newConversation.channel,
       status: 'Em atendimento',
       assignee: currentAuthor,
+      assigneeUserId: currentMember?.id,
       queue: 'Atendimento',
       protocol: `VF-${Date.now().toString(36).toUpperCase()}`,
       tags: [],
@@ -354,10 +399,10 @@ export function AttendanceApp() {
       lastMessageAt: now,
       updatedAt,
       unread: 0,
-      crmType: 'Contato',
-      service: '',
-      destination: '',
-      visaType: '',
+      crmType: crmRecord.kind==='lead'?'Lead':crmRecord.relationship==='Cliente'?'Cliente':'Contato',
+      service: crmRecord.interest??'',
+      destination: crmRecord.destination??'',
+      visaType: crmRecord.visaType??'',
       messages: initialMessage,
     };
     setConversations((current) => [record, ...current]);
@@ -693,6 +738,11 @@ export function AttendanceApp() {
 </header>
 <dl>
 <div>
+<dt>Vínculo CRM</dt>
+<dd>{selected.crmRecordId ? 'Vinculado' : 'Legado / externo não vinculado'}
+</dd>
+</div>
+<div>
 <dt>E-mail</dt>
 <dd>{selected.email || '—'}
 </dd>
@@ -778,7 +828,7 @@ export function AttendanceApp() {
 </span>
 <h2 id="visachat-new-conversation-title">{creatingTeamChat ? 'Novo espaço da equipe' : 'Iniciar conversa'}
 </h2>
-<p>{creatingTeamChat ? 'Crie uma conversa direta, grupo ou canal usando somente usuários ativos de Configurações.' : 'O vínculo com canal externo continua local até a integração específica de mensagens existir.'}
+<p>{creatingTeamChat ? 'Crie uma conversa direta, grupo ou canal usando somente usuários ativos de Configurações.' : 'Selecione um Contato ou Lead do CRM. O vínculo com canal externo continua local até a integração específica de mensagens existir.'}
 </p>
 </div>
 <button type="button" onClick={() => setNewConversationOpen(false)} aria-label="Fechar">×</button>
@@ -815,12 +865,14 @@ export function AttendanceApp() {
 </label>
 </> : <>
 <label>
-<span>Nome do contato / lead</span>
-<input value={newConversation.customer} onChange={(event) => setNewConversation((current) => ({ ...current, customer: event.target.value }))} placeholder="Nome completo" />
+<span>Contato / Lead do CRM</span>
+<select value={newConversation.crmRecordId} onChange={(event) => selectCrmRecord(event.target.value)}>
+<option value="">Selecione um registro</option>{crmRecords.map((record) => <option key={record.id} value={record.id}>{record.fullName} · {record.kind==='lead'?'Lead':record.relationship==='Cliente'?'Cliente':'Contato'}</option>)}
+</select>
 </label>
 <label>
 <span>Canal</span>
-<select value={newConversation.channel} onChange={(event) => setNewConversation((current) => ({ ...current, channel: event.target.value }))}>
+<select value={newConversation.channel} onChange={(event) => { const channel=event.target.value; setNewConversation((current) => { const record=crmRecordById.get(current.crmRecordId); return { ...current, channel, handle: record ? recordHandle(record,channel) : current.handle }; }); }}>
 <option>WhatsApp</option>
 <option>Instagram</option>
 <option>Facebook</option>
@@ -836,7 +888,7 @@ export function AttendanceApp() {
 <span>Mensagem inicial</span>
 <textarea rows={4} value={newConversation.message} onChange={(event) => setNewConversation((current) => ({ ...current, message: event.target.value }))} placeholder="Mensagem inicial opcional" />
 </label>
-<p className="attendance-team-help">A conversa será criada no VisaChat, mas mensagens externas só podem ser marcadas como entregues quando o canal estiver realmente integrado.</p>
+<p className="attendance-team-help">A conversa será vinculada ao registro canônico do CRM, mas mensagens externas só podem ser marcadas como entregues quando o canal estiver realmente integrado.</p>
 </>}{newConversationError && <p className="attendance-empty" role="alert">{newConversationError}
 </p>}
 </div>
