@@ -82,7 +82,7 @@ jobs:
           grep -q '<div id="root"></div>' /tmp/root.html
           grep -q '<div id="root"></div>' /tmp/crm.html
 
-      - name: Rendered CRM browser smoke
+      - name: Rendered CRM and Site CMS browser smoke
         shell: bash
         run: |
           set -euo pipefail
@@ -125,6 +125,28 @@ jobs:
             }
           }
 
+          render_site_route() {
+            route="$1"
+            expected="$2"
+            slug="$(printf '%s' "$route" | tr '/:' '__' | sed 's/^_*//')"
+            output="/tmp/browser-site-${slug}.html"
+            "$chrome_bin" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=5000 \
+              --dump-dom "http://127.0.0.1:4173${route}" > "$output"
+            grep -Fq "$expected" "$output" || {
+              echo "A rota ${route} do CMS não renderizou o conteúdo esperado: ${expected}" >&2
+              exit 1
+            }
+            grep -Fq 'site-cms-workspace' "$output" || {
+              echo "A rota ${route} não montou o workspace do Gerenciador do Site." >&2
+              exit 1
+            }
+          }
+
           render_route '/crm' 'Dashboard'
           render_route '/crm/relacionamento' 'Central de relacionamento operacional.'
           render_route '/crm/agenda' 'Agenda'
@@ -138,5 +160,11 @@ jobs:
           render_route '/crm/marketing/tarefas' 'Tarefas de Marketing'
           render_route '/crm/relatorios' 'Relatórios'
           render_route '/crm/configuracoes' 'Configurações'
+
+          render_site_route '/site-admin' 'Visão Geral'
+          render_site_route '/site-admin/pages' 'Gerenciamento por página'
+          render_site_route '/site-admin/media' 'Biblioteca central'
+          render_site_route '/site-admin/globals' 'Header, Footer e contatos'
+          render_site_route '/site-admin/settings' 'Configurações do site'
 
           CHROME_BIN="$chrome_bin" CRM_SMOKE_BASE_URL="http://127.0.0.1:4173" node scripts/browser-crm-interactions.mjs
