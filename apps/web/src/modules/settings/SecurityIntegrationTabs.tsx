@@ -1,30 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ApiClientError, isBackendConfigured } from '../../shared/apiClient';
-import { INTEGRATION_REGISTRY, type IntegrationConnectionState, type IntegrationId, type IntegrationRuntimeStatus } from '../integrations/integrationContract';
-import { connectIntegration, disconnectIntegration, getIntegrationStatuses, syncIntegration } from '../integrations/integrationApi';
+import { CAPABILITY_LABELS, INTEGRATION_REGISTRY, integrationById, type IntegrationConnectionState, type IntegrationId, type IntegrationRuntimeStatus, type OfficialAuthorizationProvider } from '../integrations/integrationContract';
+import { connectIntegration, disconnectIntegration, getIntegrationStatuses, reconnectIntegration, syncIntegration } from '../integrations/integrationApi';
 import { Card } from './settingsShared';
 import { AUTHENTICATION_ENABLED } from '../auth/auth';
 
 const STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não configurado',disconnected:'Desconectado',connecting:'Conectando',connected:'Conectado',degraded:'Degradado',error:'Erro'};
 const ICONS:Record<IntegrationId,string>={whatsapp:'WA',autentique:'A',nfse:'NF',instagram:'IG',facebook:'FB',youtube:'YT',tiktok:'TT','google-ads':'GA','google-calendar':'GC'};
-const OAUTH_HOSTS:Partial<Record<IntegrationId,readonly string[]>>={
- whatsapp:['www.facebook.com'],
- instagram:['www.facebook.com'],
- facebook:['www.facebook.com'],
- youtube:['accounts.google.com'],
+const AUTH_HOSTS:Record<OfficialAuthorizationProvider,readonly string[]>={
+ meta:['www.facebook.com','business.facebook.com'],
+ google:['accounts.google.com'],
  tiktok:['www.tiktok.com'],
- 'google-ads':['accounts.google.com'],
- 'google-calendar':['accounts.google.com'],
 };
+const AUTH_PROVIDER_LABEL:Record<OfficialAuthorizationProvider,string>={meta:'Meta',google:'Google',tiktok:'TikTok'};
 
 function statusClass(state:IntegrationConnectionState){return `settings-status is-${state.replace(/\s+/g,'-')}`}
-function safeAuthorizationRedirect(id:IntegrationId,value:string){
+function safeAuthorizationRedirect(provider:OfficialAuthorizationProvider,value:string){
  try{
-  const url=new URL(value,window.location.origin);
-  const validProtocol=url.protocol==='https:'||(import.meta.env.DEV&&url.protocol==='http:');
-  const allowedHost=url.origin===window.location.origin||(OAUTH_HOSTS[id]?.includes(url.hostname)??false);
-  if(validProtocol&&allowedHost)window.location.assign(url.toString());
- }catch{ /* invalid or untrusted authorization URL returned by backend */ }
+  const url=new URL(value);
+  if(url.protocol!=='https:'||!AUTH_HOSTS[provider].includes(url.hostname))return false;
+  window.location.assign(url.toString());
+  return true;
+ }catch{return false}
+}
+function formatDateTime(value?:string){
+ if(!value)return '';
+ const date=new Date(value);
+ return Number.isNaN(date.getTime())?value:date.toLocaleString('pt-BR');
 }
 
 export function SecurityTab(){
@@ -51,18 +53,24 @@ export function IntegrationsTab(){
  const refresh=async(signal?:AbortSignal)=>{if(!backendConfigured)return;try{setStatuses(await getIntegrationStatuses(signal));setError('')}catch(value){if(signal?.aborted)return;setError(value instanceof ApiClientError?value.message:'Não foi possível consultar o estado das integrações.')}};
  useEffect(()=>{const controller=new AbortController();void refresh(controller.signal);return()=>controller.abort()},[]);
  const statusFor=(id:IntegrationId)=>statuses.find(item=>item.id===id)??{id,state:'unconfigured' as const};
- const run=async(id:IntegrationId,action:'connect'|'disconnect'|'sync')=>{
+ const run=async(id:IntegrationId,action:'connect'|'reconnect'|'disconnect'|'sync')=>{
   if(!backendConfigured||busy)return;
+  const definition=integrationById(id);
   setBusy(id);setError('');
   try{
-   const response=action==='connect'?await connectIntegration(id):action==='disconnect'?await disconnectIntegration(id):await syncIntegration(id);
+   const response=action==='connect'?await connectIntegration(id):action==='reconnect'?await reconnectIntegration(id):action==='disconnect'?await disconnectIntegration(id):await syncIntegration(id);
    setStatuses(current=>current.map(item=>item.id===id?response.integration:item));
-   if(response.authorizationUrl)safeAuthorizationRedirect(id,response.authorizationUrl);
-  }catch(value){setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.')}finally{setBusy(undefined)}
+   if((action==='connect'||action==='reconnect')&&definition.authMode==='oauth2'){
+    if(!definition.officialAuthorizationProvider||!response.authorizationUrl||!safeAuthorizationRedirect(definition.officialAuthorizationProvider,response.authorizationUrl))throw new Error('OFFICIAL_AUTHORIZATION_REQUIRED');
+   }
+  }catch(value){
+   if(value instanceof Error&&value.message==='OFFICIAL_AUTHORIZATION_REQUIRED')setError(`A conexão com ${definition.name} foi bloqueada porque o backend não retornou uma URL HTTPS do provedor oficial.`);
+   else setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.');
+  }finally{setBusy(undefined)}
  };
  return <Card title="Integrações" description="Conectores externos configuráveis pela operação" icon="↗">
-  <div className="settings-info-box">{backendConfigured?'Os estados abaixo são consultados na API backend. Provedores internos e credenciais server-side não são expostos nesta interface.':'A API backend ainda não está configurada. Nenhuma integração é considerada conectada e nenhuma credencial deve ser inserida no frontend.'}</div>
+  <div className="settings-info-box">{backendConfigured?'Contas sociais e WhatsApp são autenticados exclusivamente nas telas oficiais dos respectivos provedores. O sistema não solicita senhas, tokens ou chaves dessas contas no frontend; tokens autorizados permanecem no backend.':'A API backend ainda não está configurada. Nenhuma integração é considerada conectada e nenhuma credencial deve ser inserida no frontend.'}</div>
   {error&&<p className="settings-security-notice" role="alert">{error}</p>}
-  {categories.map(category=><div className="settings-integration-category" key={category}><div className="settings-integration-category-title"><span>◈</span><strong>{category}</strong></div>{INTEGRATION_REGISTRY.filter(item=>item.category===category).map(item=>{const status=statusFor(item.id);const working=busy===item.id;return <div className="settings-integration-row" key={item.id}><div className="settings-integration-logo">{ICONS[item.id]}</div><div className="settings-integration-copy"><strong>{item.name}</strong><p>{item.description}</p>{status.accountLabel&&<small>{status.accountLabel}</small>}{status.errorMessage&&<small role="alert">{status.errorMessage}</small>}</div><div className="settings-integration-actions"><span className={statusClass(status.state)}>{STATUS_LABEL[status.state]}</span>{status.state==='connected'?<><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'sync')}>{working?'Processando…':'Sincronizar'}</button><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'disconnect')}>Desconectar</button></>:<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'connect')}>{working?'Processando…':backendConfigured?'Conectar':'Backend necessário'}</button>}</div></div>})}</div>)}
+  {categories.map(category=><div className="settings-integration-category" key={category}><div className="settings-integration-category-title"><span>◈</span><strong>{category}</strong></div>{INTEGRATION_REGISTRY.filter(item=>item.category===category).map(item=>{const status=statusFor(item.id);const working=busy===item.id;const linked=status.state==='connected'||status.state==='degraded'||Boolean(status.accountId||status.accountLabel);const authorized=status.authorizedCapabilities?.map(capability=>CAPABILITY_LABELS[capability]);const planned=item.capabilities.map(capability=>CAPABILITY_LABELS[capability]);return <div className="settings-integration-row" key={item.id}><div className="settings-integration-logo">{ICONS[item.id]}</div><div className="settings-integration-copy"><strong>{item.name}</strong><p>{item.description}</p>{item.officialAuthorizationProvider&&<small>Autorização: fluxo oficial {AUTH_PROVIDER_LABEL[item.officialAuthorizationProvider]}</small>}{status.accountLabel&&<small>Conta vinculada: {status.accountLabel}</small>}{status.accountId&&<small>ID da conta: {status.accountId}</small>}{linked?<small>Recursos autorizados: {authorized?.length?authorized.join(' · '):'não informados pelo backend'}</small>:<small>Recursos previstos: {planned.join(' · ')}</small>}{item.authMode==='oauth2'&&linked&&<small>Permissões concedidas: {status.grantedScopes?.length?status.grantedScopes.join(' · '):'não informadas pelo backend'}</small>}{status.lastSyncAt&&<small>Última sincronização: {formatDateTime(status.lastSyncAt)}</small>}{status.expiresAt&&<small>Autorização válida até: {formatDateTime(status.expiresAt)}</small>}{status.errorMessage&&<small role="alert">{status.errorMessage}</small>}</div><div className="settings-integration-actions"><span className={statusClass(status.state)}>{STATUS_LABEL[status.state]}</span>{linked?<><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'sync')}>{working?'Processando…':'Sincronizar'}</button>{item.authMode==='oauth2'&&<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'reconnect')}>Reconectar</button>}<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'disconnect')}>Desconectar</button></>:<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'connect')}>{working?'Processando…':backendConfigured?(item.authMode==='oauth2'?`Conectar ${item.name}`:`Configurar ${item.name}`):'Backend necessário'}</button>}</div></div>})}</div>)}
  </Card>;
 }
