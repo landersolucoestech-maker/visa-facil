@@ -168,4 +168,5 @@ jobs:
           render_site_route '/site-admin/settings' 'Configurações do site'
 
           CHROME_BIN="$chrome_bin" CRM_SMOKE_BASE_URL="http://127.0.0.1:4173" node scripts/browser-crm-interactions.mjs
+          CHROME_BIN="$chrome_bin" CRM_SMOKE_BASE_URL="http://127.0.0.1:4173" node scripts/browser-row-action-placement.mjs
           CHROME_BIN="$chrome_bin" CMS_SMOKE_BASE_URL="http://127.0.0.1:4173" node scripts/browser-site-cms-interactions.mjs
