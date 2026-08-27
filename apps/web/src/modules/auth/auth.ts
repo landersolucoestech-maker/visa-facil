@@ -15,6 +15,17 @@ export const AUTH_PROVIDER = 'disabled';
 
 const SESSION_KEY = 'visa-facil.auth.session.v1';
 
+type StorageKind='session'|'local';
+
+function getStorage(kind:StorageKind):Storage|null{
+  try{
+    if(kind==='session')return typeof sessionStorage==='undefined'?null:sessionStorage;
+    return typeof localStorage==='undefined'?null:localStorage;
+  }catch{
+    return null;
+  }
+}
+
 function isString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -39,9 +50,14 @@ function parse(raw: string | null): AuthSession | null {
   }
 }
 
+function readSession(store:Storage|null):AuthSession|null{
+  if(!store)return null;
+  try{return parse(store.getItem(SESSION_KEY))}catch{return null}
+}
+
 export function getAuthSession(): AuthSession | null {
   if (!AUTHENTICATION_ENABLED) return null;
-  return parse(sessionStorage.getItem(SESSION_KEY)) || parse(localStorage.getItem(SESSION_KEY));
+  return readSession(getStorage('session')) || readSession(getStorage('local'));
 }
 
 export async function signIn(email: string, password: string, remember = false): Promise<AuthSession> {
@@ -58,8 +74,10 @@ export async function signIn(email: string, password: string, remember = false):
 }
 
 export function signOut() {
-  sessionStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(SESSION_KEY);
+  for(const store of [getStorage('session'),getStorage('local')]){
+    if(!store)continue;
+    try{store.removeItem(SESSION_KEY)}catch{}
+  }
 }
 
 export function isInternalPath(path: string) {
