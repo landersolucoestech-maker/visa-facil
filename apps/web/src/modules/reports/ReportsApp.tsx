@@ -68,7 +68,7 @@ export function ReportsApp() {
     catch(error){setValidation({ok:false,message:error instanceof Error?error.message:'Não foi possível validar o arquivo.'})}
   };
 
-  return <div className="crm-shell reports-shell" onClick={() => setNotificationsOpen(false)}>
+  return <div className="crm-shell reports-shell" onClick={() => setNotificationsOpen(false)} onKeyDown={event=>{if(event.key==='Escape'){setNotificationsOpen(false);if(importEntity)closeImport()}}}>
     <div className="crm-workspace">
       <header className="crm-topbar">
         <div><small>VISA FÁCIL · CRM</small><h1>Relatórios</h1><p>Contratos de importação e exportação por domínio.</p></div>
@@ -87,8 +87,8 @@ export function ReportsApp() {
       </main>
     </div>
 
-    {importEntity && <div className="reports-modal-backdrop" onMouseDown={event => event.currentTarget === event.target && closeImport()}><div className="reports-import-modal">
-      <header><div><span>VALIDAÇÃO DE CSV</span><h2>{importEntity.label}</h2><p>Valide o contrato do arquivo sem simular uma importação inexistente.</p></div><button type="button" onClick={closeImport} aria-label="Fechar">×</button></header>
+    {importEntity && <div className="reports-modal-backdrop" onMouseDown={event => event.currentTarget === event.target && closeImport()}><div className="reports-import-modal" role="dialog" aria-modal="true" aria-labelledby="reports-import-title">
+      <header><div><span>VALIDAÇÃO DE CSV</span><h2 id="reports-import-title">{importEntity.label}</h2><p>Valide o contrato do arquivo sem simular uma importação inexistente.</p></div><button type="button" onClick={closeImport} aria-label="Fechar">×</button></header>
       <div className="reports-import-body"><div className="reports-import-toolbar"><button type="button" onClick={() => downloadTemplate(importEntity)}>↓ Baixar template</button></div><button className="reports-dropzone" type="button" onClick={() => fileRef.current?.click()}><input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={event => chooseFile(event.target.files?.[0])} /><span>↑</span><strong>{file ? file.name : 'Selecionar CSV'}</strong><small>{file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : 'Somente CSV · máximo de 5 MB'}</small></button>{validation&&<div className={`reports-validation${validation.ok?' reports-validation--ok':''}`} role={validation.ok?'status':'alert'}><strong>{validation.ok?'Arquivo válido':'Falha na validação'}</strong><p>{validation.message}</p></div>}<div className="reports-import-columns"><span>Campos esperados</span><div>{importEntity.columns.map(column => <b key={column}>{column}</b>)}</div></div></div>
       <footer><button className="crm-btn-secondary" type="button" onClick={closeImport}>Fechar</button><button className="crm-btn-primary" type="button" disabled={!file} onClick={runValidation}>Validar arquivo</button></footer>
     </div></div>}
