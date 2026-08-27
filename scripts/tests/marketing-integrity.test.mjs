@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { LOCAL_PERSISTENCE_ERROR_EVENT, safeWriteSessionRecords } from '../../apps/web/src/shared/sessionPersistence.ts';
 
 const root=process.cwd();
+const app=readFileSync(resolve(root,'apps/web/src/modules/marketing/MarketingApp.tsx'),'utf8');
 const store=readFileSync(resolve(root,'apps/web/src/modules/marketing/marketingSessionStore.ts'),'utf8');
 const fixture=JSON.parse(readFileSync(resolve(root,'apps/web/src/mocks/marketing/marketing.dev.json'),'utf8'));
 
@@ -43,6 +44,27 @@ test('marketing store migrates known legacy records and rejects arbitrary lifecy
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
+});
+
+test('marketing overview derives upcoming content from schedule instead of insertion order',()=>{
+  assert.ok(app.includes('const contentScheduleKey='));
+  assert.ok(app.includes('const now=currentScheduleKey()'));
+  assert.ok(app.includes("content.status==='Agendado'&&contentScheduleKey(content)>=now"));
+  assert.ok(app.includes('sort((left,right)=>contentScheduleKey(left).localeCompare(contentScheduleKey(right)))'));
+  assert.ok(app.includes('Nenhum conteúdo futuro agendado.'));
+});
+
+test('marketing day and week calendars keep every valid hour visible',()=>{
+  assert.ok((app.match(/Array\.from\(\{length:24\}/g)||[]).length>=2);
+  assert.equal(app.includes('Array.from({length:12},(_,index)=>index+8)'),false);
+  assert.equal(app.includes('Array.from({length:11},(_,index)=>index+8)'),false);
+});
+
+test('marketing makes local-only campaign and publication state explicit',()=>{
+  assert.ok(app.includes('Status interno'));
+  assert.ok(app.includes('este status não publica automaticamente nas plataformas'));
+  assert.ok(app.includes('O protótipo não publica campanhas nas plataformas'));
+  assert.ok(app.includes("total===1?'conteúdo':'conteúdos'"));
 });
 
 test('safe session persistence reports quota failures without crashing the calling UI',()=>{
