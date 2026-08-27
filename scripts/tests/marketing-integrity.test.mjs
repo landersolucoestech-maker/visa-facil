@@ -41,6 +41,17 @@ test('marketing store migrates known legacy records and rejects arbitrary lifecy
   assert.ok(store.includes('CONTENT_FORMATS[value.primaryChannel as Platform].has(value.type)'));
 });
 
+test('YouTube paid inventory is canonicalized under Google Ads instead of a duplicate provider',()=>{
+  assert.ok(store.includes("export type PaidPlatform='Meta Ads'|'Google Ads'|'TikTok Ads'"));
+  assert.ok(store.includes("if(value==='YouTube Ads'||value==='YouTube')return'Google Ads'"));
+  assert.ok(store.includes("if(channel==='Google Ads'||channel==='YouTube')return'Google Ads'"));
+  assert.ok(app.includes("const PAID_PLATFORMS:PaidPlatform[]=['Meta Ads','Google Ads','TikTok Ads']"));
+  assert.equal(app.includes("'YouTube Ads'"),false);
+  assert.ok(app.includes('YouTube In-stream'));
+  assert.ok(app.includes('YouTube Shorts'));
+  assert.ok(app.includes('inventário do YouTube'));
+});
+
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
