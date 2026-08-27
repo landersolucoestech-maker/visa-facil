@@ -10,6 +10,7 @@
   },
   "automations": {
     "email": true,
+    "sms": false,
     "push": true,
     "newLead": true,
     "leadFollowup": true,
