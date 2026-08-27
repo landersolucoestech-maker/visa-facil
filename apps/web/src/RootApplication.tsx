@@ -75,12 +75,19 @@ const TasksApp = lazy(() => import('./modules/tasks/TasksApp').then(module => ({
 const WorkspaceSelectorApp = lazy(() => import('./modules/workspaces/WorkspaceSelectorApp'));
 
 function basePath() {
-  return import.meta.env.BASE_URL.replace(/\/$/, '');
+  const base=import.meta.env.BASE_URL.replace(/\/$/, '');
+  return base==='/'?'':base;
 }
 
 function normalizePath(pathname: string) {
   const base = basePath();
-  const path = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname;
+  const path = !base
+    ? pathname
+    : pathname===base
+      ? '/'
+      : pathname.startsWith(`${base}/`)
+        ? pathname.slice(base.length) || '/'
+        : pathname;
   return path.replace(/\/+$/, '') || '/';
 }
 
