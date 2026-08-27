@@ -2,6 +2,8 @@ import type { CmsDocument, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionIns
 
 const VALID_PAGE_STATUSES=new Set<CmsStatus>(['draft','published','scheduled','hidden']);
 const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
+const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
+const KNOWN_GLOBAL_SECTION_TYPES=new Set(['header','footer']);
 
 function isRecord(value:unknown):value is Record<string,unknown>{return Boolean(value)&&typeof value==='object'&&!Array.isArray(value)}
 function isString(value:unknown):value is string{return typeof value==='string'}
@@ -81,9 +83,16 @@ export function cmsPublicationIssues(document:CmsDocument){
   if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
   if(page.seo.canonicalUrl.trim()&&!isSafeCmsExternalUrl(page.seo.canonicalUrl))issues.push(`A Canonical URL da página “${label}” deve usar HTTP ou HTTPS.`);
   const seenSectionTypes=new Set<string>();
-  for(const section of page.sections){if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type)}
+  for(const section of page.sections){
+   if(!KNOWN_PAGE_SECTION_TYPES.has(section.type))issues.push(`A página “${label}” contém um tipo de seção não suportado: “${section.type}”.`);
+   if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type);
+  }
  }
  const seenGlobalTypes=new Set<string>();
- for(const section of document.globals){if(seenGlobalTypes.has(section.type))issues.push(`Existe mais de um bloco global do tipo “${section.label}”.`);else seenGlobalTypes.add(section.type)}
+ for(const section of document.globals){
+  if(!KNOWN_GLOBAL_SECTION_TYPES.has(section.type))issues.push(`Existe um bloco global não suportado: “${section.type}”.`);
+  if(seenGlobalTypes.has(section.type))issues.push(`Existe mais de um bloco global do tipo “${section.label}”.`);else seenGlobalTypes.add(section.type);
+ }
+ for(const required of KNOWN_GLOBAL_SECTION_TYPES)if(!seenGlobalTypes.has(required))issues.push(`O bloco global obrigatório “${required}” está ausente.`);
  return issues;
 }
