@@ -12,7 +12,9 @@ test('CRM ownership is selected by active canonical user id instead of free text
   assert.ok(app.includes('getOperationalTeamMembers'));
   assert.ok(app.includes('<OwnerField'));
   assert.ok(app.includes("value={draft.ownerUserId||''}"));
-  assert.ok(app.includes('member.id===id'));
+  assert.ok(app.includes('members.find((item)=>item.id===id)'));
+  assert.ok(app.includes("set('ownerUserId',id)"));
+  assert.ok(app.includes("set('owner',member?.name||'')"));
   assert.equal(app.includes('<Field label="Responsável"><input'),false);
 });
 
