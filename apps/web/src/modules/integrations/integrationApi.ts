@@ -15,6 +15,12 @@ export async function getIntegrationStatuses(signal?:AbortSignal){
   return INTEGRATION_REGISTRY.map(definition=>byId.get(definition.id)??{id:definition.id,state:'unconfigured' as const});
 }
 
+/**
+ * OAuth connect/reconnect endpoints must only return an official provider
+ * authorization URL plus non-secret connection metadata. Provider tokens are
+ * exchanged and persisted exclusively by the backend callback flow.
+ */
 export function connectIntegration(id:IntegrationId){return apiRequest(path(id,'connect'),{method:'POST',body:JSON.stringify({})},isActionResponse)}
+export function reconnectIntegration(id:IntegrationId){return apiRequest(path(id,'reconnect'),{method:'POST',body:JSON.stringify({})},isActionResponse)}
 export function disconnectIntegration(id:IntegrationId){return apiRequest(path(id,'disconnect'),{method:'POST',body:JSON.stringify({})},isActionResponse)}
 export function syncIntegration(id:IntegrationId){return apiRequest(path(id,'sync'),{method:'POST',body:JSON.stringify({})},isActionResponse)}
