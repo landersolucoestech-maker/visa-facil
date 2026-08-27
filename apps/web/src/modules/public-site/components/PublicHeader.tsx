@@ -1,7 +1,10 @@
 import { cmsList, cmsText, itemText, useGlobalSection } from '../content/SiteContentContext';
 
+function homeHref(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return `${base}/`||'/'}
+
 export function PublicHeader() {
   const section=useGlobalSection('header');
+  if(section&&!section.visible)return null;
   const values=section?.values||{};
   const primaryNav=cmsList(values.primaryNav);
   const visaMenu=cmsList(values.visaMenu);
@@ -23,7 +26,7 @@ export function PublicHeader() {
       </div>
       <header className="header" id="inicio">
         <div className="container header__inner">
-          <a className="logo" href="#inicio" aria-label={`${brandName}, página inicial`}>
+          <a className="logo" href={homeHref()} aria-label={`${brandName}, página inicial`}>
             {logoImage?<img className="logo__mark" src={logoImage} alt={brandName} style={{objectFit:'contain'}}/>:<svg className="logo__mark" viewBox="0 0 64 64" aria-hidden="true">
               <path d="M7 8h17l8 39L20 56 7 8Z" fill="#FFFFFF"></path>
               <path d="M29 19c7-6 15-9 26-10-1 6-4 11-9 15-6 4-11 6-17 8v-13Z" fill="#B22234"></path>
