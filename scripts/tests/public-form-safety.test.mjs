@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { isValidPublicFieldName, isValidPublicFieldType, safePublicFieldName, safePublicFieldType } from '../../apps/web/src/modules/public-site/content/publicFormSafety.ts';
+import { MAX_PUBLIC_FORM_FIELDS, MAX_PUBLIC_SELECT_OPTIONS, isValidPublicFieldName, isValidPublicFieldType, safePublicFieldName, safePublicFieldType, safePublicSelectOptions } from '../../apps/web/src/modules/public-site/content/publicFormSafety.ts';
 
 const contact=readFileSync(resolve(process.cwd(),'apps/web/src/modules/public-site/components/ContactSection.tsx'),'utf8');
 
@@ -25,9 +25,18 @@ test('public form field names reject reserved invalid and duplicate identities',
  assert.equal(safePublicFieldName('consent',2,used),'field-3');
 });
 
-test('public contact rendering never trusts CMS field name or input type directly',()=>{
+test('public select options and field rendering are bounded',()=>{
+ const options=Array.from({length:MAX_PUBLIC_SELECT_OPTIONS+25},(_,index)=>`Opção ${index+1}`).join('\n');
+ assert.equal(safePublicSelectOptions(options).length,MAX_PUBLIC_SELECT_OPTIONS);
+ assert.equal(MAX_PUBLIC_FORM_FIELDS,30);
+ assert.ok(contact.includes('fields.slice(0,MAX_PUBLIC_FORM_FIELDS)'));
+ assert.ok(contact.includes('safePublicSelectOptions'));
+});
+
+test('public contact rendering never trusts CMS field name input type or empty label directly',()=>{
  assert.ok(contact.includes('safePublicFieldName'));
  assert.ok(contact.includes('safePublicFieldType'));
  assert.ok(contact.includes('safeFields.map'));
+ assert.ok(contact.includes("itemText(item,'label').trim()||`Campo ${index+1}`"));
  assert.equal(contact.includes("const type=itemText(item,'type','text')"),false);
 });
