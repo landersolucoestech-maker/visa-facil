@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import './settings.css';
 import './settings-responsive.css';
 import './settings-layout.css';
+import './meta-integration.css';
 import { TABS, type Tab, Bell } from './settingsShared';
 import { CompanyTab, AutomationsTab } from './CompanyAutomationTabs';
 import { SecurityTab, IntegrationsTab } from './SecurityIntegrationTabs';
