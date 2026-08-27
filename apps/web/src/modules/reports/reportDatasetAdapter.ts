@@ -1,5 +1,5 @@
 import type { CrmRecord } from '../crm/types';
-import type { TaskPriority, TaskRecord, TaskStatus, RelatedType } from '../tasks/mocks/tasksMockProvider';
+import { taskArea, type TaskArea, type TaskPriority, type TaskRecord, type TaskStatus, type RelatedType } from '../tasks/mocks/tasksMockProvider';
 import type { AgendaEvent, AgendaStatus } from '../agenda/mocks/agendaMockProvider';
 import type { FinanceRecord, FinanceStatus, FinanceType } from '../finance/types';
 import { activeFinanceCategories } from '../finance/financeConfigStore';
@@ -31,7 +31,7 @@ const LEAD_COLUMNS=[
   'E-mail','Telefone','WhatsApp','Cidade','Estado','País','Status do lead','Temperatura','Responsável','Próxima ação','Data da próxima ação','Observações',
 ] as const;
 const ATTENDANCE_COLUMNS=['Nome do contato / lead','Canal','Telefone / usuário','Mensagem inicial'] as const;
-const TASK_COLUMNS=['Título','Responsável','Tipo de vínculo','Contato / Lead relacionado','Prioridade','Status','Data','Horário','Lembrete','Descrição'] as const;
+const TASK_COLUMNS=['Título','Responsável','Área','Tipo de vínculo','Contato / Lead relacionado','Prioridade','Status','Data','Horário','Lembrete','Descrição'] as const;
 const AGENDA_COLUMNS=['Título','Tipo','Status','Data','Início','Fim','Local','Cidade','Tipo de vínculo','Contato / Lead / Cliente','Responsável','Observações'] as const;
 const FINANCE_COLUMNS=['Descrição','Tipo','Categoria','Valor','Status','Data','Vencimento','Forma de pagamento','Cliente / contato relacionado','Observações'] as const;
 
@@ -56,6 +56,7 @@ const TEMPERATURE_OPTIONS=['Frio','Morno','Quente'] as const;
 const ATTENDANCE_CHANNELS=['WhatsApp','Instagram','Facebook','Website','E-mail'] as const;
 const TASK_STATUSES=['Pendente','Em andamento','Concluída'] as const;
 const TASK_PRIORITIES=['Baixa','Média','Alta'] as const;
+const TASK_AREAS=['Geral','Marketing'] as const;
 const TASK_RELATED_TYPES=['Contato','Lead'] as const;
 const TASK_REMINDERS=['Sem lembrete','15 minutos antes','30 minutos antes','1 hora antes','1 dia antes'] as const;
 const AGENDA_TYPES=['Entrevista consular','Reunião','Follow-up','Prazo documental','Ligação','Outro'] as const;
@@ -123,7 +124,7 @@ export function getReportRows(id:ReportDatasetId):ReportRow[]{
   'E-mail':record.email,'Telefone':record.phone,'WhatsApp':record.whatsapp,'Cidade':record.city,'Estado':record.state,'País':record.country,'Status do lead':record.leadStatus??'','Temperatura':record.temperature??'','Responsável':record.owner??'','Próxima ação':record.nextAction??'','Data da próxima ação':record.nextActionDate??'','Observações':record.notes,
  }));
  if(id==='attendance')return getAttendanceSessionConversations().filter(record=>getAttendanceConversationKind(record)==='customer').map(record=>({'Nome do contato / lead':record.customer,'Canal':record.channel,'Telefone / usuário':record.handle,'Mensagem inicial':record.messages[0]?.body??''}));
- if(id==='tasks')return getTaskSessionRecords().map(record=>({'Título':record.title,'Responsável':record.owner,'Tipo de vínculo':record.relatedType,'Contato / Lead relacionado':record.relatedName,'Prioridade':record.priority,'Status':record.status,'Data':record.dueDate,'Horário':record.dueTime,'Lembrete':record.reminder,'Descrição':record.description}));
+ if(id==='tasks')return getTaskSessionRecords().map(record=>({'Título':record.title,'Responsável':record.owner,'Área':taskArea(record),'Tipo de vínculo':record.relatedType,'Contato / Lead relacionado':record.relatedName,'Prioridade':record.priority,'Status':record.status,'Data':record.dueDate,'Horário':record.dueTime,'Lembrete':record.reminder,'Descrição':record.description}));
  if(id==='agenda')return getAgendaSessionEvents().map(record=>({'Título':record.title,'Tipo':record.type,'Status':record.status,'Data':record.date,'Início':record.startTime,'Fim':record.endTime,'Local':record.location,'Cidade':record.city,'Tipo de vínculo':record.relatedType,'Contato / Lead / Cliente':record.relatedName,'Responsável':record.owner,'Observações':record.notes}));
  return getFinanceSessionRecords().map(record=>({'Descrição':record.description,'Tipo':record.type,'Categoria':record.category,'Valor':record.amount.toFixed(2).replace('.',','),'Status':record.status,'Data':record.date,'Vencimento':record.dueDate,'Forma de pagamento':record.paymentMethod,'Cliente / contato relacionado':record.relatedName,'Observações':record.notes}));
 }
@@ -176,8 +177,8 @@ function importAttendance(rows:ReportRow[]):ImportResult{
 function importTasks(rows:ReportRow[]):ImportResult{
  const current=getTaskSessionRecords();const next=[...current];let imported=0;let updated=0;
  rows.forEach((row,index)=>{
-  const rowNumber=index+2;const title=required(row,'Título',rowNumber);const relatedType=canonicalOption(text(row,'Tipo de vínculo'),TASK_RELATED_TYPES,'Contato','Tipo de vínculo',rowNumber) as RelatedType;const relation=crmRelationSelection(text(row,'Contato / Lead relacionado'),relatedType,rowNumber,'Contato / Lead relacionado');const priority=canonicalOption(text(row,'Prioridade'),TASK_PRIORITIES,'Média','Prioridade',rowNumber) as TaskPriority;const status=canonicalOption(text(row,'Status'),TASK_STATUSES,'Pendente','Status',rowNumber) as TaskStatus;const dueDate=excelDate(text(row,'Data'),'Data',rowNumber,false);const dueTime=dueDate?excelTime(text(row,'Horário'),'Horário',rowNumber):'';const reminder=dueDate?canonicalOption(text(row,'Lembrete'),TASK_REMINDERS,'Sem lembrete','Lembrete',rowNumber):'Sem lembrete';if(!dueDate&&(text(row,'Horário')||text(row,'Lembrete')))throw new Error(`Linha ${rowNumber}: Horário e Lembrete exigem uma Data.`);const owner=ownerSelection(text(row,'Responsável'),rowNumber);const description=text(row,'Descrição');
-  const existingIndex=next.findIndex(record=>normalize(record.title)===normalize(title)&&record.relatedType===relatedType&&normalize(record.relatedName)===normalize(relation.relatedName)&&record.dueDate===dueDate&&record.dueTime===dueTime);const previous=existingIndex>=0?next[existingIndex]:undefined;const timestamp=nowIso();const record:TaskRecord={id:previous?.id??newId('task'),title,description,relatedType,relatedName:relation.relatedName,relatedRecordId:relation.relatedRecordId,owner:owner.owner,ownerUserId:owner.ownerUserId,priority,status,dueDate,dueTime,reminder,createdAt:previous?.createdAt??timestamp,updatedAt:timestamp};if(existingIndex>=0){next[existingIndex]=record;updated+=1}else{next.push(record);imported+=1}
+  const rowNumber=index+2;const title=required(row,'Título',rowNumber);const area=canonicalOption(text(row,'Área'),TASK_AREAS,'Geral','Área',rowNumber) as TaskArea;const relatedType=canonicalOption(text(row,'Tipo de vínculo'),TASK_RELATED_TYPES,'Contato','Tipo de vínculo',rowNumber) as RelatedType;const relation=crmRelationSelection(text(row,'Contato / Lead relacionado'),relatedType,rowNumber,'Contato / Lead relacionado');const priority=canonicalOption(text(row,'Prioridade'),TASK_PRIORITIES,'Média','Prioridade',rowNumber) as TaskPriority;const status=canonicalOption(text(row,'Status'),TASK_STATUSES,'Pendente','Status',rowNumber) as TaskStatus;const dueDate=excelDate(text(row,'Data'),'Data',rowNumber,false);const dueTime=dueDate?excelTime(text(row,'Horário'),'Horário',rowNumber):'';const reminder=dueDate?canonicalOption(text(row,'Lembrete'),TASK_REMINDERS,'Sem lembrete','Lembrete',rowNumber):'Sem lembrete';if(!dueDate&&(text(row,'Horário')||text(row,'Lembrete')))throw new Error(`Linha ${rowNumber}: Horário e Lembrete exigem uma Data.`);const owner=ownerSelection(text(row,'Responsável'),rowNumber);const description=text(row,'Descrição');
+  const existingIndex=next.findIndex(record=>normalize(record.title)===normalize(title)&&taskArea(record)===area&&record.relatedType===relatedType&&normalize(record.relatedName)===normalize(relation.relatedName)&&record.dueDate===dueDate&&record.dueTime===dueTime);const previous=existingIndex>=0?next[existingIndex]:undefined;const timestamp=nowIso();const record:TaskRecord={id:previous?.id??newId('task'),title,description,area,relatedType,relatedName:relation.relatedName,relatedRecordId:relation.relatedRecordId,owner:owner.owner,ownerUserId:owner.ownerUserId,priority,status,dueDate,dueTime,reminder,createdAt:previous?.createdAt??timestamp,updatedAt:timestamp};if(existingIndex>=0){next[existingIndex]=record;updated+=1}else{next.push(record);imported+=1}
  });
  const saved=saveTaskSessionRecords(next);assertPersisted(saved,getTaskSessionRecords(),'tarefas');return{imported,updated,total:rows.length};
 }
