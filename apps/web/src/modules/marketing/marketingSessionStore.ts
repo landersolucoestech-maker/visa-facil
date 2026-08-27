@@ -1,6 +1,6 @@
 import { getMarketingMockFixture, type MarketingMockCampaign, type MarketingMockContent } from './mocks/marketingMockProvider';
 import { readSessionRecords } from '../../shared/sessionRecords';
-import { safeWriteSessionRecords } from '../../shared/sessionPersistence';
+import { safeWriteSessionRecords as writeSessionRecordsSafely } from '../../shared/sessionPersistence';
 
 export type Platform='Instagram'|'Facebook'|'TikTok'|'YouTube'|'X'|'Threads';
 export type PaidPlatform='Meta Ads'|'Google Ads'|'YouTube Ads'|'TikTok Ads';
@@ -134,6 +134,6 @@ function migrateStoredRecords(key:string,upgrade:(value:unknown)=>unknown,valida
 }
 
 export function getMarketingSessionContents(){migrateStoredRecords(CONTENT_KEY,upgradeStoredContent,isMarketingContent);return readSessionRecords<ContentItem>(CONTENT_KEY,()=>fixture().contents.map(seedContent),isMarketingContent)}
-export function saveMarketingSessionContents(records:ContentItem[]){return safeWriteSessionRecords<ContentItem>(CONTENT_KEY,records,isMarketingContent)}
+export function saveMarketingSessionContents(records:ContentItem[]){return writeSessionRecordsSafely<ContentItem>(CONTENT_KEY,records,isMarketingContent)}
 export function getMarketingSessionCampaigns(){migrateStoredRecords(CAMPAIGN_KEY,upgradeStoredCampaign,isMarketingCampaign);return readSessionRecords<Campaign>(CAMPAIGN_KEY,()=>fixture().campaigns.map(seedCampaign),isMarketingCampaign)}
-export function saveMarketingSessionCampaigns(records:Campaign[]){return safeWriteSessionRecords<Campaign>(CAMPAIGN_KEY,records,isMarketingCampaign)}
+export function saveMarketingSessionCampaigns(records:Campaign[]){return writeSessionRecordsSafely<Campaign>(CAMPAIGN_KEY,records,isMarketingCampaign)}
