@@ -77,6 +77,8 @@ test('CMS media UI blocks unsafe URLs, unsafe upload formats and removal of refe
   assert.ok(resources.includes('Tipo de arquivo não suportado. Envie PNG, JPEG, GIF, WebP, AVIF ou PDF.'));
   assert.ok(resources.includes('SAFE_MEDIA_UPLOAD_ACCEPT'));
   assert.equal(resources.includes('accept="image/*'),false);
+  assert.ok(resources.includes('cmsImageSrc(asset.url)'));
+  assert.equal(resources.includes('src={asset.url}'),false);
 });
 
 test('CMS settings and SEO surface invalid publishable metadata while editing',()=>{
