@@ -22,11 +22,13 @@ test('global notification helper reuses the existing disabled bell and anchors i
     'document.body',
     "window.addEventListener('resize', updatePosition)",
     "window.addEventListener('scroll', updatePosition, true)",
-    "event.key === 'Escape'",
     'MutationObserver',
   ]) {
     assert.ok(helper.includes(token), `missing ${token}`);
   }
+  assert.match(helper, /event\.key\s*!==\s*['"]Escape['"]/, 'notification escape guard must remain explicit');
+  assert.ok(helper.includes('setOpen(false)'), 'Escape must close the notification panel');
+  assert.ok(helper.includes('requestAnimationFrame(() => target.focus())'), 'Escape must restore focus to the notification trigger');
   assert.ok(styles.includes('position:fixed'));
   assert.ok(!styles.includes('right:0'));
   assert.ok(!helper.includes('function BellIcon'));
