@@ -98,6 +98,10 @@ try{
  await assertBrowser(`document.body.textContent?.includes('Vivo')&&document.body.textContent?.includes('TIM')&&document.body.textContent?.includes('Claro')`,'traditional telephony provider targets');
  await assertBrowser(`document.body.textContent?.includes('Twilio')&&document.body.textContent?.includes('Dialpad')&&document.body.textContent?.includes('RingCentral')`,'IP communication provider targets');
  await assertBrowser(`document.body.textContent?.includes('Backend necessário')`,'telephony integration remains truthful while backend is absent');
+ await waitFor(`document.body.textContent?.includes('Produtos / canais: Facebook · Instagram · Messenger · Meta Ads')`,'unified Meta provider hierarchy');
+ await assertBrowser(`(()=>{const names=[...document.querySelectorAll('.settings-integration-copy>strong')].map(item=>item.textContent?.trim());return names.filter(name=>name==='Meta').length===1&&!names.includes('Facebook')&&!names.includes('Instagram')})()`,'Facebook and Instagram are not independent integration rows');
+ await assertBrowser(`document.body.textContent?.includes('Autorização: fluxo oficial Meta')`,'Meta official authorization label');
+ await assertBrowser(`document.body.textContent?.includes('Meta App ID, Meta App Secret, OAuth, tokens, webhook, Graph API e estado geral pertencem ao provider Meta')`,'Meta shared technical configuration disclosure');
 
  console.log('CRM browser interaction smoke passed.');
 }finally{
