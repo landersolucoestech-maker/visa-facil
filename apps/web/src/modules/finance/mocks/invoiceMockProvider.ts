@@ -20,6 +20,7 @@ export type InvoiceSeed = {
   id: string;
   invoiceNumber?: string;
   customer?: string;
+  customerRecordId?: string;
   billingContact?: string;
   service?: string;
   processRef?: string;
@@ -55,7 +56,7 @@ const VALID_STATUSES = new Set<InvoiceSeedStatus>(['Rascunho', 'Pronta', 'Enviad
 const VALID_DIRECTIONS = new Set<InvoiceSeedDirection>(['Entrada', 'Saída']);
 const VALID_SETTLEMENT_STATUSES = new Set<InvoiceSeedSettlementStatus>(['Liquidado', 'Pendente', 'Cancelado']);
 const NUMERIC_FIELDS = ['quantity', 'unitValue', 'serviceFee', 'consularFee', 'translationFee', 'courierFee', 'thirdPartyFee', 'otherCharges', 'discounts', 'tax', 'taxBase', 'icms', 'ipi', 'pis', 'cofins', 'iss', 'withheldTaxes', 'freight', 'insurance', 'otherFiscalExpenses', 'paid'] as const;
-const TEXT_FIELDS = ['invoiceNumber', 'customer', 'billingContact', 'service', 'processRef', 'referenceNumbers', 'destination', 'visaType', 'processStage', 'appointmentDate', 'travelDate', 'natureOfOperation', 'series', 'fiscalNumber', 'accessKey', 'issueDate', 'operationDate', 'dueDate', 'fiscalStatus', 'issuerName', 'issuerDocument', 'issuerStateRegistration', 'issuerMunicipalRegistration', 'issuerAddress', 'issuerCity', 'issuerState', 'issuerZip', 'recipientName', 'recipientDocument', 'recipientStateRegistration', 'recipientAddress', 'recipientCity', 'recipientState', 'recipientZip', 'supplierName', 'supplierDocument', 'supplierInvoiceNumber', 'supplierSeries', 'supplierAccessKey', 'purchaseOrderRef', 'receiptDate', 'entryPurpose', 'customerOrderRef', 'deliveryAddress', 'shippingMethod', 'departureDate', 'salePurpose', 'cfop', 'serviceCode', 'ncm', 'cstCsosn', 'unit', 'paymentTerms', 'relatedDocuments', 'notes', 'instructions', 'additionalInfo'] as const;
+const TEXT_FIELDS = ['invoiceNumber', 'customer', 'customerRecordId', 'billingContact', 'service', 'processRef', 'referenceNumbers', 'destination', 'visaType', 'processStage', 'appointmentDate', 'travelDate', 'natureOfOperation', 'series', 'fiscalNumber', 'accessKey', 'issueDate', 'operationDate', 'dueDate', 'fiscalStatus', 'issuerName', 'issuerDocument', 'issuerStateRegistration', 'issuerMunicipalRegistration', 'issuerAddress', 'issuerCity', 'issuerState', 'issuerZip', 'recipientName', 'recipientDocument', 'recipientStateRegistration', 'recipientAddress', 'recipientCity', 'recipientState', 'recipientZip', 'supplierName', 'supplierDocument', 'supplierInvoiceNumber', 'supplierSeries', 'supplierAccessKey', 'purchaseOrderRef', 'receiptDate', 'entryPurpose', 'customerOrderRef', 'deliveryAddress', 'shippingMethod', 'departureDate', 'salePurpose', 'cfop', 'serviceCode', 'ncm', 'cstCsosn', 'unit', 'paymentTerms', 'relatedDocuments', 'notes', 'instructions', 'additionalInfo'] as const;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
