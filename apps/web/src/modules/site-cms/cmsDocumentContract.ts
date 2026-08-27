@@ -41,6 +41,29 @@ export function isValidCmsSchedule(value:string){
  return Number.isFinite(new Date(value).getTime());
 }
 
+export function isSafeCmsExternalUrl(value:string){
+ const trimmed=value.trim();
+ if(!trimmed)return false;
+ try{const parsed=new URL(trimmed);return parsed.protocol==='https:'||parsed.protocol==='http:'}catch{return false}
+}
+
+function cmsValueReferenceCount(value:CmsValue,url:string){
+ if(typeof value==='string')return value===url?1:0;
+ if(typeof value==='boolean')return 0;
+ return value.reduce((total,item)=>total+Object.values(item).reduce((sum,entry)=>sum+(typeof entry==='string'&&entry===url?1:0),0),0);
+}
+
+export function cmsMediaReferenceCount(document:CmsDocument,url:string){
+ if(!url)return 0;
+ let count=document.settings.defaultOgImage===url?1:0;
+ for(const page of document.pages){
+  if(page.seo.ogImage===url)count+=1;
+  for(const section of page.sections)for(const value of Object.values(section.values))count+=cmsValueReferenceCount(value,url);
+ }
+ for(const section of document.globals)for(const value of Object.values(section.values))count+=cmsValueReferenceCount(value,url);
+ return count;
+}
+
 export function cmsPublicationIssues(document:CmsDocument){
  const issues:string[]=[];
  const seenSlugs=new Map<string,string>();
