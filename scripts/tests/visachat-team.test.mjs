@@ -108,10 +108,14 @@ test('VisaChat team participants come from active canonical settings users', () 
   assert.equal(members.some((member) => member.id === 'u-1'), true);
 });
 
-test('session persistence does not crash the UI when browser storage quota fails', () => {
+test('strict session writes expose quota failures while the operational UI layer stays alive', () => {
   const throwingStorage = { getItem: () => null, setItem: () => { throw new Error('quota'); }, removeItem: () => {}, clear: () => {} };
   withSessionStorage(throwingStorage, () => {
-    assert.doesNotThrow(() => sessionRecords.writeSessionRecords('quota-test', [{ id: 'x' }], (value) => Boolean(value && typeof value === 'object' && value.id === 'x')));
+    assert.throws(
+      () => sessionRecords.writeSessionRecords('quota-test', [{ id: 'x' }], (value) => Boolean(value && typeof value === 'object' && value.id === 'x')),
+      (error) => error instanceof sessionRecords.SessionRecordPersistenceError,
+    );
+    assert.doesNotThrow(() => store.saveAttendanceSessionConversations([team]));
   });
 });
 
