@@ -20,7 +20,7 @@ const MAIN_ITEMS:NavItem[] = [
 
 const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
   {label:'Transações',href:'/crm/financeiro/transacoes',section:'transactions'},
-  {label:'Invoices',href:'/crm/financeiro/invoices',section:'invoices'},
+  {label:'Notas Fiscais',href:'/crm/financeiro/invoices',section:'invoices'},
   {label:'Contabilidade',href:'/crm/financeiro/pl',section:'pl'},
 ];
 
@@ -46,7 +46,7 @@ function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path=
 function BrandMark(){return <span className="crm-brand-mark" aria-hidden="true"><i/><b/></span>}
 
 function NavLink({item,active}:{item:NavItem;active:boolean}){
- return <a className={active?'is-active':''} href={href(item.href)}><AppSidebarIcon name={item.icon}/><span>{item.label}</span></a>
+ return <a className={active?'is-active':''} aria-current={active?'page':undefined} href={href(item.href)}><AppSidebarIcon name={item.icon}/><span>{item.label}</span></a>
 }
 
 export function CrmSidebar(){
@@ -63,15 +63,15 @@ export function CrmSidebar(){
   </div>
   <div className="crm-sidebar-body">
    <span className="crm-sidebar-label">Navegação</span>
-   <nav>
+   <nav aria-label="Navegação principal do CRM">
     {MAIN_ITEMS.map(item=><NavLink key={item.href} item={item} active={isActive(path,item.href)}/>)}
     <div className={`crm-sidebar-group${isFinance?' is-active':''}`}>
-     <button type="button" className={`crm-sidebar-group__trigger${isFinance?' is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen}><AppSidebarIcon name="finance"/><span>Financeiro</span><AppSidebarIcon name="chevron" className={financeOpen?'is-open':''}/></button>
-     {financeOpen&&<div className="crm-sidebar-subnav">{FINANCE_ITEMS.map(item=><a key={item.href} className={isFinance&&fSection===item.section?'is-active':''} href={href(item.href)}><span>{item.label}</span></a>)}</div>}
+     <button type="button" className={`crm-sidebar-group__trigger${isFinance?' is-active':''}`} onClick={()=>setFinanceOpen(v=>!v)} aria-expanded={financeOpen} aria-controls="crm-finance-subnav"><AppSidebarIcon name="finance"/><span>Financeiro</span><AppSidebarIcon name="chevron" className={financeOpen?'is-open':''}/></button>
+     {financeOpen&&<div className="crm-sidebar-subnav" id="crm-finance-subnav" aria-label="Financeiro">{FINANCE_ITEMS.map(item=>{const active=isFinance&&fSection===item.section;return <a key={item.href} className={active?'is-active':''} aria-current={active?'page':undefined} href={href(item.href)}><span>{item.label}</span></a>})}</div>}
     </div>
     <div className={`crm-sidebar-group${isMarketing?' is-active':''}`}>
-     <button type="button" className={`crm-sidebar-group__trigger${isMarketing?' is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen}><AppSidebarIcon name="marketing"/><span>Marketing</span><AppSidebarIcon name="chevron" className={marketingOpen?'is-open':''}/></button>
-     {marketingOpen&&<div className="crm-sidebar-subnav">{MARKETING_ITEMS.map(item=><a key={item.href} className={isMarketing&&mSection===item.section?'is-active':''} href={href(item.href)}><span>{item.label}</span></a>)}</div>}
+     <button type="button" className={`crm-sidebar-group__trigger${isMarketing?' is-active':''}`} onClick={()=>setMarketingOpen(v=>!v)} aria-expanded={marketingOpen} aria-controls="crm-marketing-subnav"><AppSidebarIcon name="marketing"/><span>Marketing</span><AppSidebarIcon name="chevron" className={marketingOpen?'is-open':''}/></button>
+     {marketingOpen&&<div className="crm-sidebar-subnav" id="crm-marketing-subnav" aria-label="Marketing">{MARKETING_ITEMS.map(item=>{const active=isMarketing&&mSection===item.section;return <a key={item.href} className={active?'is-active':''} aria-current={active?'page':undefined} href={href(item.href)}><span>{item.label}</span></a>})}</div>}
     </div>
     {AFTER_ITEMS.map(item=><NavLink key={item.href} item={item} active={isActive(path,item.href)}/>)}
    </nav>
