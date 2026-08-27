@@ -80,6 +80,8 @@ export function signOut() {
   }
 }
 
+function isPathAtOrBelow(path:string,prefix:string){return path===prefix||path.startsWith(`${prefix}/`)}
+
 export function isInternalPath(path: string) {
-  return path === '/workspaces' || path.startsWith('/crm') || path.startsWith('/site-admin') || path === '/preview';
+  return path === '/workspaces' || isPathAtOrBelow(path,'/crm') || isPathAtOrBelow(path,'/site-admin') || path === '/preview';
 }
