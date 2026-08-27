@@ -83,7 +83,7 @@ export function TableViewPagination() {
       paginationMount = document.createElement('div');
       paginationMount.className = 'tableview-pagination-mount';
       paginationMount.dataset.paginationFor = config.label;
-      container.insertAdjacentElement('afterend', paginationMount);
+      container.insertAdjacentElement('beforeend', paginationMount);
       setMount(paginationMount);
 
       const sync = () => {
