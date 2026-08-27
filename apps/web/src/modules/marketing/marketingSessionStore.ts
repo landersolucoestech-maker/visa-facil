@@ -3,8 +3,8 @@ import { readSessionRecords } from '../../shared/sessionRecords';
 import { safeWriteSessionRecords as writeSessionRecordsSafely } from '../../shared/sessionPersistence';
 
 export type Platform='Instagram'|'Facebook'|'TikTok'|'YouTube'|'X'|'Threads';
-export type PaidPlatform='Meta Ads'|'Google Ads'|'YouTube Ads'|'TikTok Ads';
-export type ContentItem={id:string;date:string;time:string;title:string;channels:Platform[];primaryChannel:Platform;type:string;status:string;owner:string;copy:string;mediaName?:string};
+export type PaidPlatform='Meta Ads'|'Google Ads'|'TikTok Ads';
+export type ContentItem={id:string;date:string;time:string;title:string;channels:Platform[];primaryChannel:Platform;type:string;status:string;owner:string;ownerUserId?:string;copy:string;mediaName?:string};
 export type Campaign={
  id:string;
  name:string;
@@ -39,7 +39,7 @@ export type Campaign={
 const CONTENT_KEY='visa-facil.session.marketing.contents.v2';
 const CAMPAIGN_KEY='visa-facil.session.marketing.campaigns.v2';
 const PUBLISH_PLATFORMS=new Set<Platform>(['Instagram','Facebook','TikTok','YouTube','X','Threads']);
-const PAID_PLATFORMS=new Set<PaidPlatform>(['Meta Ads','Google Ads','YouTube Ads','TikTok Ads']);
+const PAID_PLATFORMS=new Set<PaidPlatform>(['Meta Ads','Google Ads','TikTok Ads']);
 const CONTENT_STATUSES=new Set(['Agendado','Produção','Revisão','Publicado']);
 const CAMPAIGN_STATUSES=new Set(['Rascunho','Agendada','Ativa','Pausada']);
 const CAMPAIGN_OBJECTIVES=new Set(['Alcance','Tráfego','Engajamento','Conversões']);
@@ -66,13 +66,17 @@ function unique(values:string[]){return new Set(values).size===values.length}
 function normalizeObjective(value:unknown){if(value==='Geração de leads')return'Conversões';return typeof value==='string'&&CAMPAIGN_OBJECTIVES.has(value)?value:'Conversões'}
 function defaultResult(objective:unknown){const canonical=normalizeObjective(objective);return RESULTS_BY_OBJECTIVE[canonical]?.[0]??'Leads'}
 function normalizeResult(objective:unknown,value:unknown){const canonical=normalizeObjective(objective);return typeof value==='string'&&RESULTS_BY_OBJECTIVE[canonical]?.includes(value)?value:defaultResult(canonical)}
+function normalizePaidPlatform(value:unknown):PaidPlatform|undefined{
+ if(value==='YouTube Ads'||value==='YouTube')return'Google Ads';
+ return typeof value==='string'&&PAID_PLATFORMS.has(value as PaidPlatform)?value as PaidPlatform:undefined;
+}
 
 export function isMarketingContent(value:unknown):value is ContentItem{
  if(!isObject(value)||typeof value.id!=='string'||!value.id.trim()||typeof value.date!=='string'||!DATE_RE.test(value.date)||typeof value.time!=='string'||!TIME_RE.test(value.time)||typeof value.title!=='string'||!value.title.trim())return false;
  if(!Array.isArray(value.channels)||value.channels.length===0||!value.channels.every(channel=>typeof channel==='string'&&PUBLISH_PLATFORMS.has(channel as Platform))||!unique(value.channels as string[]))return false;
  if(typeof value.primaryChannel!=='string'||!PUBLISH_PLATFORMS.has(value.primaryChannel as Platform)||!(value.channels as string[]).includes(value.primaryChannel))return false;
  if(typeof value.type!=='string'||!CONTENT_FORMATS[value.primaryChannel as Platform].has(value.type))return false;
- return typeof value.status==='string'&&CONTENT_STATUSES.has(value.status)&&typeof value.owner==='string'&&typeof value.copy==='string'&&(value.mediaName===undefined||typeof value.mediaName==='string');
+ return typeof value.status==='string'&&CONTENT_STATUSES.has(value.status)&&typeof value.owner==='string'&&(value.ownerUserId===undefined||typeof value.ownerUserId==='string')&&typeof value.copy==='string'&&(value.mediaName===undefined||typeof value.mediaName==='string');
 }
 
 export function isMarketingCampaign(value:unknown):value is Campaign{
@@ -89,8 +93,7 @@ export function isMarketingCampaign(value:unknown):value is Campaign{
 }
 
 function paidPlatform(channel:MarketingMockCampaign['channel']):PaidPlatform{
- if(channel==='Google Ads')return'Google Ads';
- if(channel==='YouTube')return'YouTube Ads';
+ if(channel==='Google Ads'||channel==='YouTube')return'Google Ads';
  if(channel==='TikTok')return'TikTok Ads';
  return'Meta Ads';
 }
@@ -102,15 +105,18 @@ function upgradeStoredContent(value:unknown):unknown{
  if(!isObject(value))return value;
  const primaryChannel=typeof value.primaryChannel==='string'?value.primaryChannel:'';
  const type=primaryChannel==='Facebook'&&value.type==='Post'?'Feed':value.type;
- return {...value,type};
+ return {...value,type,ownerUserId:typeof value.ownerUserId==='string'?value.ownerUserId:undefined};
 }
 function upgradeStoredCampaign(value:unknown):unknown{
  if(!isObject(value))return value;
  const objective=normalizeObjective(value.objective);
+ const rawPlatforms=Array.isArray(value.paidPlatforms)?value.paidPlatforms:[];
+ const paidPlatforms=Array.from(new Set(rawPlatforms.map(normalizePaidPlatform).filter((platform):platform is PaidPlatform=>Boolean(platform))));
  return {
   ...value,
   objective,
   result:normalizeResult(objective,value.result),
+  paidPlatforms,
   location:typeof value.location==='string'?value.location:'Brasil',
   gender:typeof value.gender==='string'?value.gender:'Todos',
   languages:typeof value.languages==='string'?value.languages:'Português',
