@@ -2,7 +2,7 @@ import raw from '../../../mocks/settings/settings.dev.json';
 import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 import type { AutomationKey, Company, Role, UserRecord } from '../settingsShared';
 
-const AUTOMATION_KEYS:AutomationKey[]=['email','push','newLead','leadFollowup','financeMovement','weeklyFinance','weeklyReport','criticalAlerts','operational','backup'];
+const AUTOMATION_KEYS:AutomationKey[]=['email','sms','push','newLead','leadFollowup','financeMovement','weeklyFinance','weeklyReport','criticalAlerts','operational','backup'];
 const USER_STATUSES=new Set<UserRecord['status']>(['Ativo','Inativo','Pendente']);
 function isObject(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
 function isString(value:unknown):value is string{return typeof value==='string'}
