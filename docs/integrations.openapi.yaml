@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Visa Fácil Integration API Contract
-  version: 1.1.0
+  version: 1.2.0
   description: >-
     Contract for the future server-side API. This repository currently provides
     the frontend consumer and domain contracts only; this document does not
@@ -322,7 +322,7 @@ components:
   schemas:
     IntegrationId:
       type: string
-      enum: [whatsapp, telephony-sms, autentique, nfse, instagram, facebook, youtube, tiktok, google-ads, google-calendar]
+      enum: [whatsapp, telephony-sms, autentique, nfse, meta, youtube, tiktok, google-ads, google-calendar]
     IntegrationState:
       type: string
       enum: [unconfigured, disconnected, connecting, connected, degraded, error]
@@ -347,6 +347,62 @@ components:
         lastSyncAt: { type: string, format: date-time }
         errorCode: { type: string }
         errorMessage: { type: string }
+        metaProducts:
+          type: array
+          description: >-
+            Product/channel states inside the single Meta provider. These entries
+            never represent independent Facebook or Instagram integrations.
+          items: { $ref: '#/components/schemas/MetaProductStatus' }
+        metaAssets:
+          type: array
+          description: Authorized Meta assets with product-level scope/capability metadata.
+          items: { $ref: '#/components/schemas/MetaAssetStatus' }
+    MetaProductId:
+      type: string
+      enum: [facebook, instagram, messenger, meta-ads]
+    MetaProductState:
+      type: string
+      enum: [unconfigured, disconnected, connected, unavailable, degraded, error]
+    MetaProductStatus:
+      type: object
+      additionalProperties: false
+      required: [id, state]
+      properties:
+        id: { $ref: '#/components/schemas/MetaProductId' }
+        state: { $ref: '#/components/schemas/MetaProductState' }
+        assetIds:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        grantedScopes:
+          type: array
+          items: { type: string }
+        authorizedCapabilities:
+          type: array
+          items: { type: string }
+        errorCode: { type: string }
+        errorMessage: { type: string }
+    MetaAssetKind:
+      type: string
+      enum: [facebook-page, instagram-account, business-portfolio, ad-account, other]
+    MetaAssetStatus:
+      type: object
+      additionalProperties: false
+      required: [id, kind]
+      properties:
+        id: { type: string, minLength: 1 }
+        kind: { $ref: '#/components/schemas/MetaAssetKind' }
+        label: { type: string }
+        productIds:
+          type: array
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/MetaProductId' }
+        grantedScopes:
+          type: array
+          items: { type: string }
+        authorizedCapabilities:
+          type: array
+          items: { type: string }
     IntegrationListResponse:
       type: object
       additionalProperties: false
