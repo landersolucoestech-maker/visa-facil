@@ -117,6 +117,11 @@ try{
  await assertBrowser(`document.querySelector('.reports-import-modal')?.textContent?.includes('Baixar template XLSX completo')`,'reports complete XLSX template action');
 
  await navigate('/crm/configuracoes');
+ await clickButton('Automações');
+ await waitFor(`document.body.textContent?.includes('Canais de Notificação')`,'automation notification channels');
+ await assertBrowser(`(()=>{const tile=[...document.querySelectorAll('.settings-channel-grid>div')].find(item=>item.querySelector('strong')?.textContent?.trim()==='SMS');const toggle=tile?.querySelector('button.settings-toggle');return !!toggle&&!toggle.disabled})()`,'SMS can be modeled as a future notification preference');
+ await assertBrowser(`document.body.textContent?.includes('não disparam e-mails, SMS, push, backups ou jobs')`,'SMS preference remains non-executable without backend');
+
  await clickButton('Integrações');
  await waitFor(`document.body.textContent?.includes('Telefonia e SMS')`,'telephony and SMS integration row');
  await assertBrowser(`document.body.textContent?.includes('Camada de integração agnóstica para conexão com operadoras de telefonia e provedores de comunicação via internet')`,'telephony architecture description');
