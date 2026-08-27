@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type InvoiceSeed } from './mocks/invoiceMockProvider';
 import { getInvoiceSessionSeeds, saveInvoiceSessionSeeds } from './invoiceSessionStore';
 
@@ -77,6 +77,18 @@ function SearchIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden=
 function PaymentIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 10h18M7 14h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>; }
 function DocumentIcon() { return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M14 3v5h5M10 12h5M10 16h5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>; }
 
+function useDialogEscape(close: () => void) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      close();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [close]);
+}
+
 function Field({ label, children, wide = false }: { label: string; children: ReactNode; wide?: boolean }) {
   return <label className={wide ? 'is-wide' : ''}><span>{label}</span>{children}</label>;
 }
@@ -85,11 +97,13 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function InvoiceDocument({ record, close }: { record: Invoice; close: () => void }) {
+  const titleId = useId();
+  useDialogEscape(close);
   return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="fiscal-document-modal invoice-document-modal">
+    <div className="fiscal-document-modal invoice-document-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className="fiscal-document-actions"><button className="crm-btn-secondary" type="button" onClick={() => window.print()}>Imprimir / PDF</button><button className="crm-btn-secondary" type="button" onClick={close}>Fechar</button></div>
       <article className="fiscal-document-sheet">
-        <header className="fiscal-doc-header"><div><small>DOCUMENTO FISCAL · PROTÓTIPO</small><h1>Nota Fiscal de {record.noteDirection}</h1><p>{record.natureOfOperation || '—'}</p></div><div className="fiscal-doc-number"><span>Nº</span><strong>{record.fiscalNumber || record.invoiceNumber}</strong><small>Série {record.series || '—'}</small></div></header>
+        <header className="fiscal-doc-header"><div><small>DOCUMENTO FISCAL · PROTÓTIPO</small><h1 id={titleId}>Nota Fiscal de {record.noteDirection}</h1><p>{record.natureOfOperation || '—'}</p></div><div className="fiscal-doc-number"><span>Nº</span><strong>{record.fiscalNumber || record.invoiceNumber}</strong><small>Série {record.series || '—'}</small></div></header>
         <section className="fiscal-doc-key"><span>Chave de acesso</span><strong>{record.noteDirection === 'Entrada' ? (record.supplierAccessKey || record.accessKey || 'Não informada') : (record.accessKey || 'Não informada')}</strong><b>{record.fiscalStatus}</b></section>
         <section className="fiscal-doc-parties">{record.noteDirection === 'Entrada' ? <><div><h3>Fornecedor / remetente</h3><strong>{record.supplierName || record.issuerName || '—'}</strong><p>{record.supplierDocument || record.issuerDocument || '—'}</p><p>NF fornecedor {record.supplierInvoiceNumber || '—'} · Série {record.supplierSeries || '—'}</p></div><div><h3>Destinatário / estabelecimento</h3><strong>{record.recipientName || 'VISA FÁCIL'}</strong><p>{record.recipientDocument || '—'}</p><p>Recebimento {date(record.receiptDate)}</p></div></> : <><div><h3>Emitente</h3><strong>{record.issuerName || 'VISA FÁCIL'}</strong><p>{record.issuerDocument || '—'}</p><p>{record.issuerAddress || '—'}</p></div><div><h3>Destinatário / cliente</h3><strong>{record.recipientName || record.customer}</strong><p>{record.recipientDocument || '—'}</p><p>{record.recipientAddress || '—'}</p></div></>}</section>
         <section className="fiscal-doc-meta"><div><span>Emissão</span><b>{date(record.issueDate)}</b></div><div><span>{record.noteDirection === 'Entrada' ? 'Recebimento' : 'Saída'}</span><b>{date(record.noteDirection === 'Entrada' ? record.receiptDate : record.departureDate)}</b></div><div><span>CFOP</span><b>{record.cfop || '—'}</b></div><div><span>Cód. serviço</span><b>{record.serviceCode || '—'}</b></div></section>
@@ -100,10 +114,12 @@ function InvoiceDocument({ record, close }: { record: Invoice; close: () => void
 }
 
 function InvoiceDetail({ record, close, edit, registerPayment, document }: { record: Invoice; close: () => void; edit: () => void; registerPayment: () => void; document: () => void }) {
+  const titleId = useId();
+  useDialogEscape(close);
   const currentStatus = visibleStatus(record);
   return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="invoice-detail-modal">
-      <header className="invoice-detail-header"><div><span>INVOICE</span><h2>{record.invoiceNumber}</h2><p>{record.customer} · {record.service || 'Serviço não informado'}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+    <div className="invoice-detail-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <header className="invoice-detail-header"><div><span>INVOICE</span><h2 id={titleId}>{record.invoiceNumber}</h2><p>{record.customer} · {record.service || 'Serviço não informado'}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
       <section className="invoice-detail-summary"><div><span>Total</span><strong>{money(total(record))}</strong></div><div><span>Recebido</span><strong>{money(record.paid)}</strong></div><div><span>Saldo</span><strong className={balance(record) > 0 ? 'is-outstanding' : ''}>{money(balance(record))}</strong></div><div><span>Status</span><b className={`invoice-status is-${statusClass(currentStatus)}`}>{currentStatus}</b></div></section>
       <section className="invoice-detail-grid"><div><span>Cliente</span><strong>{record.customer || '—'}</strong><small>{record.billingContact || 'Contato de cobrança não informado'}</small></div><div><span>Processo</span><strong>{record.processRef || '—'}</strong><small>{record.referenceNumbers || 'Sem outras referências'}</small></div><div><span>Emissão</span><strong>{date(record.issueDate)}</strong><small>{record.noteDirection === 'Entrada' ? 'Nota de entrada' : 'Nota de saída'}</small></div><div><span>Vencimento</span><strong className={isOverdue(record) ? 'is-overdue' : ''}>{date(record.dueDate)}</strong><small>{isOverdue(record) ? 'Pagamento em atraso' : record.paymentTerms || 'Prazo não informado'}</small></div></section>
       <section className="invoice-payment-history"><header><div><h3>Pagamentos</h3><p>Histórico financeiro desta invoice.</p></div><strong>{record.payments.length}</strong></header>{record.payments.length ? <div>{record.payments.map((payment) => <article key={payment.id}><div><strong>{money(payment.amount)}</strong><small>{payment.method}</small></div><span>{date(payment.date)}</span><b>{payment.settlementStatus}</b></article>)}</div> : <p className="invoice-empty-copy">Nenhum pagamento registrado.</p>}</section>
@@ -113,14 +129,16 @@ function InvoiceDetail({ record, close, edit, registerPayment, document }: { rec
 }
 
 function InvoiceForm({ mode, record, close, save }: { mode: 'create' | 'edit'; record?: Invoice; close: () => void; save: (draft: Draft) => void }) {
+  const titleId = useId();
+  useDialogEscape(close);
   const [draft, setDraft] = useState<Draft>(() => record ? (({ id: _id, payments: _payments, ...rest }) => rest)(record) : EMPTY);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
   const invalidDates = Boolean(draft.issueDate && draft.dueDate && draft.dueDate < draft.issueDate);
   const invalidPaidBalance = draft.paid - total(draft) > 0.0001;
   const invalid = !draft.customer.trim() || invalidDates || invalidPaidBalance;
   return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="finance-invoice-form invoice-refined-form">
-      <header><div><span>{mode === 'create' ? 'NOVA INVOICE' : 'EDITAR INVOICE'}</span><h2>{mode === 'create' ? 'Criar invoice / nota fiscal' : record?.invoiceNumber}</h2><p>Organize os dados comerciais, fiscais e financeiros do documento.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+    <div className="finance-invoice-form invoice-refined-form" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <header><div><span>{mode === 'create' ? 'NOVA INVOICE' : 'EDITAR INVOICE'}</span><h2 id={titleId}>{mode === 'create' ? 'Criar invoice / nota fiscal' : record?.invoiceNumber}</h2><p>Organize os dados comerciais, fiscais e financeiros do documento.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
       <form onSubmit={(event) => { event.preventDefault(); if (!invalid) save(draft); }}>
         <Section title="Identificação e cobrança"><Field label="Número da invoice"><input value={draft.invoiceNumber} onChange={(event) => set('invoiceNumber', event.target.value)} /></Field><Field label="Status"><select value={draft.status} onChange={(event) => set('status', event.target.value as InvoiceStatus)}>{STATUS.map((item) => <option key={item} disabled={DERIVED_STATUS.has(item)}>{item}</option>)}</select></Field><Field label="Cliente *"><input required value={draft.customer} onChange={(event) => set('customer', event.target.value)} /></Field><Field label="Contato de cobrança"><input value={draft.billingContact} onChange={(event) => set('billingContact', event.target.value)} /></Field><Field label="Serviço"><input value={draft.service} onChange={(event) => set('service', event.target.value)} /></Field><Field label="Processo"><input value={draft.processRef} onChange={(event) => set('processRef', event.target.value)} /></Field><Field label="Emissão"><input type="date" value={draft.issueDate} onChange={(event) => set('issueDate', event.target.value)} /></Field><Field label="Vencimento"><input type="date" min={draft.issueDate || undefined} value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></Field></Section>
         <Section title="Tipo e identificação fiscal"><Field label="Tipo da nota"><select value={draft.noteDirection} onChange={(event) => set('noteDirection', event.target.value as NoteDirection)}><option>Entrada</option><option>Saída</option></select></Field><Field label="Natureza da operação"><input value={draft.natureOfOperation} onChange={(event) => set('natureOfOperation', event.target.value)} /></Field><Field label="Série"><input value={draft.series} onChange={(event) => set('series', event.target.value)} /></Field><Field label="Número fiscal"><input value={draft.fiscalNumber} onChange={(event) => set('fiscalNumber', event.target.value)} /></Field><Field label="Status fiscal"><select value={draft.fiscalStatus} onChange={(event) => set('fiscalStatus', event.target.value)}><option>Não emitida</option><option>Autorizada</option><option>Cancelada</option><option>Contingência</option></select></Field><Field label="Chave de acesso" wide><input maxLength={44} value={draft.accessKey} onChange={(event) => set('accessKey', event.target.value.replace(/\D/g, ''))} /></Field></Section>
@@ -140,13 +158,17 @@ function InvoiceForm({ mode, record, close, save }: { mode: 'create' | 'edit'; r
 }
 
 function PaymentModal({ record, close, pay }: { record: Invoice; close: () => void; pay: (payment: Payment) => void }) {
+  const titleId = useId();
+  useDialogEscape(close);
   const [payment, setPayment] = useState<{method:string;amount:number;date:string;processingFee:number;settlementStatus:SettlementStatus;notes:string}>({ method: 'Pix', amount: balance(record), date: today(), processingFee: 0, settlementStatus: 'Liquidado', notes: '' });
-  return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}><div className="finance-small-modal invoice-payment-modal"><header><div><span>REGISTRAR PAGAMENTO</span><h2>{record.invoiceNumber}</h2><p>{record.customer} · saldo {money(balance(record))}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="finance-payment-grid"><Field label="Valor"><input type="number" min="0.01" max={balance(record)} step="0.01" value={payment.amount || ''} onChange={(event) => setPayment((current) => ({ ...current, amount: Number(event.target.value) }))} /></Field><Field label="Método"><select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))}>{PAYMENT_METHODS.map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Data"><input type="date" value={payment.date} onChange={(event) => setPayment((current) => ({ ...current, date: event.target.value }))} /></Field><Field label="Liquidação"><select value={payment.settlementStatus} onChange={(event) => setPayment((current) => ({ ...current, settlementStatus: event.target.value as SettlementStatus }))}><option>Liquidado</option><option>Pendente</option></select></Field><Field label="Observações" wide><textarea rows={3} value={payment.notes} onChange={(event) => setPayment((current) => ({ ...current, notes: event.target.value }))} /></Field></div><footer><button className="crm-btn-secondary" type="button" onClick={close}>Cancelar</button><button className="crm-btn-primary" type="button" disabled={payment.amount <= 0 || payment.amount > balance(record) || !payment.date} onClick={() => pay({ id: `PAY-${Date.now()}`, ...payment })}>Registrar pagamento</button></footer></div></div>;
+  return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}><div className="finance-small-modal invoice-payment-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}><header><div><span>REGISTRAR PAGAMENTO</span><h2 id={titleId}>{record.invoiceNumber}</h2><p>{record.customer} · saldo {money(balance(record))}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="finance-payment-grid"><Field label="Valor"><input type="number" min="0.01" max={balance(record)} step="0.01" value={payment.amount || ''} onChange={(event) => setPayment((current) => ({ ...current, amount: Number(event.target.value) }))} /></Field><Field label="Método"><select value={payment.method} onChange={(event) => setPayment((current) => ({ ...current, method: event.target.value }))}>{PAYMENT_METHODS.map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="Data"><input type="date" value={payment.date} onChange={(event) => setPayment((current) => ({ ...current, date: event.target.value }))} /></Field><Field label="Liquidação"><select value={payment.settlementStatus} onChange={(event) => setPayment((current) => ({ ...current, settlementStatus: event.target.value as SettlementStatus }))}><option>Liquidado</option><option>Pendente</option></select></Field><Field label="Observações" wide><textarea rows={3} value={payment.notes} onChange={(event) => setPayment((current) => ({ ...current, notes: event.target.value }))} /></Field></div><footer><button className="crm-btn-secondary" type="button" onClick={close}>Cancelar</button><button className="crm-btn-primary" type="button" disabled={payment.amount <= 0 || payment.amount > balance(record) || !payment.date} onClick={() => pay({ id: `PAY-${Date.now()}`, ...payment })}>Registrar pagamento</button></footer></div></div>;
 }
 
 function PaymentPicker({ records, close, pick }: { records: Invoice[]; close: () => void; pick: (record: Invoice) => void }) {
+  const titleId = useId();
+  useDialogEscape(close);
   const [id, setId] = useState(records[0]?.id || '');
-  return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}><div className="finance-small-modal invoice-payment-picker"><header><div><span>PAGAMENTO</span><h2>Selecionar invoice</h2><p>Escolha qual invoice receberá o pagamento.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="invoice-picker-body"><label><span>Invoice</span><select value={id} onChange={(event) => setId(event.target.value)}>{records.map((record) => <option key={record.id} value={record.id}>{record.invoiceNumber} · {record.customer} · {money(balance(record))}</option>)}</select></label></div><footer><button className="crm-btn-secondary" type="button" onClick={close}>Cancelar</button><button className="crm-btn-primary" type="button" disabled={!id} onClick={() => { const record = records.find((item) => item.id === id); if (record) pick(record); }}>Continuar</button></footer></div></div>;
+  return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}><div className="finance-small-modal invoice-payment-picker" role="dialog" aria-modal="true" aria-labelledby={titleId}><header><div><span>PAGAMENTO</span><h2 id={titleId}>Selecionar invoice</h2><p>Escolha qual invoice receberá o pagamento.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header><div className="invoice-picker-body"><label><span>Invoice</span><select value={id} onChange={(event) => setId(event.target.value)}>{records.map((record) => <option key={record.id} value={record.id}>{record.invoiceNumber} · {record.customer} · {money(balance(record))}</option>)}</select></label></div><footer><button className="crm-btn-secondary" type="button" onClick={close}>Cancelar</button><button className="crm-btn-primary" type="button" disabled={!id} onClick={() => { const record = records.find((item) => item.id === id); if (record) pick(record); }}>Continuar</button></footer></div></div>;
 }
 
 export function FinanceInvoicesWorkspace() {
@@ -157,7 +179,22 @@ export function FinanceInvoicesWorkspace() {
   const [menu, setMenu] = useState<string>();
   const [notifications, setNotifications] = useState(false);
   const [paymentPicker, setPaymentPicker] = useState(false);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { saveInvoiceSessionSeeds(items); }, [items]);
+  useEffect(() => {
+    if (!menu && !notifications) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setMenu(undefined);
+      if (notifications) {
+        setNotifications(false);
+        requestAnimationFrame(() => notificationButtonRef.current?.focus());
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [menu, notifications]);
 
   const rows = useMemo(() => items.filter((invoice) => {
     const searchable = `${invoice.invoiceNumber} ${invoice.customer} ${invoice.billingContact} ${invoice.service} ${invoice.processRef}`.toLowerCase();
@@ -209,8 +246,8 @@ export function FinanceInvoicesWorkspace() {
           <button className="invoice-secondary-action" type="button" disabled={!openInvoices.length} onClick={startPayment}><PaymentIcon />Registrar pagamento</button>
           <button className="crm-topbar-primary invoice-primary-action" type="button" onClick={() => setModal({ mode: 'create' })}><PlusIcon />Nova invoice</button>
           <div className="invoice-notification-wrap">
-            <button className="invoice-notification-button" type="button" aria-label="Notificações de invoices" aria-expanded={notifications} onClick={() => setNotifications((current) => !current)}><BellIcon />{notificationRecords.length > 0 && <span>{notificationRecords.length}</span>}</button>
-            {notifications && <div className="invoice-notification-menu"><header><strong>Notificações</strong><span>{notificationRecords.length}</span></header>{notificationRecords.length ? <div>{notificationRecords.map((invoice) => <button key={invoice.id} type="button" onClick={() => openAction('view', invoice)}><strong>{invoice.invoiceNumber} · {invoice.customer}</strong><small>{isOverdue(invoice) ? 'Vencida' : 'Vence hoje'} · saldo {money(balance(invoice))}</small></button>)}</div> : <p>Nenhuma invoice exige atenção hoje.</p>}</div>}
+            <button ref={notificationButtonRef} className="invoice-notification-button" type="button" aria-label="Notificações de invoices" aria-haspopup="true" aria-expanded={notifications} aria-controls="invoice-notifications" onClick={() => setNotifications((current) => !current)}><BellIcon />{notificationRecords.length > 0 && <span>{notificationRecords.length}</span>}</button>
+            {notifications && <div className="invoice-notification-menu" id="invoice-notifications" role="region" aria-label="Notificações de invoices"><header><strong>Notificações</strong><span>{notificationRecords.length}</span></header>{notificationRecords.length ? <div>{notificationRecords.map((invoice) => <button key={invoice.id} type="button" onClick={() => openAction('view', invoice)}><strong>{invoice.invoiceNumber} · {invoice.customer}</strong><small>{isOverdue(invoice) ? 'Vencida' : 'Vence hoje'} · saldo {money(balance(invoice))}</small></button>)}</div> : <p>Nenhuma invoice exige atenção hoje.</p>}</div>}
           </div>
         </div>
       </header>
@@ -219,7 +256,7 @@ export function FinanceInvoicesWorkspace() {
         <section className="finance-invoice-kpis invoice-kpis"><article><span>Faturado</span><strong>{money(billed)}</strong><small>Total ativo</small></article><article><span>Recebido</span><strong>{money(received)}</strong><small>Pagamentos liquidados</small></article><article><span>Em aberto</span><strong>{money(outstanding)}</strong><small>{openInvoices.length} {openInvoices.length === 1 ? 'invoice pendente' : 'invoices pendentes'}</small></article><article className={overdueRecords.length ? 'is-alert' : ''}><span>Vencido</span><strong>{money(overdue)}</strong><small>{overdueRecords.length} {overdueRecords.length === 1 ? 'invoice vencida' : 'invoices vencidas'}</small></article></section>
 
         <section className="invoice-list-card">
-          <div className="invoice-filters"><label className="invoice-search"><SearchIcon /><input placeholder="Buscar invoice, cliente, serviço ou processo" value={query} onChange={(event) => setQuery(event.target.value)} /></label><select aria-label="Filtrar por status" value={status} onChange={(event) => setStatus(event.target.value)}><option>Todos</option>{STATUS.map((item) => <option key={item}>{item}</option>)}</select></div>
+          <div className="invoice-filters"><label className="invoice-search"><SearchIcon /><input aria-label="Buscar invoices" placeholder="Buscar invoice, cliente, serviço ou processo" value={query} onChange={(event) => setQuery(event.target.value)} /></label><select aria-label="Filtrar por status" value={status} onChange={(event) => setStatus(event.target.value)}><option>Todos</option>{STATUS.map((item) => <option key={item}>{item}</option>)}</select></div>
           <div className="invoice-table-meta"><span>{rows.length} {rows.length === 1 ? 'invoice' : 'invoices'}</span>{overdueRecords.length > 0 && <strong>{overdueRecords.length} {overdueRecords.length === 1 ? 'vencida' : 'vencidas'}</strong>}</div>
           <div className="invoice-table-scroll"><div className="invoice-table">
             <div className="invoice-table-head"><span>Invoice</span><span>Cliente</span><span>Emissão</span><span>Vencimento</span><span>Total</span><span>Saldo</span><span>Status</span><span>Ações</span></div>
@@ -231,7 +268,7 @@ export function FinanceInvoicesWorkspace() {
               <strong className="invoice-money" data-label="Total">{money(total(invoice))}</strong>
               <div className="invoice-balance-cell" data-label="Saldo"><strong className={balance(invoice) > 0 ? 'is-outstanding' : ''}>{money(balance(invoice))}</strong><small>{invoice.paid > 0 ? `${money(invoice.paid)} recebido` : 'Sem pagamentos liquidados'}</small></div>
               <span data-label="Status"><b className={`invoice-status is-${statusClass(currentStatus)}`}>{currentStatus}</b></span>
-              <div className="invoice-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}><button className="invoice-action-trigger" type="button" aria-label={`Ações da invoice ${invoice.invoiceNumber}`} aria-expanded={menu === invoice.id} onClick={() => setMenu((current) => current === invoice.id ? undefined : invoice.id)}>⋯</button>{menu === invoice.id && <div className="invoice-actions-menu"><button type="button" onClick={() => openAction('view', invoice)}>Ver detalhes</button><button type="button" onClick={() => openAction('edit', invoice)}>Editar</button><button type="button" onClick={() => openAction('document', invoice)}>Documento fiscal / PDF</button><button type="button" disabled={balance(invoice) <= 0 || invoice.status === 'Cancelada'} onClick={() => openAction('payment', invoice)}>Registrar pagamento</button><div /><button className="is-danger" type="button" onClick={() => remove(invoice)}>Excluir</button></div>}</div>
+              <div className="invoice-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}><button className="invoice-action-trigger" type="button" aria-label={`Ações da invoice ${invoice.invoiceNumber}`} aria-haspopup="menu" aria-expanded={menu === invoice.id} onClick={() => setMenu((current) => current === invoice.id ? undefined : invoice.id)}>⋯</button>{menu === invoice.id && <div className="invoice-actions-menu" role="menu"><button role="menuitem" type="button" onClick={() => openAction('view', invoice)}>Ver detalhes</button><button role="menuitem" type="button" onClick={() => openAction('edit', invoice)}>Editar</button><button role="menuitem" type="button" onClick={() => openAction('document', invoice)}>Documento fiscal / PDF</button><button role="menuitem" type="button" disabled={balance(invoice) <= 0 || invoice.status === 'Cancelada'} onClick={() => openAction('payment', invoice)}>Registrar pagamento</button><div role="separator" /><button role="menuitem" className="is-danger" type="button" onClick={() => remove(invoice)}>Excluir</button></div>}</div>
             </div>; }) : <div className="invoice-empty"><strong>Nenhuma invoice encontrada</strong><span>Ajuste a busca ou o filtro de status.</span></div>}
           </div></div>
         </section>
