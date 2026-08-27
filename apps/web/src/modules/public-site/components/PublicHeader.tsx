@@ -1,4 +1,4 @@
-import { cmsList, cmsText, itemText, useGlobalSection } from '../content/SiteContentContext';
+import { cmsHref, cmsList, cmsTarget, cmsText, itemText, useGlobalSection } from '../content/SiteContentContext';
 
 function homeHref(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return `${base}/`||'/'}
 
@@ -11,14 +11,14 @@ export function PublicHeader() {
   const brandName=cmsText(values.brandName,'VISA FÁCIL');
   const brandTagline=cmsText(values.brandTagline,'seu visto, sem complicação');
   const logoImage=cmsText(values.logoImage);
-  const announcementTarget=cmsText(values.announcementCtaTarget,'_self');
-  const headerCtaTarget=cmsText(values.headerCtaTarget,'_self');
+  const announcementTarget=cmsTarget(cmsText(values.announcementCtaTarget,'_self'));
+  const headerCtaTarget=cmsTarget(cmsText(values.headerCtaTarget,'_self'));
   return (
     <>
       <div className="announcement">
         <div className="container announcement__inner">
           <span>{cmsText(values.announcementText,'Atendimento online para todo o Brasil')}</span>
-          <a href={cmsText(values.announcementCtaUrl,'#diagnostico')} target={announcementTarget} rel={announcementTarget==='_blank'?'noreferrer':undefined}>
+          <a href={cmsHref(cmsText(values.announcementCtaUrl),'#diagnostico')} target={announcementTarget} rel={announcementTarget==='_blank'?'noreferrer':undefined}>
             {cmsText(values.announcementCtaLabel,'Faça uma análise inicial gratuita')}
             <span aria-hidden="true">→</span>
           </a>
@@ -37,12 +37,12 @@ export function PublicHeader() {
             <span className="logo__text"><strong>{brandName}</strong><small>{brandTagline}</small></span>
           </a>
           <nav className="nav" id="public-navigation" aria-label="Navegação principal" data-nav="">
-            {primaryNav.slice(0,2).map((item,index)=><a href={itemText(item,'url','#')} target={itemText(item,'target','_self')} rel={itemText(item,'target')==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index}`}>{itemText(item,'label')}</a>)}
-            {visaMenu.length>0&&<div className="nav__dropdown"><button type="button" className="nav__trigger" aria-haspopup="true" aria-expanded="false" aria-controls="visa-menu">Vistos <span aria-hidden="true">⌄</span></button><div className="nav__menu" id="visa-menu">{visaMenu.map((item,index)=><a href={itemText(item,'url','#')} target={itemText(item,'target','_self')} rel={itemText(item,'target')==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index}`}><b>{itemText(item,'label')}</b><small>{itemText(item,'description')}</small></a>)}</div></div>}
-            {primaryNav.slice(2).map((item,index)=><a href={itemText(item,'url','#')} target={itemText(item,'target','_self')} rel={itemText(item,'target')==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index+2}`}>{itemText(item,'label')}</a>)}
+            {primaryNav.slice(0,2).map((item,index)=>{const target=cmsTarget(itemText(item,'target'));return <a href={cmsHref(itemText(item,'url'))} target={target} rel={target==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index}`}>{itemText(item,'label')}</a>})}
+            {visaMenu.length>0&&<div className="nav__dropdown"><button type="button" className="nav__trigger" aria-haspopup="true" aria-expanded="false" aria-controls="visa-menu">Vistos <span aria-hidden="true">⌄</span></button><div className="nav__menu" id="visa-menu">{visaMenu.map((item,index)=>{const target=cmsTarget(itemText(item,'target'));return <a href={cmsHref(itemText(item,'url'))} target={target} rel={target==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index}`}><b>{itemText(item,'label')}</b><small>{itemText(item,'description')}</small></a>})}</div></div>}
+            {primaryNav.slice(2).map((item,index)=>{const target=cmsTarget(itemText(item,'target'));return <a href={cmsHref(itemText(item,'url'))} target={target} rel={target==='_blank'?'noreferrer':undefined} key={`${itemText(item,'label')}-${index+2}`}>{itemText(item,'label')}</a>})}
           </nav>
           <div className="header__actions">
-            <a className="btn btn--small btn--primary" href={cmsText(values.headerCtaUrl,'#diagnostico')} target={headerCtaTarget} rel={headerCtaTarget==='_blank'?'noreferrer':undefined}>{cmsText(values.headerCtaLabel,'Analisar meu perfil')}</a>
+            <a className="btn btn--small btn--primary" href={cmsHref(cmsText(values.headerCtaUrl),'#diagnostico')} target={headerCtaTarget} rel={headerCtaTarget==='_blank'?'noreferrer':undefined}>{cmsText(values.headerCtaLabel,'Analisar meu perfil')}</a>
             <button className="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="public-navigation" data-menu-button=""><span></span><span></span><span></span></button>
           </div>
         </div>
