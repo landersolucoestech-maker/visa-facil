@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
   title: Visa Fácil Integration API Contract
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     Contract for the future server-side API. This repository currently provides
-    the frontend consumer only; this document does not represent a deployed API.
+    the frontend consumer and domain contracts only; this document does not
+    represent a deployed API or live provider connection.
 servers:
   - url: https://api.example.invalid
     description: Replace with the real backend origin per environment.
@@ -29,6 +30,20 @@ paths:
       responses:
         '200':
           description: Connection started or completed. OAuth providers may return authorizationUrl.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationActionResponse'
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/integrations/{provider}/reconnect:
+    post:
+      operationId: reconnectIntegration
+      parameters:
+        - $ref: '#/components/parameters/Provider'
+      responses:
+        '200':
+          description: Reauthorization/reconnection started or completed.
           content:
             application/json:
               schema:
@@ -85,6 +100,170 @@ paths:
           description: Redirect to the safe frontend completion route after server-side validation.
         default:
           $ref: '#/components/responses/ApiError'
+  /v1/communications/providers:
+    get:
+      operationId: listCommunicationProviders
+      description: >-
+        Returns backend-verified provider adapters and capabilities. Catalog
+        presence alone must never be interpreted as an active commercial/API connection.
+      responses:
+        '200':
+          description: Available provider adapters for this deployment.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommunicationProvider' }
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/communications/connections:
+    get:
+      operationId: listCommunicationConnections
+      responses:
+        '200':
+          description: Sanitized telephony/SMS connection metadata; never returns provider secret values.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommunicationConnection' }
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      operationId: createCommunicationConnection
+      description: >-
+        Creates provider connection metadata using a server-side credential-set
+        reference. Raw API keys, passwords, tokens and certificates are not accepted
+        from the ordinary browser integration surface.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommunicationConnectionRequest'
+      responses:
+        '201':
+          description: Connection metadata created; health verification may remain pending.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationConnection' }
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/communications/endpoints:
+    get:
+      operationId: listCommunicationEndpoints
+      responses:
+        '200':
+          description: Provisioned physical lines, virtual numbers and sender IDs visible to the operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommunicationEndpoint' }
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/communications/routes:
+    get:
+      operationId: listCommunicationRoutes
+      responses:
+        '200':
+          description: Canonical routing configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommunicationRoute' }
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/communications/messages:
+    get:
+      operationId: listCommunicationMessages
+      parameters:
+        - name: crmRecordId
+          in: query
+          required: false
+          schema: { type: string }
+        - name: attendanceConversationId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Canonical communication history.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/CommunicationMessage' }
+        default:
+          $ref: '#/components/responses/ApiError'
+    post:
+      operationId: sendSms
+      description: >-
+        Sends an SMS through the canonical router. The backend validates
+        authorization, provider health, routing, destination and policy before dispatch.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendSmsRequest' }
+      responses:
+        '202':
+          description: Message accepted by the application for provider dispatch.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationMessage' }
+        default:
+          $ref: '#/components/responses/ApiError'
+  /v1/webhooks/communications/{communicationProvider}:
+    post:
+      operationId: receiveCommunicationWebhook
+      description: >-
+        Provider-specific telephony/SMS webhook boundary. The server validates
+        the raw signature/token before adapter normalization and idempotent processing.
+      parameters:
+        - name: communicationProvider
+          in: path
+          required: true
+          schema: { type: string, minLength: 1 }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {}
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '200': { description: Valid event accepted or already processed idempotently. }
+        '400': { description: Invalid payload. }
+        '401': { description: Signature/token verification failed. }
+        '429': { description: Server is temporarily rate-limiting ingestion. }
+        '503': { description: Temporary server-side processing dependency failure. }
   /v1/webhooks/{provider}:
     post:
       operationId: receiveIntegrationWebhook
@@ -102,8 +281,7 @@ paths:
           application/octet-stream:
             schema: { type: string, format: binary }
       responses:
-        '200':
-          description: Valid event accepted or already processed idempotently.
+        '200': { description: Valid event accepted or already processed idempotently. }
         '400': { description: Invalid payload. }
         '401': { description: Signature/token verification failed. }
         '429': { description: Server is temporarily rate-limiting ingestion. }
@@ -144,7 +322,7 @@ components:
   schemas:
     IntegrationId:
       type: string
-      enum: [whatsapp, resend, autentique, nfse, instagram, facebook, youtube, tiktok, google-ads, google-calendar]
+      enum: [whatsapp, telephony-sms, autentique, nfse, instagram, facebook, youtube, tiktok, google-ads, google-calendar]
     IntegrationState:
       type: string
       enum: [unconfigured, disconnected, connecting, connected, degraded, error]
@@ -155,7 +333,16 @@ components:
       properties:
         id: { $ref: '#/components/schemas/IntegrationId' }
         state: { $ref: '#/components/schemas/IntegrationState' }
+        accountId: { type: string }
         accountLabel: { type: string }
+        grantedScopes:
+          type: array
+          items: { type: string }
+        authorizedCapabilities:
+          type: array
+          items: { type: string }
+        connectedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
         lastCheckedAt: { type: string, format: date-time }
         lastSyncAt: { type: string, format: date-time }
         errorCode: { type: string }
@@ -178,6 +365,141 @@ components:
           type: string
           format: uri
           description: Short-lived provider authorization URL generated by the backend.
+    CommunicationProvider:
+      type: object
+      additionalProperties: false
+      required: [key, name, providerClass, channels, capabilities]
+      properties:
+        key: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        providerClass:
+          type: string
+          enum: [telecom-carrier, cloud-communications, custom]
+        channels:
+          type: array
+          items: { type: string, enum: [sms, voice] }
+        capabilities:
+          type: array
+          items: { $ref: '#/components/schemas/CommunicationCapability' }
+    CommunicationCapability:
+      type: string
+      enum: [sms-outbound, sms-inbound, voice-outbound, voice-inbound, physical-lines, virtual-numbers, sender-ids, delivery-status, webhooks]
+    CommunicationConnectionState:
+      type: string
+      enum: [unconfigured, pending, connected, degraded, disconnected, error]
+    CommunicationConnection:
+      type: object
+      additionalProperties: false
+      required: [id, providerKey, label, state, configuredCapabilities]
+      properties:
+        id: { type: string, minLength: 1 }
+        providerKey: { type: string, minLength: 1 }
+        label: { type: string, minLength: 1 }
+        state: { $ref: '#/components/schemas/CommunicationConnectionState' }
+        credentialSetRef:
+          type: string
+          description: Opaque server-side secret-manager reference; never a credential value.
+        accountRef: { type: string }
+        environment: { type: string, enum: [sandbox, production] }
+        configuredCapabilities:
+          type: array
+          items: { $ref: '#/components/schemas/CommunicationCapability' }
+        lastCheckedAt: { type: string, format: date-time }
+        errorCode: { type: string }
+    CommunicationConnectionRequest:
+      type: object
+      additionalProperties: false
+      required: [providerKey, label, credentialSetRef]
+      properties:
+        providerKey: { type: string, minLength: 1 }
+        label: { type: string, minLength: 1 }
+        credentialSetRef:
+          type: string
+          minLength: 1
+          description: Pre-existing server-side credential-set reference; never raw secrets.
+        accountRef: { type: string }
+        environment: { type: string, enum: [sandbox, production] }
+    CommunicationEndpoint:
+      type: object
+      additionalProperties: false
+      required: [id, providerConnectionId, kind, label, channels, enabled]
+      properties:
+        id: { type: string, minLength: 1 }
+        providerConnectionId: { type: string, minLength: 1 }
+        kind: { type: string, enum: [physical-line, virtual-number, sender-id] }
+        label: { type: string }
+        phoneNumber: { type: string }
+        senderId: { type: string }
+        providerEndpointRef: { type: string }
+        channels:
+          type: array
+          items: { type: string, enum: [sms, voice] }
+        enabled: { type: boolean }
+    CommunicationRoute:
+      type: object
+      additionalProperties: false
+      required: [id, name, channel, providerConnectionId, endpointId, priority, enabled]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string }
+        channel: { type: string, enum: [sms, voice] }
+        providerConnectionId: { type: string, minLength: 1 }
+        endpointId: { type: string, minLength: 1 }
+        priority: { type: integer, minimum: 0 }
+        enabled: { type: boolean }
+        countryCodes:
+          type: array
+          items: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+    CommunicationDeliveryStatus:
+      type: string
+      enum: [queued, submitted, sent, delivered, undelivered, failed, received, read, unknown]
+    CommunicationRecordLink:
+      type: object
+      additionalProperties: false
+      properties:
+        crmRecordId: { type: string }
+        attendanceConversationId: { type: string }
+        contractId: { type: string }
+        taskId: { type: string }
+        invoiceId: { type: string }
+    CommunicationMessage:
+      type: object
+      additionalProperties: false
+      required: [id, providerKey, providerConnectionId, channel, direction, from, to, body, status, createdAt, updatedAt]
+      properties:
+        id: { type: string, minLength: 1 }
+        providerKey: { type: string, minLength: 1 }
+        providerConnectionId: { type: string, minLength: 1 }
+        providerMessageId: { type: string }
+        routeId: { type: string }
+        endpointId: { type: string }
+        channel: { type: string, const: sms }
+        direction: { type: string, enum: [inbound, outbound] }
+        from: { type: string }
+        to: { type: string }
+        body: { type: string }
+        status: { $ref: '#/components/schemas/CommunicationDeliveryStatus' }
+        statusReason: { type: string }
+        link: { $ref: '#/components/schemas/CommunicationRecordLink' }
+        createdAt: { type: string, format: date-time }
+        submittedAt: { type: string, format: date-time }
+        sentAt: { type: string, format: date-time }
+        deliveredAt: { type: string, format: date-time }
+        receivedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    SendSmsRequest:
+      type: object
+      additionalProperties: false
+      required: [routeId, to, body, clientMessageId]
+      properties:
+        routeId: { type: string, minLength: 1 }
+        to: { type: string, minLength: 1 }
+        body: { type: string, minLength: 1 }
+        clientMessageId: { type: string, minLength: 1 }
+        link: { $ref: '#/components/schemas/CommunicationRecordLink' }
     PublicLeadRequest:
       type: object
       additionalProperties: false
