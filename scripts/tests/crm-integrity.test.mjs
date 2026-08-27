@@ -3,9 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const app=readFileSync(resolve(process.cwd(),'apps/web/src/modules/crm/CrmApp.tsx'),'utf8');
-const types=readFileSync(resolve(process.cwd(),'apps/web/src/modules/crm/types.ts'),'utf8');
-const provider=readFileSync(resolve(process.cwd(),'apps/web/src/modules/crm/mocks/mockDataProvider.ts'),'utf8');
+const root=process.cwd();
+const app=readFileSync(resolve(root,'apps/web/src/modules/crm/CrmApp.tsx'),'utf8');
+const types=readFileSync(resolve(root,'apps/web/src/modules/crm/types.ts'),'utf8');
+const provider=readFileSync(resolve(root,'apps/web/src/modules/crm/mocks/mockDataProvider.ts'),'utf8');
+const tasks=readFileSync(resolve(root,'apps/web/src/modules/tasks/TasksApp.tsx'),'utf8');
+const taskProvider=readFileSync(resolve(root,'apps/web/src/modules/tasks/mocks/tasksMockProvider.ts'),'utf8');
+const agenda=readFileSync(resolve(root,'apps/web/src/modules/agenda/AgendaApp.tsx'),'utf8');
+const agendaProvider=readFileSync(resolve(root,'apps/web/src/modules/agenda/mocks/agendaMockProvider.ts'),'utf8');
+const finance=readFileSync(resolve(root,'apps/web/src/modules/finance/FinanceTransactionsApp.tsx'),'utf8');
+const financeTypes=readFileSync(resolve(root,'apps/web/src/modules/finance/types.ts'),'utf8');
+const reports=readFileSync(resolve(root,'apps/web/src/modules/reports/reportDatasetAdapter.ts'),'utf8');
 
 test('CRM ownership is selected by active canonical user id instead of free text',()=>{
   assert.ok(types.includes('ownerUserId?: string'));
@@ -43,4 +51,38 @@ test('CRM blocks duplicate identities using email CPF passport or WhatsApp while
   assert.ok(app.includes("['WhatsApp',normalizeDigits(record.whatsapp)]"));
   assert.ok(app.includes('editing?.convertedContactId'));
   assert.ok(app.includes('editing?.convertedFromLeadId'));
+});
+
+test('Tasks Agenda and Finance persist canonical CRM relation ids while preserving legacy display names',()=>{
+  assert.ok(taskProvider.includes('relatedRecordId?: string'));
+  assert.ok(taskProvider.includes('ownerUserId?: string'));
+  assert.ok(tasks.includes('getCrmSessionRecords'));
+  assert.ok(tasks.includes('getOperationalTeamMembers'));
+  assert.ok(tasks.includes('relatedRecordId:id'));
+  assert.ok(tasks.includes('ownerUserId:id'));
+  assert.equal(tasks.includes('<span>Responsável</span><input'),false);
+  assert.equal(tasks.includes('<span>Contato / Lead relacionado</span><input'),false);
+
+  assert.ok(agendaProvider.includes('relatedRecordId?: string'));
+  assert.ok(agendaProvider.includes('ownerUserId?: string'));
+  assert.ok(agenda.includes('getCrmSessionRecords'));
+  assert.ok(agenda.includes('getOperationalTeamMembers'));
+  assert.ok(agenda.includes('relatedRecordId:id'));
+  assert.ok(agenda.includes('ownerUserId:id'));
+  assert.equal(agenda.includes('<span>Responsável</span><input'),false);
+  assert.equal(agenda.includes('<span>Contato / Lead / Cliente</span><input'),false);
+
+  assert.ok(financeTypes.includes('relatedRecordId?: string'));
+  assert.ok(finance.includes('getCrmSessionRecords'));
+  assert.ok(finance.includes('relatedRecordId:id'));
+  assert.equal(finance.includes('<span>Cliente / contato relacionado</span><input'),false);
+});
+
+test('XLSX imports resolve visible relation labels into canonical ids instead of creating dangling text references',()=>{
+  assert.ok(reports.includes('function crmRelationSelection'));
+  assert.ok(reports.includes('function financeRelationSelection'));
+  assert.ok(reports.includes('relatedRecordId:relation.relatedRecordId'));
+  assert.ok(reports.includes('ownerUserId:owner.ownerUserId'));
+  assert.ok(reports.includes('não corresponde a um único registro'));
+  assert.ok(reports.includes('não corresponde a um único contato/cliente no CRM'));
 });
