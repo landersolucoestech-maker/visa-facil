@@ -27,13 +27,32 @@ export type MarketingMockCampaign = {
   endDate: string;
 };
 
+export type MarketingMockBriefing = {
+  id: string;
+  title: string;
+  objective: string;
+  audience: string;
+  channels: MarketingMockContent['channel'][];
+  owner: string;
+  ownerUserId?: string;
+  dueDate: string;
+  status: 'Rascunho' | 'Em elaboração' | 'Em revisão' | 'Aprovado' | 'Arquivado';
+  keyMessage: string;
+  deliverables: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type MarketingMockFixture = {
   contents: MarketingMockContent[];
   campaigns: MarketingMockCampaign[];
+  briefings: MarketingMockBriefing[];
 };
 
 const CONTENT_CHANNELS = new Set<MarketingMockContent['channel']>(['Instagram', 'Facebook', 'TikTok', 'YouTube', 'X', 'Threads']);
 const CAMPAIGN_CHANNELS = new Set<MarketingMockCampaign['channel']>(['Meta Ads', 'Google Ads', 'YouTube', 'TikTok']);
+const BRIEFING_STATUSES = new Set<MarketingMockBriefing['status']>(['Rascunho', 'Em elaboração', 'Em revisão', 'Aprovado', 'Arquivado']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -64,6 +83,17 @@ function isCampaign(value: unknown): value is MarketingMockCampaign {
     && isText(value.objective)
     && isText(value.status);
 }
+function isBriefing(value: unknown): value is MarketingMockBriefing {
+  if (!isObject(value) || typeof value.id !== 'string' || !value.id.trim() || typeof value.title !== 'string' || !value.title.trim()) return false;
+  if (typeof value.objective !== 'string' || typeof value.audience !== 'string' || typeof value.owner !== 'string' || (value.ownerUserId !== undefined && typeof value.ownerUserId !== 'string')) return false;
+  if (!Array.isArray(value.channels) || !value.channels.every((channel) => typeof channel === 'string' && CONTENT_CHANNELS.has(channel as MarketingMockContent['channel'])) || new Set(value.channels).size !== value.channels.length) return false;
+  if (typeof value.dueDate !== 'string' || (value.dueDate !== '' && !DATE_RE.test(value.dueDate))) return false;
+  if (typeof value.status !== 'string' || !BRIEFING_STATUSES.has(value.status as MarketingMockBriefing['status'])) return false;
+  if (typeof value.keyMessage !== 'string' || typeof value.deliverables !== 'string' || typeof value.notes !== 'string') return false;
+  if (typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.updatedAt !== 'string' || !Number.isFinite(Date.parse(value.updatedAt))) return false;
+  if (value.status !== 'Rascunho' && (!value.objective.trim() || !value.ownerUserId)) return false;
+  return true;
+}
 function uniqueById<T extends { id: string }>(items: T[]) {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -74,10 +104,15 @@ function uniqueById<T extends { id: string }>(items: T[]) {
 }
 
 export function getMarketingMockFixture(): MarketingMockFixture {
-  if (!isMockDataEnabled()) return { contents: [], campaigns: [] };
+  if (!isMockDataEnabled()) return { contents: [], campaigns: [], briefings: [] };
   const clone: unknown = structuredClone(mockData);
-  if (!isObject(clone)) return { contents: [], campaigns: [] };
+  if (!isObject(clone)) return { contents: [], campaigns: [], briefings: [] };
   const contents = Array.isArray(clone.contents) ? uniqueById(clone.contents.filter(isContent)) : [];
   const campaigns = Array.isArray(clone.campaigns) ? uniqueById(clone.campaigns.filter(isCampaign)) : [];
-  return { contents, campaigns };
+  const briefings = Array.isArray(clone.briefings) ? uniqueById(clone.briefings.filter(isBriefing)) : [];
+  return { contents, campaigns, briefings };
+}
+
+export function getMarketingMockBriefings(): MarketingMockBriefing[] {
+  return getMarketingMockFixture().briefings.map((briefing) => structuredClone(briefing));
 }
