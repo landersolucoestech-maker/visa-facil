@@ -12,5 +12,6 @@ export type FinanceRecord = {
   status: FinanceStatus;
   paymentMethod: string;
   relatedName: string;
+  relatedRecordId?: string;
   notes: string;
 };
