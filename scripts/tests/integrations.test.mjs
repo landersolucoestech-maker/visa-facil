@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { INTEGRATION_REGISTRY, isIntegrationRuntimeStatus } from '../../apps/web/src/modules/integrations/integrationContract.ts';
+import { INTEGRATION_REGISTRY, META_PRODUCTS, isIntegrationRuntimeStatus } from '../../apps/web/src/modules/integrations/integrationContract.ts';
 
-const EXPECTED=['whatsapp','telephony-sms','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'];
-const OFFICIAL_ACCOUNT_PROVIDERS=['whatsapp','instagram','facebook','youtube','tiktok'];
+const EXPECTED=['whatsapp','telephony-sms','autentique','nfse','meta','youtube','tiktok','google-ads','google-calendar'];
+const OFFICIAL_ACCOUNT_PROVIDERS=['whatsapp','meta','youtube','tiktok'];
 const root=process.cwd();
 const contractSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/integrationContract.ts'),'utf8');
 const apiSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/integrationApi.ts'),'utf8');
@@ -15,6 +15,28 @@ test('integration registry contains every frontend-manageable provider exactly o
   assert.deepEqual(INTEGRATION_REGISTRY.map(item=>item.id).sort(),[...EXPECTED].sort());
   assert.equal(new Set(INTEGRATION_REGISTRY.map(item=>item.id)).size,EXPECTED.length);
   assert.equal(new Set(INTEGRATION_REGISTRY.map(item=>item.name)).size,EXPECTED.length);
+});
+
+test('Meta is one technical provider while Facebook Instagram Messenger and Meta Ads remain products',()=>{
+  const meta=INTEGRATION_REGISTRY.find(item=>item.id==='meta');
+  assert.ok(meta,'Meta provider must exist');
+  assert.equal(INTEGRATION_REGISTRY.some(item=>item.id==='instagram'),false);
+  assert.equal(INTEGRATION_REGISTRY.some(item=>item.id==='facebook'),false);
+  assert.deepEqual(META_PRODUCTS.map(item=>item.id),['facebook','instagram','messenger','meta-ads']);
+  assert.equal(meta.officialAuthorizationProvider,'meta');
+  assert.ok(meta.serverOnlySecrets.includes('META_APP_SECRET'));
+  assert.ok(meta.apiFamilies?.includes('Meta Graph API'));
+  assert.ok(meta.apiFamilies?.includes('Meta Marketing API'));
+  assert.ok(meta.capabilities.includes('messaging'));
+  assert.ok(meta.capabilities.includes('content-publishing'));
+  assert.ok(meta.capabilities.includes('comments-moderation'));
+  assert.ok(meta.capabilities.includes('ads'));
+  assert.ok(meta.capabilities.includes('analytics'));
+  assert.ok(settingsSource.includes('Produtos / canais: Facebook · Instagram · Messenger · Meta Ads'));
+  assert.ok(settingsSource.includes('Meta App ID, Meta App Secret, OAuth, tokens, webhook, Graph API e estado geral pertencem ao provider Meta'));
+  assert.ok(settingsSource.includes("meta:'M'"));
+  assert.equal(settingsSource.includes("instagram:'IG'"),false);
+  assert.equal(settingsSource.includes("facebook:'FB'"),false);
 });
 
 test('server-owned transactional email provider is not exposed by the browser contract',()=>{
@@ -46,8 +68,7 @@ test('social and WhatsApp account connections require official provider authoriz
 test('provider capabilities are explicit and do not overstate YouTube paid-media ownership',()=>{
   const whatsapp=INTEGRATION_REGISTRY.find(item=>item.id==='whatsapp');
   const telephony=INTEGRATION_REGISTRY.find(item=>item.id==='telephony-sms');
-  const instagram=INTEGRATION_REGISTRY.find(item=>item.id==='instagram');
-  const facebook=INTEGRATION_REGISTRY.find(item=>item.id==='facebook');
+  const meta=INTEGRATION_REGISTRY.find(item=>item.id==='meta');
   const youtube=INTEGRATION_REGISTRY.find(item=>item.id==='youtube');
   const tiktok=INTEGRATION_REGISTRY.find(item=>item.id==='tiktok');
   assert.ok(whatsapp?.capabilities.includes('messaging'));
@@ -56,12 +77,10 @@ test('provider capabilities are explicit and do not overstate YouTube paid-media
   assert.ok(telephony?.capabilities.includes('voice'));
   assert.ok(telephony?.capabilities.includes('phone-numbers'));
   assert.ok(telephony?.capabilities.includes('delivery-status'));
-  assert.ok(instagram?.capabilities.includes('messaging'));
-  assert.ok(instagram?.capabilities.includes('content-publishing'));
-  assert.ok(instagram?.capabilities.includes('ads'));
-  assert.ok(facebook?.capabilities.includes('messaging'));
-  assert.ok(facebook?.capabilities.includes('content-management'));
-  assert.ok(facebook?.capabilities.includes('analytics'));
+  assert.ok(meta?.capabilities.includes('messaging'));
+  assert.ok(meta?.capabilities.includes('content-management'));
+  assert.ok(meta?.capabilities.includes('analytics'));
+  assert.ok(meta?.capabilities.includes('ads'));
   assert.ok(youtube?.capabilities.includes('content-publishing'));
   assert.ok(youtube?.capabilities.includes('analytics'));
   assert.equal(youtube?.capabilities.includes('ads'),false,'YouTube paid campaigns belong to Google Ads API, not YouTube Data API');
@@ -84,14 +103,18 @@ test('every frontend integration declares production authentication and dependen
   }
 });
 
-test('runtime connection status accepts authorized metadata but never needs provider tokens',()=>{
+test('runtime connection status models Meta products and assets without exposing provider tokens',()=>{
   for(const id of EXPECTED){
     assert.equal(isIntegrationRuntimeStatus({id,state:'unconfigured'}),true);
     assert.equal(isIntegrationRuntimeStatus({id,state:'connected',accountId:'account-1',accountLabel:'Conta',grantedScopes:['scope.read'],authorizedCapabilities:['analytics'],lastCheckedAt:'2026-08-25T12:00:00.000Z'}),true);
   }
+  const metaStatus={id:'meta',state:'connected',metaProducts:[{id:'facebook',state:'connected',assetIds:['page-1'],authorizedCapabilities:['content-publishing']},{id:'instagram',state:'disconnected'},{id:'messenger',state:'unavailable'},{id:'meta-ads',state:'connected',assetIds:['ad-1'],authorizedCapabilities:['ads','analytics']}],metaAssets:[{id:'page-1',kind:'facebook-page',label:'Página',productIds:['facebook','messenger']},{id:'ad-1',kind:'ad-account',label:'Conta de anúncios',productIds:['meta-ads']} ]};
+  assert.equal(isIntegrationRuntimeStatus(metaStatus),true);
+  assert.equal(isIntegrationRuntimeStatus({...metaStatus,id:'youtube'}),false,'Meta product metadata must not leak into another provider');
+  assert.equal(isIntegrationRuntimeStatus({id:'meta',state:'connected',metaProducts:[{id:'facebook',state:'connected'},{id:'facebook',state:'connected'}]}),false,'Meta products must be unique');
   assert.equal(isIntegrationRuntimeStatus({id:'unknown',state:'connected'}),false);
   assert.equal(isIntegrationRuntimeStatus({id:'whatsapp',state:'fake-connected'}),false);
-  assert.equal(isIntegrationRuntimeStatus({id:'instagram',state:'connected',authorizedCapabilities:['not-real']}),false);
+  assert.equal(isIntegrationRuntimeStatus({id:'meta',state:'connected',authorizedCapabilities:['not-real']}),false);
   assert.equal(contractSource.includes('accessToken'),false);
   assert.equal(contractSource.includes('refreshToken'),false);
 });
