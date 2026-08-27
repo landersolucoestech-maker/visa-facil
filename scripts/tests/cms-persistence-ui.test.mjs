@@ -81,11 +81,22 @@ test('CMS media UI blocks unsafe URLs, unsafe upload formats and removal of refe
   assert.equal(resources.includes('src={asset.url}'),false);
 });
 
+test('CMS editor image previews are sanitized before reaching img src',()=>{
+  assert.ok(editors.includes('cmsImageSrc(stringValue)'));
+  assert.ok(editors.includes('cmsImageSrc(current)'));
+  assert.equal(editors.includes('src={stringValue}'),false);
+  assert.equal(editors.includes('src={current}'),false);
+  assert.ok(editors.includes('Imagem inválida ou não suportada.'));
+});
+
 test('CMS settings and SEO surface invalid publishable metadata while editing',()=>{
   assert.ok(resources.includes('A URL principal deve usar http:// ou https://.'));
+  assert.ok(resources.includes('A OG Image padrão deve usar uma URL absoluta http:// ou https://.'));
   assert.ok(resources.includes('Informe o nome do site.'));
   assert.ok(resources.includes('type="url"'));
   assert.ok(editors.includes('isSafeCmsExternalUrl'));
   assert.ok(editors.includes('A Canonical URL deve usar http:// ou https://.'));
+  assert.ok(editors.includes('A OG Image deve usar uma URL absoluta http:// ou https://.'));
+  assert.ok(editors.includes("asset.kind==='image'&&isSafeCmsExternalUrl(asset.url)"));
   assert.ok(editors.includes('role="alert"'));
 });
