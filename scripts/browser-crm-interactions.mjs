@@ -93,6 +93,29 @@ try{
  await assertBrowser(`(()=>{const label=[...document.querySelectorAll('#visachat-new-conversation label')].find(item=>item.querySelector(':scope > span')?.textContent?.trim()==='Contato / Lead do CRM');const select=label?.querySelector('select');return !!select&&select.options.length>1})()`,'VisaChat uses canonical CRM record selector');
  await assertBrowser(`document.querySelector('#visachat-new-conversation')?.textContent?.includes('mensagens externas só podem ser marcadas como entregues quando o canal estiver realmente integrado')`,'VisaChat keeps external delivery limitation explicit');
 
+ await navigate('/crm/financeiro/transacoes');
+ await clickButton('Nova transação');
+ await waitFor(`!!document.querySelector('.finance-transaction-form-modal[role="dialog"]')`,'finance transaction dialog');
+ await assertBrowser(`[...document.querySelectorAll('.finance-transaction-form-modal label > span')].some(item=>item.textContent?.trim()==='Cliente / contato relacionado')`,'finance transaction canonical CRM relationship field');
+ await assertBrowser(`(()=>{const label=[...document.querySelectorAll('.finance-transaction-form-modal label')].find(item=>item.querySelector(':scope > span')?.textContent?.trim()==='Cliente / contato relacionado');const select=label?.querySelector('select');return !!select&&select.options.length>1&&!label.querySelector('input')})()`,'finance transaction relationship uses a selector instead of free text');
+ await assertBrowser(`[...document.querySelectorAll('.finance-transaction-form-modal label > span')].some(item=>item.textContent?.trim()==='Categoria')`,'finance transaction category field remains present');
+
+ await navigate('/crm/contratos');
+ await clickButton('Novo Contrato');
+ await waitFor(`!!document.querySelector('.contracts-editor[role="dialog"]')`,'contract editor dialog');
+ await assertBrowser(`['Template','Partes','Variáveis','Documento','Signatários','Revisão'].every(label=>[...document.querySelectorAll('.contracts-editor-steps nav button span')].some(item=>item.textContent?.trim()===label))`,'contract six-step wizard');
+ await assertBrowser(`document.querySelector('.contracts-editor')?.textContent?.includes('Os dados ficam somente na sessão atual até existir persistência backend.')`,'contract editor keeps local persistence limitation explicit');
+ await assertBrowser(`document.querySelectorAll('.contracts-template-picker button').length>0`,'contract editor exposes active templates as canonical classification');
+
+ await navigate('/crm/relatorios');
+ await assertBrowser(`document.body.textContent?.includes('Importação e exportação dos datasets operacionais e de configuração exclusivamente em XLSX.')`,'reports remains XLSX-only');
+ await assertBrowser(`!document.body.textContent?.includes('CSV')`,'reports page does not expose CSV');
+ await clickButton('Importar XLSX');
+ await waitFor(`!!document.querySelector('.reports-import-modal[role="dialog"]')`,'reports XLSX import dialog');
+ await assertBrowser(`document.querySelector('.reports-import-modal input[type="file"]')?.accept.includes('.xlsx')`,'reports import accepts XLSX');
+ await assertBrowser(`document.querySelectorAll('.reports-import-columns b').length>5`,'reports import exposes complete modal schema');
+ await assertBrowser(`document.querySelector('.reports-import-modal')?.textContent?.includes('Baixar template XLSX completo')`,'reports complete XLSX template action');
+
  await navigate('/crm/configuracoes');
  await clickButton('Integrações');
  await waitFor(`document.body.textContent?.includes('Telefonia e SMS')`,'telephony and SMS integration row');
