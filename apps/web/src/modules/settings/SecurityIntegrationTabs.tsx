@@ -6,7 +6,7 @@ import { Card } from './settingsShared';
 import { AUTHENTICATION_ENABLED } from '../auth/auth';
 
 const STATUS_LABEL:Record<IntegrationConnectionState,string>={unconfigured:'Não configurado',disconnected:'Desconectado',connecting:'Conectando',connected:'Conectado',degraded:'Degradado',error:'Erro'};
-const ICONS:Record<IntegrationId,string>={whatsapp:'WA',resend:'R',autentique:'A',nfse:'NF',instagram:'IG',facebook:'FB',youtube:'YT',tiktok:'TT','google-ads':'GA','google-calendar':'GC'};
+const ICONS:Record<IntegrationId,string>={whatsapp:'WA',autentique:'A',nfse:'NF',instagram:'IG',facebook:'FB',youtube:'YT',tiktok:'TT','google-ads':'GA','google-calendar':'GC'};
 const OAUTH_HOSTS:Partial<Record<IntegrationId,readonly string[]>>={
  whatsapp:['www.facebook.com'],
  instagram:['www.facebook.com'],
@@ -60,8 +60,8 @@ export function IntegrationsTab(){
    if(response.authorizationUrl)safeAuthorizationRedirect(id,response.authorizationUrl);
   }catch(value){setError(value instanceof ApiClientError?value.message:'A operação da integração falhou.')}finally{setBusy(undefined)}
  };
- return <Card title="Integrações" description="Estado real dos conectores externos" icon="↗">
-  <div className="settings-info-box">{backendConfigured?'Os estados abaixo são consultados na API backend. Credenciais e tokens permanecem fora do bundle do navegador.':'A API backend ainda não está configurada. Nenhuma integração é considerada conectada e nenhuma credencial deve ser inserida no frontend.'}</div>
+ return <Card title="Integrações" description="Conectores externos configuráveis pela operação" icon="↗">
+  <div className="settings-info-box">{backendConfigured?'Os estados abaixo são consultados na API backend. Provedores internos e credenciais server-side não são expostos nesta interface.':'A API backend ainda não está configurada. Nenhuma integração é considerada conectada e nenhuma credencial deve ser inserida no frontend.'}</div>
   {error&&<p className="settings-security-notice" role="alert">{error}</p>}
   {categories.map(category=><div className="settings-integration-category" key={category}><div className="settings-integration-category-title"><span>◈</span><strong>{category}</strong></div>{INTEGRATION_REGISTRY.filter(item=>item.category===category).map(item=>{const status=statusFor(item.id);const working=busy===item.id;return <div className="settings-integration-row" key={item.id}><div className="settings-integration-logo">{ICONS[item.id]}</div><div className="settings-integration-copy"><strong>{item.name}</strong><p>{item.description}</p>{status.accountLabel&&<small>{status.accountLabel}</small>}{status.errorMessage&&<small role="alert">{status.errorMessage}</small>}</div><div className="settings-integration-actions"><span className={statusClass(status.state)}>{STATUS_LABEL[status.state]}</span>{status.state==='connected'?<><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'sync')}>{working?'Processando…':'Sincronizar'}</button><button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'disconnect')}>Desconectar</button></>:<button className="settings-btn settings-btn-outline" type="button" disabled={!backendConfigured||working} onClick={()=>void run(item.id,'connect')}>{working?'Processando…':backendConfigured?'Conectar':'Backend necessário'}</button>}</div></div>})}</div>)}
  </Card>;
