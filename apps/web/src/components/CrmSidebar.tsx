@@ -5,7 +5,7 @@ import './crm-sidebar.css';
 import './crm-workspace-switch.css';
 import '../styles/sidebar-v2.css';
 
-type MarketingSection = 'overview' | 'campaigns' | 'calendar' | 'metrics';
+type MarketingSection = 'overview' | 'briefings' | 'campaigns' | 'calendar' | 'tasks' | 'metrics';
 type FinanceSection = 'transactions' | 'invoices' | 'pl';
 type NavItem = {label:string;href:string;icon:AppSidebarIconName};
 
@@ -26,8 +26,10 @@ const FINANCE_ITEMS:Array<{label:string;href:string;section:FinanceSection}>=[
 
 const MARKETING_ITEMS: Array<{ label: string; href: string; section: MarketingSection }> = [
   { label: 'Visão Geral', href: '/crm/marketing', section: 'overview' },
+  { label: 'Briefings', href: '/crm/marketing/briefings', section: 'briefings' },
   { label: 'Campanhas', href: '/crm/marketing/campanhas', section: 'campaigns' },
   { label: 'Calendário', href: '/crm/marketing/calendario', section: 'calendar' },
+  { label: 'Tarefas', href: '/crm/marketing/tarefas', section: 'tasks' },
   { label: 'Métricas', href: '/crm/marketing/metricas', section: 'metrics' },
 ];
 
@@ -40,7 +42,7 @@ function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return
 function href(path:string){return `${basePath()}${path}`||path}
 function go(path:string){window.location.href=href(path)}
 function currentPath(){const base=basePath();const pathname=window.location.pathname;const normalized=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return normalized.replace(/\/+$/,'')||'/'}
-function marketingSection(path:string):MarketingSection{if(path.endsWith('/campanhas'))return'campaigns';if(path.endsWith('/calendario'))return'calendar';if(path.endsWith('/metricas'))return'metrics';return'overview'}
+function marketingSection(path:string):MarketingSection{if(path.endsWith('/briefings'))return'briefings';if(path.endsWith('/campanhas'))return'campaigns';if(path.endsWith('/calendario'))return'calendar';if(path.endsWith('/tarefas'))return'tasks';if(path.endsWith('/metricas'))return'metrics';return'overview'}
 function financeSection(path:string):FinanceSection|undefined{if(path==='/crm/categorias-financeiras'||path==='/crm/regras-financeiras')return undefined;if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
 function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path==='/crm';return path===itemHref||path.startsWith(`${itemHref}/`)}
 function BrandMark(){return <span className="crm-brand-mark" aria-hidden="true"><i/><b/></span>}
