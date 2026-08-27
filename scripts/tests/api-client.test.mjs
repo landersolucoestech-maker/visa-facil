@@ -1,11 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { normalizeApiBaseUrl } from '../../apps/web/src/shared/apiBaseUrl.ts';
 
-const source=readFileSync(resolve(process.cwd(),'apps/web/src/shared/apiClient.ts'),'utf8');
+test('API base URL accepts only safe same-origin paths or allowed absolute HTTP(S) origins',()=>{
+  assert.equal(normalizeApiBaseUrl('/api/'),'/api');
+  assert.equal(normalizeApiBaseUrl('/'),'/');
+  assert.equal(normalizeApiBaseUrl('https://api.example.com/v1/'),'https://api.example.com/v1');
+  assert.equal(normalizeApiBaseUrl('http://localhost:3000/api',true),'http://localhost:3000/api');
+  assert.equal(normalizeApiBaseUrl('http://api.example.com'),null);
+});
 
-test('API client never turns a root-relative base into a protocol-relative host',()=>{
-  assert.ok(source.includes("if(base==='/')return clean;"));
-  assert.equal(source.includes('return `${base}${clean}`;')&&source.includes("if(base==='/')return clean;"),true);
+test('API base URL rejects protocol-relative hosts and malformed relative paths',()=>{
+  assert.equal(normalizeApiBaseUrl('//evil.example/api'),null);
+  assert.equal(normalizeApiBaseUrl('/\\evil.example/api'),null);
+  assert.equal(normalizeApiBaseUrl('/api/../admin'),null);
+  assert.equal(normalizeApiBaseUrl('/api?host=evil'),null);
+  assert.equal(normalizeApiBaseUrl('/api#fragment'),null);
+  assert.equal(normalizeApiBaseUrl('/api\n/next'),null);
+});
+
+test('API base URL rejects embedded credentials query strings and fragments',()=>{
+  assert.equal(normalizeApiBaseUrl('https://user:pass@api.example.com'),null);
+  assert.equal(normalizeApiBaseUrl('https://api.example.com?token=secret'),null);
+  assert.equal(normalizeApiBaseUrl('https://api.example.com/#fragment'),null);
 });
