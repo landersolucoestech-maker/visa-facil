@@ -5,6 +5,11 @@ const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
 const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
 const KNOWN_GLOBAL_SECTION_TYPES=new Set(['header','footer']);
 
+export class CmsPublicationError extends Error{
+ readonly issues:string[];
+ constructor(issues:string[]){super(`Publicação bloqueada: ${issues[0]||'o documento do CMS é inválido.'}`);this.name='CmsPublicationError';this.issues=issues}
+}
+
 function isRecord(value:unknown):value is Record<string,unknown>{return Boolean(value)&&typeof value==='object'&&!Array.isArray(value)}
 function isString(value:unknown):value is string{return typeof value==='string'}
 function isBoolean(value:unknown):value is boolean{return typeof value==='boolean'}
@@ -95,4 +100,9 @@ export function cmsPublicationIssues(document:CmsDocument){
  }
  for(const required of KNOWN_GLOBAL_SECTION_TYPES)if(!seenGlobalTypes.has(required))issues.push(`O bloco global obrigatório “${required}” está ausente.`);
  return issues;
+}
+
+export function assertCmsPublishable(document:CmsDocument){
+ const issues=cmsPublicationIssues(document);
+ if(issues.length)throw new CmsPublicationError(issues);
 }
