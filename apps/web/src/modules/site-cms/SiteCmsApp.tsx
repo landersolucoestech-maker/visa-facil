@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CmsStorageError, loadDraft, publishDraft, resetCms, saveDraft } from './siteStore';
+import { CmsPublicationError, CmsStorageError, loadDraft, publishDraft, resetCms, saveDraft } from './siteStore';
 import { cmsPublicationIssues } from './cmsDocumentContract';
 import type { CmsDocument } from './types';
 import { CmsSidebar } from './CmsEditors';
@@ -17,7 +17,7 @@ export function SiteCmsApp(){
  const setDocument=(next:CmsDocument)=>{setDocumentState(next);setDirty(true)};
  const selectedPage=useMemo(()=>document.pages.find(page=>page.id===selectedPageId)||document.pages[0],[document.pages,selectedPageId]);
  const showNotice=(message:string,timeout=2400)=>{setNotice(message);window.setTimeout(()=>setNotice(''),timeout)};
- const storageMessage=(error:unknown)=>error instanceof CmsStorageError?error.message:'Não foi possível salvar o conteúdo local do CMS.';
+ const storageMessage=(error:unknown)=>error instanceof CmsStorageError||error instanceof CmsPublicationError?error.message:'Não foi possível salvar o conteúdo local do CMS.';
  useEffect(()=>{if(!dirty)return;const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue=''};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[dirty]);
  const save=()=>{try{const next=saveDraft(document);setDocumentState(next);setDirty(false);showNotice('Rascunho salvo localmente neste navegador.')}catch(error){showNotice(storageMessage(error),4200)}};
  const publish=()=>{const issues=cmsPublicationIssues(document);if(issues.length){showNotice(`Publicação bloqueada: ${issues[0]}`,5200);return}try{const saved=saveDraft(document);const next=publishDraft(saved);setDocumentState(next);setDirty(false);showNotice('Conteúdo publicado localmente neste navegador.',3000)}catch(error){showNotice(storageMessage(error),4200)}};
