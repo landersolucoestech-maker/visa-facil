@@ -1,6 +1,8 @@
 import { getMarketingMockFixture, type MarketingMockCampaign, type MarketingMockContent } from './mocks/marketingMockProvider';
 import { readSessionRecords } from '../../shared/sessionRecords';
 import { safeWriteSessionRecords as writeSessionRecordsSafely } from '../../shared/sessionPersistence';
+import { isSafeMarketingDestinationUrl } from './marketingUrl';
+export { isSafeMarketingDestinationUrl } from './marketingUrl';
 
 export type Platform='Instagram'|'Facebook'|'TikTok'|'YouTube'|'X'|'Threads';
 export type PaidPlatform='Meta Ads'|'Google Ads'|'TikTok Ads';
@@ -61,7 +63,6 @@ const RESULTS_BY_OBJECTIVE:Record<string,string[]>={
 };
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE=/^([01]\d|2[0-3]):[0-5]\d$/;
-const URL_CONTROL_OR_BACKSLASH=/[\u0000-\u001f\u007f\\]/;
 
 function isObject(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
 function isStringArray(value:unknown):value is string[]{return Array.isArray(value)&&value.every(item=>typeof item==='string')}
@@ -72,15 +73,6 @@ function normalizeResult(objective:unknown,value:unknown){const canonical=normal
 function normalizePaidPlatform(value:unknown):PaidPlatform|undefined{
  if(value==='YouTube Ads'||value==='YouTube')return'Google Ads';
  return typeof value==='string'&&PAID_PLATFORMS.has(value as PaidPlatform)?value as PaidPlatform:undefined;
-}
-
-export function isSafeMarketingDestinationUrl(value:string){
- const candidate=value.trim();
- if(!candidate||URL_CONTROL_OR_BACKSLASH.test(candidate))return false;
- try{
-  const url=new URL(candidate);
-  return (url.protocol==='https:'||url.protocol==='http:')&&!url.username&&!url.password;
- }catch{return false}
 }
 
 export function isMarketingContent(value:unknown):value is ContentItem{
