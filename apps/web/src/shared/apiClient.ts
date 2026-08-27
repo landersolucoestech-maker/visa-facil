@@ -1,4 +1,4 @@
-import { normalizeApiBaseUrl } from './apiBaseUrl';
+import { buildApiEndpoint, normalizeApiBaseUrl } from './apiBaseUrl';
 
 export type ApiErrorDetails={
   code:string;
@@ -22,9 +22,9 @@ export function isBackendConfigured(){return getApiBaseUrl()!==null}
 function endpoint(path:string){
   const base=getApiBaseUrl();
   if(!base)throw new ApiClientError({code:'BACKEND_NOT_CONFIGURED',message:'A API backend não está configurada neste ambiente.',retryable:false,status:0});
-  const clean=path.startsWith('/')?path:`/${path}`;
-  if(base==='/')return clean;
-  return `${base}${clean}`;
+  const target=buildApiEndpoint(base,path);
+  if(!target)throw new ApiClientError({code:'INVALID_API_PATH',message:'O caminho solicitado para a API é inválido.',retryable:false,status:0});
+  return target;
 }
 
 function isRecord(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
@@ -58,7 +58,8 @@ export async function apiRequest<T>(path:string,init:RequestInit,validate:(value
       credentials:'include',
       headers:{Accept:'application/json',...(init.body?{'Content-Type':'application/json'}:{}),...init.headers},
     });
-  }catch{
+  }catch(error){
+    if(error instanceof ApiClientError)throw error;
     throw new ApiClientError({code:'NETWORK_ERROR',message:'Não foi possível alcançar a API backend.',retryable:true,status:0});
   }
   if(!response.ok)throw await toError(response);
