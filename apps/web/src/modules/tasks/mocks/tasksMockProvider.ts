@@ -4,6 +4,7 @@ import { isMockDataEnabled } from '../../../shared/runtimeFlags';
 export type TaskStatus = 'Pendente' | 'Em andamento' | 'Concluída';
 export type TaskPriority = 'Baixa' | 'Média' | 'Alta';
 export type RelatedType = 'Contato' | 'Lead';
+export type TaskArea = 'Geral' | 'Marketing';
 
 export type TaskRecord = {
   id: string;
@@ -14,6 +15,7 @@ export type TaskRecord = {
   relatedRecordId?: string;
   owner: string;
   ownerUserId?: string;
+  area?: TaskArea;
   priority: TaskPriority;
   status: TaskStatus;
   dueDate: string;
@@ -26,6 +28,7 @@ export type TaskRecord = {
 const STATUSES = new Set<TaskStatus>(['Pendente', 'Em andamento', 'Concluída']);
 const PRIORITIES = new Set<TaskPriority>(['Baixa', 'Média', 'Alta']);
 const RELATED_TYPES = new Set<RelatedType>(['Contato', 'Lead']);
+const AREAS = new Set<TaskArea>(['Geral', 'Marketing']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -34,11 +37,13 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
 function isOptionalText(value: unknown): value is string | undefined { return value === undefined || typeof value === 'string'; }
+export function taskArea(record:Pick<TaskRecord,'area'>):TaskArea{return record.area??'Geral'}
 export function isTaskRecord(value: unknown): value is TaskRecord {
   if (!isObject(value)) return false;
   if (typeof value.dueDate !== 'string' || (value.dueDate !== '' && !DATE_RE.test(value.dueDate))) return false;
   if (typeof value.dueTime !== 'string' || (value.dueTime !== '' && !TIME_RE.test(value.dueTime))) return false;
   if (!value.dueDate && (value.dueTime !== '' || value.reminder !== 'Sem lembrete')) return false;
+  if(value.area!==undefined&&(typeof value.area!=='string'||!AREAS.has(value.area as TaskArea)))return false;
   return typeof value.id === 'string' && value.id.trim().length > 0
     && typeof value.title === 'string' && value.title.trim().length > 0
     && isText(value.description)
