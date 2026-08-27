@@ -81,6 +81,16 @@ try{
  await waitFor(`document.querySelector('.site-cms-media-message')?.textContent?.includes('http:// ou https://')`,'unsafe external media URL rejection');
  await assertBrowser(`document.querySelectorAll('.site-cms-media-card').length===0`,'unsafe URL is not inserted into media library');
 
+ await evaluate(`localStorage.setItem('visa-facil.cms.draft.v1','{broken')`);
+ await navigate('/site-admin');
+ await waitFor(`document.querySelector('.site-cms-toast')?.textContent?.includes('recuperado a partir da última publicação local válida')`,'corrupt draft recovery notice');
+ await assertBrowser(`(()=>{try{return JSON.parse(localStorage.getItem('visa-facil.cms.draft.v1')).version===1}catch{return false}})()`,'corrupt draft is replaced by a valid recovered snapshot');
+
+ await evaluate(`localStorage.setItem('visa-facil.cms.published.v1','{broken')`);
+ await navigate('/site-admin');
+ await waitFor(`document.querySelector('.site-cms-toast')?.textContent?.includes('publicação local armazenada estava inválida')`,'corrupt published snapshot notice');
+ await assertBrowser(`(()=>{try{return JSON.parse(localStorage.getItem('visa-facil.cms.draft.v1')).version===1}catch{return false}})()`,'valid draft remains preserved when published snapshot is corrupt');
+
  console.log('Site CMS browser interaction smoke passed.');
 }finally{
  socket.close();
