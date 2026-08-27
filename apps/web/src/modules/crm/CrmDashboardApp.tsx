@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { getAgendaSessionEvents, getAttendanceSessionConversations, getCrmSessionRecords, getFinanceSessionRecords, getTaskSessionRecords } from '../../shared/operationalSessionStore';
+import { localDateIso } from '../../shared/localDate';
 
 const money = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const isoToday = () => new Date().toISOString().slice(0, 10);
 function basePath(){return import.meta.env.BASE_URL.replace(/\/$/,'')}
 function href(path:string){return `${basePath()}${path}`||path}
 function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
@@ -10,7 +10,7 @@ function formatActivityTime(value:string){const parsed=new Date(value);return Nu
 function KpiCard({label,value,detail,tone}:{label:string;value:string;detail:string;tone:'blue'|'red'|'navy'}){return <article className={`crm-kpi-card crm-dashboard-kpi crm-dashboard-kpi--${tone}`} data-dashboard-kpi={label}><div><small>{label}</small><strong>{value}</strong><p>{detail}</p></div></article>}
 
 export function CrmDashboardApp(){
- const crmRecords=useMemo(()=>getCrmSessionRecords(),[]);const financeRecords=useMemo(()=>getFinanceSessionRecords(),[]);const agendaEvents=useMemo(()=>getAgendaSessionEvents(),[]);const tasks=useMemo(()=>getTaskSessionRecords(),[]);const conversations=useMemo(()=>getAttendanceSessionConversations(),[]);const today=isoToday();
+ const crmRecords=useMemo(()=>getCrmSessionRecords(),[]);const financeRecords=useMemo(()=>getFinanceSessionRecords(),[]);const agendaEvents=useMemo(()=>getAgendaSessionEvents(),[]);const tasks=useMemo(()=>getTaskSessionRecords(),[]);const conversations=useMemo(()=>getAttendanceSessionConversations(),[]);const today=localDateIso();
  const contacts=crmRecords.filter(record=>record.kind==='contact').length;const leads=crmRecords.filter(record=>record.kind==='lead').length;const clients=crmRecords.filter(record=>record.kind==='contact'&&record.relationship==='Cliente').length;
  const revenue=financeRecords.filter(record=>record.type==='Receita'&&record.status==='Recebido').reduce((sum,record)=>sum+record.amount,0);const expenses=financeRecords.filter(record=>record.type==='Despesa'&&record.status==='Pago').reduce((sum,record)=>sum+record.amount,0);const result=revenue-expenses;
  const recentActivities=[...crmRecords].sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt)).slice(0,4).map(record=>({id:record.id,name:record.fullName,activity:record.kind==='lead'?`Lead · ${record.leadStatus||'atualizado'}`:`Contato · ${record.relationship||record.contactStatus||'atualizado'}`,time:formatActivityTime(record.updatedAt)}));
