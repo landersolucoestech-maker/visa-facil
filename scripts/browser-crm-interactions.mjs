@@ -96,14 +96,29 @@ try{
  await navigate('/crm/configuracoes');
  await clickButton('Integrações');
  await waitFor(`document.body.textContent?.includes('Telefonia e SMS')`,'telephony and SMS integration row');
- await assertBrowser(`document.body.textContent?.includes('Integração agnóstica com operadoras e provedores IP para SMS, voz, linhas/números, roteamento e atendimento integrado ao CRM e VisaChat por meio de APIs.')`,'compact telephony integration description');
- await assertBrowser(`!document.body.textContent?.includes('Operadoras tradicionais previstas:')&&!document.body.textContent?.includes('Provedores IP/Internet previstos:')`,'verbose telephony provider lists stay hidden');
- await assertBrowser(`document.body.textContent?.includes('Backend necessário')`,'telephony integration remains truthful while backend is absent');
- await waitFor(`document.body.textContent?.includes('Meta — Facebook, Instagram, Messenger e Ads')`,'unified Meta provider heading');
- await assertBrowser(`document.body.textContent?.includes('Integração oficial via OAuth para atendimento, mensagens, conteúdo, comentários, anúncios, métricas e demais recursos autorizados pelas APIs da Meta.')`,'compact Meta integration description');
- await assertBrowser(`(()=>{const names=[...document.querySelectorAll('.settings-integration-copy>strong')].map(item=>item.textContent?.trim());return names.filter(name=>name==='Meta — Facebook, Instagram, Messenger e Ads').length===1&&!names.includes('Facebook')&&!names.includes('Instagram')})()`,'Facebook and Instagram are not independent integration rows');
- await assertBrowser(`document.body.textContent?.includes('Autorização: fluxo oficial Meta')`,'Meta official authorization label');
- await assertBrowser(`!document.body.textContent?.includes('Produtos / canais: Facebook · Instagram · Messenger · Meta Ads')&&!document.body.textContent?.includes('Meta App ID, Meta App Secret, OAuth, tokens, webhook, Graph API e estado geral pertencem ao provider Meta')`,'verbose Meta technical disclosure stays hidden from the list');
+ await assertBrowser(`document.body.textContent?.includes('Camada de integração agnóstica para conexão com operadoras de telefonia e provedores de comunicação via internet')`,'telephony architecture description');
+ await assertBrowser(`document.body.textContent?.includes('Vivo')&&document.body.textContent?.includes('TIM')&&document.body.textContent?.includes('Claro')`,'traditional telephony provider targets');
+ await assertBrowser(`document.body.textContent?.includes('Twilio')&&document.body.textContent?.includes('Dialpad')&&document.body.textContent?.includes('RingCentral')`,'IP communication provider targets');
+ await assertBrowser(`document.body.textContent?.includes('Recebimento e envio de mensagens')&&document.body.textContent?.includes('Histórico de comunicação')`,'telephony resource presentation');
+ await assertBrowser(`document.body.textContent?.includes('Backend necessário')`,'integrations remain truthful while backend is absent');
+
+ await waitFor(`document.body.textContent?.includes('Facebook · Instagram · Messenger · Meta Ads')`,'unified Meta provider hierarchy');
+ await assertBrowser(`(()=>{const names=[...document.querySelectorAll('.settings-integration-copy>strong')].map(item=>item.textContent?.trim());return names.filter(name=>name==='Meta').length===1&&!names.includes('Facebook')&&!names.includes('Instagram')&&!names.includes('Messenger')&&!names.includes('Meta Ads')})()`,'Meta products are not independent integration rows');
+ await assertBrowser(`document.body.textContent?.includes('Autorização: fluxo oficial Meta via OAuth')`,'Meta official OAuth label');
+ await assertBrowser(`document.body.textContent?.includes('A conexão deverá centralizar atendimento, mensagens, gestão de conteúdo, interações sociais, publicidade e métricas')`,'Meta operational description');
+ await assertBrowser(`document.body.textContent?.includes('Páginas e perfis')&&document.body.textContent?.includes('Campanhas e anúncios')`,'Meta requested capabilities');
+
+ await waitFor(`document.body.textContent?.includes('YouTube · Google Ads · Google Calendar')`,'unified Google provider hierarchy');
+ await assertBrowser(`(()=>{const names=[...document.querySelectorAll('.settings-integration-copy>strong')].map(item=>item.textContent?.trim());return names.filter(name=>name==='Google').length===1&&!names.includes('YouTube')&&!names.includes('Google Ads')&&!names.includes('Google Calendar')})()`,'Google services are not independent integration rows');
+ await assertBrowser(`document.body.textContent?.includes('Autorização: fluxo oficial Google via OAuth')`,'Google official OAuth label');
+ await assertBrowser(`[...document.querySelectorAll('.settings-integration-service h4')].some(item=>item.textContent?.trim()==='YouTube')`,'YouTube service section');
+ await assertBrowser(`[...document.querySelectorAll('.settings-integration-service h4')].some(item=>item.textContent?.trim()==='Google Ads')`,'Google Ads service section');
+ await assertBrowser(`[...document.querySelectorAll('.settings-integration-service h4')].some(item=>item.textContent?.trim()==='Google Calendar')`,'Google Calendar service section');
+ await assertBrowser(`document.body.textContent?.includes('Inventário de YouTube quando aplicável')&&document.body.textContent?.includes('Sincronização bidirecional')`,'Google service capability details');
+ await assertBrowser(`document.body.textContent?.includes('Social, Conteúdo & Publicidade')`,'consolidated social content and advertising category');
+
+ await assertBrowser(`document.body.textContent?.includes('A integração deverá utilizar exclusivamente recursos oficialmente disponibilizados e autorizados pelo TikTok.')`,'TikTok official-only integration disclosure');
+ await assertBrowser(`document.body.textContent?.includes('Campanhas e anúncios quando autorizados')`,'TikTok conditional advertising capability');
 
  console.log('CRM browser interaction smoke passed.');
 }finally{
