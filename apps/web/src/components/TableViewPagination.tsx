@@ -12,7 +12,7 @@ type PaginationConfig = {
 const PAGE_SIZE = 10;
 
 const CONFIGS: PaginationConfig[] = [
-  { paths: ['/crm/relacionamento'], containerSelector: '.crm-directory', rowSelector: '.crm-directory-row', label: 'CRM' },
+  { paths: ['/crm/relacionamento'], containerSelector: '.crm-directory-table', rowSelector: '.crm-directory-row', label: 'CRM' },
   { paths: ['/crm/tarefas'], containerSelector: '.tasks-card', rowSelector: '.tasks-row', label: 'Tarefas' },
   { paths: ['/crm/contratos', '/crm/contratos/templates', '/crm/contratos/variaveis'], containerSelector: '.contracts-panel', rowSelector: '.contracts-table tbody tr', label: 'Contratos' },
   { paths: ['/crm/financeiro', '/crm/financeiro/transacoes'], containerSelector: '.finance-transactions-card', rowSelector: '.finance-transactions-table .finance-row', label: 'Transações' },
