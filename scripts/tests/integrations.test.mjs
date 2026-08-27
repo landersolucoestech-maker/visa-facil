@@ -10,6 +10,7 @@ const root=process.cwd();
 const contractSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/integrationContract.ts'),'utf8');
 const apiSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/integrationApi.ts'),'utf8');
 const settingsSource=readFileSync(resolve(root,'apps/web/src/modules/settings/SecurityIntegrationTabs.tsx'),'utf8');
+const authorizationSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/officialAuthorization.ts'),'utf8');
 
 test('integration registry contains every frontend-manageable technical provider exactly once',()=>{
   assert.deepEqual(INTEGRATION_REGISTRY.map(item=>item.id).sort(),[...EXPECTED].sort());
@@ -86,9 +87,11 @@ test('official account providers require their original OAuth authorization flow
     assert.equal(integration.authMode,'oauth2',`${id} must use provider OAuth/official authorization`);
     assert.ok(integration.officialAuthorizationProvider,`${id} must identify its official authorization provider`);
   }
-  assert.match(settingsSource,/AUTH_HOSTS/);
-  assert.match(settingsSource,/url\.protocol!==['"]https:['"]/);
+  assert.match(authorizationSource,/OFFICIAL_AUTH_HOSTS/);
+  assert.match(authorizationSource,/url\.protocol!==['"]https:['"]/);
+  assert.match(authorizationSource,/OFFICIAL_AUTH_HOSTS\[provider\]\.includes\(url\.hostname\)/);
   assert.equal(settingsSource.includes('url.origin===window.location.origin'),false,'OAuth authorization must never fall back to a local imitation login');
+  assert.match(settingsSource,/officialAuthorizationUrl\(definition\.officialAuthorizationProvider,response\.authorizationUrl\)/);
   assert.match(settingsSource,/Conectar \$\{item\.name\}/);
   assert.match(settingsSource,/Reconectar/);
   assert.match(settingsSource,/fluxo oficial/);
