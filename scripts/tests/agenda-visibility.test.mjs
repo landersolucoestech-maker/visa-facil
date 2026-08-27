@@ -18,5 +18,9 @@ test('events without a start time have an explicit visible row instead of disapp
   assert.ok(source.includes('agenda-untimed-row'));
   assert.ok(source.includes('agenda-week-untimed'));
   assert.ok(source.includes('Sem horário'));
-  assert.ok(root.includes("await import('./modules/agenda/agenda-integrity.css');"));
+});
+
+test('Agenda keeps the canonical single-style lazy loader',()=>{
+  assert.ok(root.includes("const AgendaApp = lazy(() => import('./modules/agenda/AgendaApp'));"));
+  assert.equal(root.includes('agenda-integrity.css'),false);
 });
