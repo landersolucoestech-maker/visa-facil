@@ -94,7 +94,8 @@ const integrationApi=read('apps/web/src/modules/integrations/integrationApi.ts')
 const integrationsUi=read('apps/web/src/modules/settings/SecurityIntegrationTabs.tsx');
 const settingsShared=read('apps/web/src/modules/settings/settingsShared.tsx');
 const apiClient=read('apps/web/src/shared/apiClient.ts');
-for(const provider of ['whatsapp','resend','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'])if(!integrationContract.includes(`'${provider}'`))fail(`Canonical integration registry is missing ${provider}.`);
+for(const provider of ['whatsapp','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'])if(!integrationContract.includes(`'${provider}'`))fail(`Canonical frontend integration registry is missing ${provider}.`);
+if(integrationContract.includes("'resend'")||integrationContract.includes('RESEND_API_KEY')||integrationContract.includes('RESEND_WEBHOOK_SECRET')||integrationsUi.toLowerCase().includes('resend'))fail('Resend is server-owned and must not be exposed by the frontend integration contract or Settings UI.');
 for(const token of ['IntegrationRuntimeStatus','serverOnlySecrets','externalRequirements','isIntegrationRuntimeStatus'])if(!integrationContract.includes(token))fail(`Integration contract is incomplete: missing ${token}.`);
 for(const token of ['/v1/integrations','connectIntegration','disconnectIntegration','syncIntegration','apiRequest'])if(!integrationApi.includes(token))fail(`Integration API facade is incomplete: missing ${token}.`);
 for(const token of ['INTEGRATION_REGISTRY','getIntegrationStatuses','connectIntegration','disconnectIntegration','syncIntegration','isBackendConfigured'])if(!integrationsUi.includes(token))fail(`Settings integration UI must use the real backend contract: missing ${token}.`);
