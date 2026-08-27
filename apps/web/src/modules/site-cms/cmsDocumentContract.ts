@@ -3,6 +3,8 @@ import type { CmsDocument, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionIns
 const CMS_DOCUMENT_VERSION=1;
 const VALID_PAGE_STATUSES=new Set<CmsStatus>(['draft','published','scheduled','hidden']);
 const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
+const SAFE_RASTER_DATA_URL=/^data:image\/(?:png|jpeg|gif|webp|avif);base64,[A-Za-z0-9+/]+={0,2}$/;
+const SAFE_PDF_DATA_URL=/^data:application\/pdf;base64,[A-Za-z0-9+/]+={0,2}$/;
 const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
 const KNOWN_GLOBAL_SECTION_TYPES=new Set(['header','footer']);
 const VALID_PUBLIC_FORM_FIELD_TYPES=new Set(['text','tel','email','select','textarea']);
@@ -24,7 +26,7 @@ function isCmsValue(value:unknown):value is CmsValue{return isString(value)||isB
 function isSeo(value:unknown):value is CmsSeo{return isRecord(value)&&isString(value.title)&&isString(value.description)&&isString(value.ogImage)&&isString(value.canonicalUrl)&&isBoolean(value.noIndex)}
 function isSection(value:unknown):value is CmsSectionInstance{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.type)&&value.type.trim().length>0&&isString(value.label)&&isBoolean(value.visible)&&isNumber(value.order)&&Number.isInteger(value.order)&&value.order>=0&&isRecord(value.values)&&Object.values(value.values).every(isCmsValue)}
 function isPage(value:unknown):value is CmsPage{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.name)&&isString(value.slug)&&typeof value.status==='string'&&VALID_PAGE_STATUSES.has(value.status as CmsStatus)&&isString(value.scheduledAt)&&isDateTimeString(value.updatedAt)&&isSeo(value.seo)&&Array.isArray(value.sections)&&value.sections.every(isSection)}
-function isMedia(value:unknown):value is CmsMediaItem{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.name)&&isString(value.url)&&isString(value.alt)&&typeof value.kind==='string'&&VALID_MEDIA_KINDS.has(value.kind as CmsMediaItem['kind'])&&isDateTimeString(value.createdAt)}
+function isMedia(value:unknown):value is CmsMediaItem{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.name)&&isString(value.url)&&isString(value.alt)&&typeof value.kind==='string'&&VALID_MEDIA_KINDS.has(value.kind as CmsMediaItem['kind'])&&isSafeCmsMediaUrl(value.kind as CmsMediaItem['kind'],value.url)&&isDateTimeString(value.createdAt)}
 function isSettings(value:unknown):value is CmsSettings{return isRecord(value)&&isString(value.siteName)&&isString(value.siteUrl)&&isString(value.locale)&&isString(value.defaultOgImage)&&isString(value.organizationName)}
 function hasUniqueIds<T extends {id:string}>(items:T[]){return new Set(items.map(item=>item.id)).size===items.length}
 function hasUniqueOrders<T extends {order:number}>(items:T[]){return new Set(items.map(item=>item.order)).size===items.length}
@@ -58,6 +60,15 @@ export function isSafeCmsExternalUrl(value:string){
  const trimmed=value.trim();
  if(!trimmed)return false;
  try{const parsed=new URL(trimmed);return parsed.protocol==='https:'||parsed.protocol==='http:'}catch{return false}
+}
+
+export function isSafeCmsMediaUrl(kind:CmsMediaItem['kind'],value:string){
+ const trimmed=value.trim();
+ if(!trimmed)return false;
+ if(isSafeCmsExternalUrl(trimmed))return true;
+ if(kind==='image')return SAFE_RASTER_DATA_URL.test(trimmed);
+ if(kind==='document')return SAFE_PDF_DATA_URL.test(trimmed);
+ return false;
 }
 
 export function canonicalCmsLocale(value:string){
@@ -145,7 +156,11 @@ export function cmsPublicationIssues(document:CmsDocument){
    if(section.type==='contact')appendPublicFormIssues(issues,section,label);
   }
  }
- for(const media of document.media)if(!isDateTimeString(media.createdAt))issues.push(`A mídia “${media.name||media.id}” possui data de criação inválida.`);
+ for(const media of document.media){
+  const mediaLabel=media.name||media.id;
+  if(!isDateTimeString(media.createdAt))issues.push(`A mídia “${mediaLabel}” possui data de criação inválida.`);
+  if(!isSafeCmsMediaUrl(media.kind,media.url))issues.push(`A mídia “${mediaLabel}” possui uma URL incompatível com o tipo ${media.kind==='image'?'imagem':'documento'}.`);
+ }
  appendOrderIssues(issues,document.globals,'O conteúdo global');
  const seenGlobalTypes=new Set<string>();
  for(const section of document.globals){
