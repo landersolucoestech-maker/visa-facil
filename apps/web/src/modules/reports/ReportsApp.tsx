@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import './reports.css';
 import { getReportRows, importReportRows, REPORT_DATASET_COLUMNS, type ReportDatasetId, type ReportRow } from './reportDatasetAdapter';
 import { CONFIGURATION_REPORT_DATASET_COLUMNS, getConfigurationReportRows, importConfigurationReportRows, isConfigurationReportDatasetId, type ConfigurationReportDatasetId } from './reportConfigurationDatasetAdapter';
+import { assertSafeXlsxFile } from './xlsxImportSafety';
 import { createXlsxBlob, readXlsxFile } from './xlsxWorkbook';
 
 type ReportEntityId=ReportDatasetId|ConfigurationReportDatasetId;
@@ -47,6 +48,7 @@ async function parseXlsx(file:File,entity:ReportEntity):Promise<ReportRow[]>{
  if(!file.name.toLowerCase().endsWith('.xlsx'))throw new Error('Envie exclusivamente um arquivo XLSX (.xlsx).');
  if(file.size===0)throw new Error('O arquivo XLSX está vazio.');
  if(file.size>MAX_XLSX_BYTES)throw new Error('O arquivo XLSX excede o limite de 10 MB.');
+ await assertSafeXlsxFile(file);
  const workbook=await readXlsxFile(file);validateHeaders(workbook.headers,entity);
  const headerIndex=new Map(workbook.headers.map((header,index)=>[normalizeHeader(header),index]));
  return workbook.rows.map(values=>{const row:ReportRow={};for(const column of entity.columns){const index=headerIndex.get(normalizeHeader(column));row[column]=index===undefined?'':String(values[index]??'').trim()}return row}).filter(row=>Object.values(row).some(value=>value.length>0));
