@@ -1,3 +1,5 @@
+import { normalizeApiBaseUrl } from './apiBaseUrl';
+
 export type ApiErrorDetails={
   code:string;
   message:string;
@@ -11,17 +13,8 @@ export class ApiClientError extends Error{
   constructor(details:ApiErrorDetails){super(details.message);this.name='ApiClientError';this.details=details}
 }
 
-function trimSlash(value:string){return value.replace(/\/+$/,'')}
-
 export function getApiBaseUrl():string|null{
-  const raw=import.meta.env.VITE_API_BASE_URL?.trim();
-  if(!raw)return null;
-  if(raw.startsWith('/'))return trimSlash(raw)||'/';
-  try{
-    const url=new URL(raw);
-    if(url.protocol!=='https:'&&!(import.meta.env.DEV&&url.protocol==='http:'))return null;
-    return trimSlash(url.toString());
-  }catch{return null}
+  return normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL,import.meta.env.DEV);
 }
 
 export function isBackendConfigured(){return getApiBaseUrl()!==null}
