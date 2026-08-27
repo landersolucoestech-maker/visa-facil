@@ -15,7 +15,9 @@ export type AgendaEvent = {
   city: string;
   relatedType: 'Contato' | 'Lead' | 'Cliente';
   relatedName: string;
+  relatedRecordId?: string;
   owner: string;
+  ownerUserId?: string;
   notes: string;
 };
 
@@ -28,6 +30,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
+function isOptionalText(value: unknown): value is string | undefined { return value === undefined || typeof value === 'string'; }
 export function isAgendaEvent(value: unknown): value is AgendaEvent {
   if (!isObject(value)) return false;
   if (typeof value.startTime !== 'string' || typeof value.endTime !== 'string') return false;
@@ -42,7 +45,9 @@ export function isAgendaEvent(value: unknown): value is AgendaEvent {
     && isText(value.city)
     && typeof value.relatedType === 'string' && RELATED_TYPES.has(value.relatedType as AgendaEvent['relatedType'])
     && isText(value.relatedName)
+    && isOptionalText(value.relatedRecordId)
     && isText(value.owner)
+    && isOptionalText(value.ownerUserId)
     && isText(value.notes);
 }
 
