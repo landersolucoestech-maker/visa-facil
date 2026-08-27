@@ -13,7 +13,7 @@ import {
 } from '../modules/attendance/attendanceDomain';
 import { getSettingsUserMocks } from '../modules/settings/mocks/settingsMockProvider';
 import { readSessionRecords } from './sessionRecords';
-import { safeWriteSessionRecords } from './sessionPersistence';
+import { safeWriteSessionRecords as writeSessionRecordsSafely } from './sessionPersistence';
 
 export { LOCAL_PERSISTENCE_ERROR_EVENT, type LocalPersistenceErrorDetail } from './sessionPersistence';
 
@@ -34,16 +34,16 @@ export function getOperationalTeamMembers():OperationalTeamMember[]{
 }
 
 export function getCrmSessionRecords(){return readSessionRecords<CrmRecord>(KEYS.crm,getCrmInitialRecords,isCrmRecord)}
-export function saveCrmSessionRecords(records:CrmRecord[]){return safeWriteSessionRecords(KEYS.crm,records,isCrmRecord)}
+export function saveCrmSessionRecords(records:CrmRecord[]){return writeSessionRecordsSafely(KEYS.crm,records,isCrmRecord)}
 
 export function getTaskSessionRecords(){return readSessionRecords<TaskRecord>(KEYS.tasks,getTaskInitialRecords,isTaskRecord)}
-export function saveTaskSessionRecords(records:TaskRecord[]){return safeWriteSessionRecords(KEYS.tasks,records,isTaskRecord)}
+export function saveTaskSessionRecords(records:TaskRecord[]){return writeSessionRecordsSafely(KEYS.tasks,records,isTaskRecord)}
 
 export function getAgendaSessionEvents(){return readSessionRecords<AgendaEvent>(KEYS.agenda,getAgendaInitialEvents,isAgendaEvent)}
-export function saveAgendaSessionEvents(records:AgendaEvent[]){return safeWriteSessionRecords(KEYS.agenda,records,isAgendaEvent)}
+export function saveAgendaSessionEvents(records:AgendaEvent[]){return writeSessionRecordsSafely(KEYS.agenda,records,isAgendaEvent)}
 
 export function getFinanceSessionRecords(){return readSessionRecords<FinanceRecord>(KEYS.finance,getFinanceInitialRecords,isFinanceRecord)}
-export function saveFinanceSessionRecords(records:FinanceRecord[]){return safeWriteSessionRecords(KEYS.finance,records,isFinanceRecord)}
+export function saveFinanceSessionRecords(records:FinanceRecord[]){return writeSessionRecordsSafely(KEYS.finance,records,isFinanceRecord)}
 
 export function getAttendanceSessionConversations(){
  const seeds=getAttendanceInitialConversations();
@@ -55,5 +55,5 @@ export function getAttendanceSessionConversations(){
  return sortAttendanceConversations(merged.map(item=>normalizeAttendanceConversation(item,seedById.get(item.id))));
 }
 export function saveAttendanceSessionConversations(records:AttendanceConversation[]){
- return safeWriteSessionRecords(KEYS.attendance,sortAttendanceConversations(records),isAttendanceConversation);
+ return writeSessionRecordsSafely(KEYS.attendance,sortAttendanceConversations(records),isAttendanceConversation);
 }
