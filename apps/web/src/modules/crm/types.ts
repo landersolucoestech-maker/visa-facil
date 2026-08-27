@@ -22,6 +22,7 @@ export type CrmRecord = {
   contactStatus?: string;
   source?: string;
   owner?: string;
+  ownerUserId?: string;
   interest?: string;
   destination?: string;
   visaType?: string;
@@ -29,6 +30,9 @@ export type CrmRecord = {
   temperature?: string;
   nextAction?: string;
   nextActionDate?: string;
+  convertedContactId?: string;
+  convertedFromLeadId?: string;
+  convertedAt?: string;
 };
 
-export type CrmRecordDraft = Omit<CrmRecord, 'id' | 'kind' | 'createdAt' | 'updatedAt'>;
+export type CrmRecordDraft = Omit<CrmRecord, 'id' | 'kind' | 'createdAt' | 'updatedAt' | 'convertedContactId' | 'convertedFromLeadId' | 'convertedAt'>;
