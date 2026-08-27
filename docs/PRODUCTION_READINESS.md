@@ -2,22 +2,35 @@
 
 ## Situação geral
 
-O frontend passou por consolidação arquitetural, mas o projeto ainda não é um sistema de produção completo porque este repositório não possui backend, banco de dados, autenticação real, secret management, workers ou adapters externos. Esses limites devem permanecer explícitos até as respectivas camadas existirem.
+O frontend passou por consolidação arquitetural. Dentro do escopo deste repositório estático, não há bloqueio estrutural conhecido nas rotas e fluxos locais do CRM cobertos pelos gates atuais. Isso **não** significa que o produto esteja pronto para operação real: este repositório não possui backend, banco de dados, autenticação real, secret management, workers ou adapters externos. Esses limites devem permanecer explícitos até as respectivas camadas existirem.
 
 | Área | Estado | Bloqueio para produção real |
 | --- | --- | --- |
 | Site público e navegação | Implementados | Nenhum bloqueio estrutural conhecido no frontend |
 | Formulário público | Frontend preparado | Exige `VITE_API_BASE_URL` apontando para API real e endpoint `POST /v1/public/leads` |
-| CRM/Agenda/Tarefas/VisaChat | Funcionais em sessão | Persistência compartilhada/multiusuário exige backend e banco |
+| CRM/Agenda/Tarefas/VisaChat | Frontend consolidado em sessão | Persistência compartilhada/multiusuário exige backend e banco |
+| Marketing | Briefings, campanhas, conteúdo/calendário, tarefas e métricas consolidados em sessão; conteúdo pode vincular campanha por ID canônico | Publicação, mensagens, métricas e mídia paga reais exigem providers autorizados e backend |
 | Financeiro/Invoices/Contabilidade | Regras frontend consolidadas | Persistência, autorização, conciliação e fiscal real exigem backend |
 | CMS | Funcional no navegador | Conteúdo compartilhado, versionamento multiusuário e publicação central exigem API/DB |
 | Autenticação/RBAC | Desativados | Provedor de identidade, sessão e enforcement server-side |
 | Integrações externas | Contratos frontend preparados | Backend, credenciais, OAuth, webhooks, workers e secret manager |
 | Telefonia e SMS | Contrato agnóstico de provider preparado | Provider adapter, conta/contrato, credenciais server-side, linhas/números, roteamento e webhooks/gateway reais |
-| Automações | Preferências modeladas | Worker/jobs/filas inexistentes |
+| Automações | Preferências de E-mail, SMS e Push/In-App modeladas em sessão | Worker/jobs/filas inexistentes; preferências não executam disparos |
 | Relatórios | XLSX operacional/configuração no navegador | Persistência compartilhada e multiusuário exige fonte de dados server-side |
 | Contratos | Frontend funcional em sessão | Persistência server-side, anexos duráveis, auditoria imutável, RBAC e assinatura Autentique real exigem backend |
 | NFS-e | Apenas arquitetura de integração | Provedor fiscal, homologação, certificado/dados fiscais e backend |
+
+## Fechamento do frontend do CRM
+
+Os gates atuais validam o frontend local do CRM em quatro níveis: contrato arquitetural/lint, testes de domínio, TypeScript/build e execução em navegador headless com montagem e interações selecionadas. Entre os fluxos cobertos estão Relacionamento, Agenda, Tarefas, VisaChat, Contratos, Financeiro, Faturamento, Marketing, Relatórios e Configurações.
+
+As relações internas que possuem entidade canônica não devem depender apenas de nomes digitados. O frontend já preserva IDs onde aplicável, incluindo responsáveis (`ownerUserId`/`assigneeUserId`), registros relacionados do CRM (`relatedRecordId`/`crmRecordId`), cliente de cobrança (`customerRecordId`) e campanha vinculada ao conteúdo de Marketing (`campaignId`). Nomes permanecem como representação legível e compatibilidade de registros legados, não como chave primária do relacionamento.
+
+No Marketing, Briefings e Tarefas são superfícies reais do frontend. Tarefas de Marketing reutilizam o mesmo domínio canônico de Tarefas com `Área = Marketing`; não existe um segundo store de tarefas paralelo. Conteúdos podem ser associados às campanhas existentes da sessão por `campaignId`; ao excluir uma campanha, o vínculo local é removido dos conteúdos sem apagar os conteúdos. A conta externa usada para publicação continua indisponível sem conexão real de provider.
+
+Em Configurações, SMS é uma preferência futura de canal assim como E-mail e Push/In-App. Ativar essa preferência apenas preserva a escolha na sessão; não envia mensagens. A execução depende da futura camada de Telefonia/SMS, backend, worker e provider real.
+
+Assim, qualquer item que ainda exija autenticação, persistência compartilhada, comunicação externa, fiscal, assinatura, publicação social, mídia paga, webhooks ou execução de automações não deve ser “completado” no frontend por simulação. Esses itens pertencem às pendências de infraestrutura descritas abaixo.
 
 ## Pendências obrigatórias para operação real
 
@@ -62,7 +75,7 @@ Telefonia/SMS deverá medir pelo menos provider, rota, latência, tentativas, ta
 
 ### Testes
 
-A suíte atual protege contratos, regras financeiras, stores, contratos de integrações, arquitetura de telefonia/SMS, Relatórios XLSX, build/runtime e renderização/interações selecionadas das rotas críticas do frontend em navegador headless.
+A suíte atual protege contratos, regras financeiras, stores, contratos de integrações, arquitetura de telefonia/SMS, Relatórios XLSX, build/runtime e renderização/interações selecionadas das rotas críticas do frontend em navegador headless. O smoke de interação verifica, entre outros pontos, relacionamentos canônicos, wizard de Contratos, importação XLSX, preferências de SMS, unificação Meta/Google e o vínculo Conteúdo → Campanha no Marketing.
 
 Ainda serão necessários para operação real:
 
@@ -87,12 +100,13 @@ O build publicado atualmente mantém os datasets demonstrativos centralizados ha
 
 - autenticação real e operações de segurança da conta;
 - persistência multiusuário dos módulos operacionais;
-- execução real das preferências de automação;
+- execução real das preferências de automação, inclusive SMS;
 - conexão real com WhatsApp, Meta, Google, TikTok, Autentique e NFS-e;
 - habilitação real dos produtos Facebook, Instagram, Messenger e Meta Ads dentro do provider Meta;
 - habilitação real dos serviços YouTube, Google Ads e Google Calendar dentro do provider Google;
 - conexão real com Vivo, TIM, Claro, Twilio, Dialpad, RingCentral ou qualquer outro provedor de telefonia/SMS;
 - envio/recebimento real de SMS, chamadas, provisionamento de linhas/números e atualização real de delivery receipts;
+- publicação real de conteúdos, sincronização de métricas e execução de campanhas de Marketing;
 - emissão fiscal real;
 - importação/exportação operacional persistente e compartilhada de relatórios;
 - persistência multiusuário de contratos, anexos duráveis e auditoria legal/imutável;
