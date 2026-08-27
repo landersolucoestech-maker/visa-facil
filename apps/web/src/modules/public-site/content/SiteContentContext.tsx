@@ -27,6 +27,7 @@ export function itemBool(item:CmsRepeaterItem,key:string,fallback=false){const v
 export function cmsHref(value:string|undefined,fallback='#'){
  const href=(value??'').trim();
  if(!href)return fallback;
+ if(href.startsWith('//')||href.startsWith('\\\\'))return fallback;
  if(href.startsWith('#')||href.startsWith('/')||href.startsWith('./')||href.startsWith('../'))return href;
  if(!/^[a-z][a-z0-9+.-]*:/i.test(href))return href;
  try{return SAFE_LINK_PROTOCOLS.has(new URL(href).protocol)?href:fallback}catch{return fallback}
