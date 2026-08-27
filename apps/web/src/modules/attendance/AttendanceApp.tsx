@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import './attendance.css';
 import './attendanceSidebarKpis.css';
 import './attendanceWorkflow.css';
@@ -87,6 +87,10 @@ export function AttendanceApp() {
   const [newConversationError, setNewConversationError] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsRevision, setSettingsRevision] = useState(0);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const transferButtonRef = useRef<HTMLButtonElement>(null);
+  const quickRepliesButtonRef = useRef<HTMLButtonElement>(null);
+  const newConversationTriggerRef = useRef<HTMLButtonElement>(null);
   const teamMembers = useMemo(() => getOperationalTeamMembers(), []);
   const teamMemberById = useMemo(() => new Map(teamMembers.map((member) => [member.id, member])), [teamMembers]);
   const currentMember = teamMembers.find((member) => member.role === 'Administrador') ?? teamMembers[0];
@@ -99,6 +103,38 @@ export function AttendanceApp() {
     .sort((left, right) => left.order - right.order), [settingsRevision]);
 
   useEffect(() => { saveAttendanceSessionConversations(conversations); }, [conversations]);
+  useEffect(() => {
+    if (!newConversationOpen && !transferOpen && !quickRepliesOpen && !notificationsOpen) return;
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (newConversationOpen) {
+        event.preventDefault();
+        setNewConversationOpen(false);
+        requestAnimationFrame(() => newConversationTriggerRef.current?.focus());
+        return;
+      }
+      if (transferOpen) {
+        event.preventDefault();
+        setTransferOpen(false);
+        setTransferTarget('');
+        requestAnimationFrame(() => transferButtonRef.current?.focus());
+        return;
+      }
+      if (quickRepliesOpen) {
+        event.preventDefault();
+        setQuickRepliesOpen(false);
+        requestAnimationFrame(() => quickRepliesButtonRef.current?.focus());
+        return;
+      }
+      if (notificationsOpen) {
+        event.preventDefault();
+        setNotificationsOpen(false);
+        requestAnimationFrame(() => notificationButtonRef.current?.focus());
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [newConversationOpen, notificationsOpen, quickRepliesOpen, transferOpen]);
 
   const customerConversations = useMemo(() => sortAttendanceConversations(conversations.filter((item) => getAttendanceConversationKind(item) === 'customer')), [conversations]);
   const teamConversations = useMemo(() => sortAttendanceConversations(conversations.filter((item) => getAttendanceConversationKind(item) === 'team')), [conversations]);
@@ -148,7 +184,7 @@ export function AttendanceApp() {
     setConversations((current) => current.map((item) => item.id === selected.id && item.kind !== 'team' ? {
       ...item,
       queue: option.queue,
-      assignee: option.defaultAssignee?.trim() || 'Não atribuído',
+      assignee: teamMemberById.get(option.defaultAssignee?.trim() ?? '')?.name ?? 'Não atribuído',
       priority,
       tags: [...new Set([...item.tags, ...option.tags])],
       status: 'Em atendimento',
@@ -228,7 +264,8 @@ export function AttendanceApp() {
     requestAnimationFrame(() => document.getElementById(`visachat-tab-${nextMode}`)?.focus());
   };
 
-  const openNewConversation = () => {
+  const openNewConversation = (trigger?: HTMLButtonElement) => {
+    if (trigger) newConversationTriggerRef.current = trigger;
     setNewConversationKind(mode);
     setNewConversation(mode === 'team' ? { ...EMPTY_TEAM_CONVERSATION } : { ...EMPTY_NEW_CONVERSATION });
     setNewConversationError('');
@@ -355,16 +392,16 @@ export function AttendanceApp() {
 <SettingsIcon/>
 <span>Configurações</span>
 </button>
-          <button className="crm-topbar-primary attendance-new-conversation" type="button" aria-label={mode === 'team' ? 'Novo chat interno' : 'Nova conversa'} onClick={openNewConversation}>
+          <button className="crm-topbar-primary attendance-new-conversation" type="button" aria-label={mode === 'team' ? 'Novo chat interno' : 'Nova conversa'} aria-haspopup="dialog" aria-expanded={newConversationOpen} aria-controls="visachat-new-conversation" onClick={(event) => openNewConversation(event.currentTarget)}>
 <PlusIcon/>
 <span>{mode === 'team' ? 'Novo chat interno' : 'Nova conversa'}
 </span>
 </button>
           <div className="attendance-topbar-menu">
-<button className="attendance-notification-button" type="button" aria-label="Notificações" aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((value) => !value)}>
+<button ref={notificationButtonRef} className="attendance-notification-button" type="button" aria-label="Notificações" aria-haspopup="true" aria-expanded={notificationsOpen} aria-controls="visachat-notifications" onClick={() => setNotificationsOpen((value) => !value)}>
 <BellIcon />{unreadCount > 0 && <span className="attendance-notification-dot" aria-label={`${unreadCount} mensagens não lidas`}>{unreadCount}
 </span>}
-</button>{notificationsOpen && <div className="attendance-dropdown attendance-notifications">
+</button>{notificationsOpen && <div className="attendance-dropdown attendance-notifications" id="visachat-notifications" role="region" aria-label="Notificações do VisaChat">
 <strong>Notificações</strong>
 <p>{unreadCount > 0 ? `${unreadCount} mensagem${unreadCount === 1 ? '' : 's'} não lida${unreadCount === 1 ? '' : 's'} no VisaChat.` : 'Nenhuma notificação no momento.'}
 </p>
@@ -383,7 +420,7 @@ export function AttendanceApp() {
 <h2>{mode === 'team' ? 'Comunicação interna' : 'Inbox'}
 </h2>
 </div>
-<button type="button" aria-label={mode === 'team' ? 'Novo chat interno' : 'Nova conversa'} onClick={openNewConversation}>
+<button type="button" aria-label={mode === 'team' ? 'Novo chat interno' : 'Nova conversa'} aria-haspopup="dialog" aria-expanded={newConversationOpen} aria-controls="visachat-new-conversation" onClick={(event) => openNewConversation(event.currentTarget)}>
 <PlusIcon/>
 </button>
 </div>
@@ -506,10 +543,10 @@ export function AttendanceApp() {
 </button>
 </> : <>
 <div className="attendance-transfer" onClick={(event) => event.stopPropagation()}>
-<button type="button" className="attendance-transfer-trigger" disabled={selectedClosed || transferOptions.every((option) => option.queue === selected.queue)} aria-haspopup="dialog" aria-expanded={transferOpen} onClick={() => { setTransferOpen((value) => !value); setQuickRepliesOpen(false); setTransferTarget(''); }}>
+<button ref={transferButtonRef} type="button" className="attendance-transfer-trigger" disabled={selectedClosed || transferOptions.every((option) => option.queue === selected.queue)} aria-haspopup="dialog" aria-expanded={transferOpen} aria-controls="visachat-transfer-dialog" onClick={() => { setTransferOpen((value) => !value); setQuickRepliesOpen(false); setTransferTarget(''); }}>
 <ArrowRightLeftIcon/>
 <span>Transferir</span>
-</button>{transferOpen && <div className="attendance-transfer-popover" role="dialog" aria-label="Transferir atendimento">
+</button>{transferOpen && <div className="attendance-transfer-popover" id="visachat-transfer-dialog" role="dialog" aria-label="Transferir atendimento">
 <label>
 <span>Transferir para</span>
 <select value={transferTarget} onChange={(event) => setTransferTarget(event.target.value)} aria-label="Selecionar departamento">
@@ -567,7 +604,7 @@ export function AttendanceApp() {
 <button type="button" disabled title="Anexos indisponíveis sem armazenamento compartilhado" aria-label="Anexos indisponíveis">
 <PaperclipIcon/>
 </button>{selectedArchived ? <span className="attendance-archived-composer-label">Chat arquivado</span> : selectedKind === 'team' ? <span className="attendance-internal-composer-label">Mensagem interna</span> : <div className="attendance-quick-replies" onClick={(event) => event.stopPropagation()}>
-<button type="button" className="attendance-quick-replies-trigger" aria-haspopup="menu" aria-expanded={quickRepliesOpen} onClick={() => { setQuickRepliesOpen((value) => !value); setTransferOpen(false); }}>Resposta rápida</button>{quickRepliesOpen && <div className="attendance-quick-replies-menu" role="menu" aria-label="Respostas rápidas">
+<button ref={quickRepliesButtonRef} type="button" className="attendance-quick-replies-trigger" aria-haspopup="menu" aria-expanded={quickRepliesOpen} aria-controls="visachat-quick-replies" onClick={() => { setQuickRepliesOpen((value) => !value); setTransferOpen(false); }}>Resposta rápida</button>{quickRepliesOpen && <div className="attendance-quick-replies-menu" id="visachat-quick-replies" role="menu" aria-label="Respostas rápidas">
 <strong>Respostas rápidas</strong>
 <span className="attendance-quick-replies-separator" />{quickReplyOptions.map((template) => <button key={template.id} type="button" role="menuitem" onClick={() => applyTemplate(template.body)}>{template.body}
 </button>)}
@@ -734,7 +771,7 @@ export function AttendanceApp() {
     </div>
 
     {newConversationOpen && <div className="attendance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && setNewConversationOpen(false)}>
-<div className="attendance-modal" role="dialog" aria-modal="true" aria-labelledby="visachat-new-conversation-title">
+<div className="attendance-modal" id="visachat-new-conversation" role="dialog" aria-modal="true" aria-labelledby="visachat-new-conversation-title">
 <header>
 <div>
 <span>{creatingTeamChat ? 'CHAT INTERNO' : 'NOVA CONVERSA'}
