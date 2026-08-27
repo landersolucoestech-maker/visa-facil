@@ -25,7 +25,7 @@ const schemas={
  finance:['Descrição','Tipo','Categoria','Valor','Status','Data','Vencimento','Forma de pagamento','Cliente / contato relacionado','Observações'],
 };
 
-const attendanceModalLabelByReportColumn:Record<string,string>={
+const attendanceModalLabelByReportColumn={
  'Nome do contato / lead':'Contato / Lead do CRM',
  'Canal':'Canal',
  'Telefone / usuário':'Telefone / usuário',
