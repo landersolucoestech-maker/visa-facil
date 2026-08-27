@@ -20,7 +20,7 @@ const schemas={
  contacts:['Nome completo','CPF','RG','Número do passaporte','Interesse / Serviço','Destino de interesse','Tipo de visto / Interesse','Relacionamento','E-mail','Telefone','WhatsApp','Cidade','Estado','País','Status','Origem do contato','Responsável','Observações'],
  leads:['Nome completo','CPF','RG','Número do passaporte','Interesse / Serviço','Destino de interesse','Tipo de visto / Interesse','Origem','E-mail','Telefone','WhatsApp','Cidade','Estado','País','Status do lead','Temperatura','Responsável','Próxima ação','Data da próxima ação','Observações'],
  attendance:['Nome do contato / lead','Canal','Telefone / usuário','Mensagem inicial'],
- tasks:['Título','Responsável','Tipo de vínculo','Contato / Lead relacionado','Prioridade','Status','Data','Horário','Lembrete','Descrição'],
+ tasks:['Título','Responsável','Área','Tipo de vínculo','Contato / Lead relacionado','Prioridade','Status','Data','Horário','Lembrete','Descrição'],
  agenda:['Título','Tipo','Status','Data','Início','Fim','Local','Cidade','Tipo de vínculo','Contato / Lead / Cliente','Responsável','Observações'],
  finance:['Descrição','Tipo','Categoria','Valor','Status','Data','Vencimento','Forma de pagamento','Cliente / contato relacionado','Observações'],
 };
