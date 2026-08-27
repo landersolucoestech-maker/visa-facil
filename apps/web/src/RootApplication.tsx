@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { AccountMenu, type AccountMenuSurface } from './components/AccountMenu';
 import { GlobalNotificationFallback } from './components/GlobalNotificationFallback';
+import { GlobalPersistenceNotice } from './components/GlobalPersistenceNotice';
 import { GlobalRouteLoader } from './components/GlobalRouteLoader';
 import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
 import './styles/crm-content-layout.css';
@@ -81,7 +82,7 @@ function normalizePath(pathname: string) {
 function replacePath(path:string){window.history.replaceState(null,'',`${basePath()}${path}`||path)}
 
 function internal(page:ReactNode, accountSurface?:AccountMenuSurface){
-  return <><Suspense fallback={<GlobalRouteLoader/>}>{page}</Suspense>{accountSurface==='crm'&&<GlobalNotificationFallback/>}{accountSurface&&<AccountMenu surface={accountSurface}/>}</>;
+  return <><Suspense fallback={<GlobalRouteLoader/>}>{page}</Suspense><GlobalPersistenceNotice/>{accountSurface==='crm'&&<GlobalNotificationFallback/>}{accountSurface&&<AccountMenu surface={accountSurface}/>}</>;
 }
 function withSharedSidebar(page: ReactNode) {
   return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>,'crm');
