@@ -53,3 +53,17 @@ test('all CMS-controlled public image surfaces use the canonical image sanitizer
   assert.ok(source.includes('cmsImageSrc'),`${path} must use cmsImageSrc`);
  }
 });
+
+test('public metadata never exposes an unvalidated CMS OG image URL',()=>{
+ const page=read('apps/web/src/modules/public-site/pages/PublicSitePage.tsx');
+ assert.ok(page.includes('isSafeCmsExternalUrl(pageImage)?pageImage'));
+ assert.ok(page.includes('isSafeCmsExternalUrl(defaultImage)?defaultImage'));
+ assert.equal(page.includes("content=image||''"),false);
+});
+
+test('public base-path routing does not strip partial path prefixes',()=>{
+ const page=read('apps/web/src/modules/public-site/pages/PublicSitePage.tsx');
+ assert.ok(page.includes('pathname===base'));
+ assert.ok(page.includes('pathname.startsWith(`${base}/`)'));
+ assert.equal(page.includes('pathname.startsWith(base)?'),false);
+});
