@@ -4,7 +4,7 @@ import { safeWriteSessionRecords as writeSessionRecordsSafely } from '../../shar
 
 export type Platform='Instagram'|'Facebook'|'TikTok'|'YouTube'|'X'|'Threads';
 export type PaidPlatform='Meta Ads'|'Google Ads'|'TikTok Ads';
-export type ContentItem={id:string;date:string;time:string;title:string;channels:Platform[];primaryChannel:Platform;type:string;status:string;owner:string;ownerUserId?:string;copy:string;mediaName?:string};
+export type ContentItem={id:string;date:string;time:string;title:string;channels:Platform[];primaryChannel:Platform;type:string;status:string;owner:string;ownerUserId?:string;campaignId?:string;copy:string;mediaName?:string};
 export type Campaign={
  id:string;
  name:string;
@@ -78,7 +78,7 @@ export function isMarketingContent(value:unknown):value is ContentItem{
  if(!Array.isArray(value.channels)||value.channels.length===0||!value.channels.every(channel=>typeof channel==='string'&&PUBLISH_PLATFORMS.has(channel as Platform))||!unique(value.channels as string[]))return false;
  if(typeof value.primaryChannel!=='string'||!PUBLISH_PLATFORMS.has(value.primaryChannel as Platform)||!(value.channels as string[]).includes(value.primaryChannel))return false;
  if(typeof value.type!=='string'||!CONTENT_FORMATS[value.primaryChannel as Platform].has(value.type))return false;
- return typeof value.status==='string'&&CONTENT_STATUSES.has(value.status)&&typeof value.owner==='string'&&(value.ownerUserId===undefined||typeof value.ownerUserId==='string')&&typeof value.copy==='string'&&(value.mediaName===undefined||typeof value.mediaName==='string');
+ return typeof value.status==='string'&&CONTENT_STATUSES.has(value.status)&&typeof value.owner==='string'&&(value.ownerUserId===undefined||typeof value.ownerUserId==='string')&&(value.campaignId===undefined||typeof value.campaignId==='string')&&typeof value.copy==='string'&&(value.mediaName===undefined||typeof value.mediaName==='string');
 }
 
 export function isMarketingCampaign(value:unknown):value is Campaign{
@@ -107,7 +107,7 @@ function upgradeStoredContent(value:unknown):unknown{
  if(!isObject(value))return value;
  const primaryChannel=typeof value.primaryChannel==='string'?value.primaryChannel:'';
  const type=primaryChannel==='Facebook'&&value.type==='Post'?'Feed':value.type;
- return {...value,type,ownerUserId:typeof value.ownerUserId==='string'?value.ownerUserId:undefined};
+ return {...value,type,ownerUserId:typeof value.ownerUserId==='string'?value.ownerUserId:undefined,campaignId:typeof value.campaignId==='string'?value.campaignId:undefined};
 }
 function upgradeStoredCampaign(value:unknown):unknown{
  if(!isObject(value))return value;
