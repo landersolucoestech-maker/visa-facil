@@ -34,9 +34,9 @@ A navegação lateral do CRM é compartilhada por todos os módulos internos. Ro
 
 O frontend possui uma fronteira única em `shared/apiClient.ts`. A configuração pública opcional `VITE_API_BASE_URL` aponta para a futura API backend. Nenhuma credencial de provedor deve ser colocada em variável `VITE_*`, pois esse conteúdo é público no bundle.
 
-`modules/integrations/integrationContract.ts` é o registro canônico das integrações configuráveis pelo frontend: WhatsApp, Autentique, NFS-e, Instagram, Facebook, YouTube, TikTok, Google Ads e Google Calendar. `modules/integrations/integrationApi.ts` define o contrato frontend para consultar estado, conectar, reconectar, desconectar e sincronizar. A interface só pode mostrar `connected` quando a API backend confirmar esse estado. Resend é um provedor interno/server-side e não pertence ao registry nem à interface de configuração do navegador.
+`modules/integrations/integrationContract.ts` é o registro canônico das integrações configuráveis pelo frontend: **WhatsApp**, **Telefonia e SMS**, **Autentique**, **NFS-e**, **Meta**, **Google** e **TikTok**. Facebook, Instagram, Messenger e Meta Ads são produtos/canais internos do provider técnico Meta; YouTube, Google Ads e Google Calendar são serviços internos do provider técnico Google. `modules/integrations/integrationApi.ts` define o contrato frontend para consultar estado, conectar, reconectar, desconectar e sincronizar. A interface só pode mostrar `connected` quando a API backend confirmar esse estado. Resend é infraestrutura interna/server-side e não pertence ao registry nem à interface de configuração do navegador.
 
-Instagram, Facebook, YouTube, TikTok e WhatsApp exigem autorização pela interface oficial do respectivo provedor. O frontend não deve solicitar, reproduzir ou armazenar senha, access token, refresh token ou client secret dessas contas. A futura API backend deverá iniciar o fluxo oficial, trocar o código de autorização por tokens, armazená-los com segurança e retornar ao navegador apenas metadados não secretos sobre a conexão, conta, permissões e capacidades autorizadas.
+WhatsApp, Meta, Google e TikTok exigem autorização pela interface oficial do respectivo provedor. O frontend não deve solicitar, reproduzir ou armazenar senha, access token, refresh token ou client secret dessas contas. A futura API backend deverá iniciar o fluxo oficial, trocar o código de autorização por tokens, armazená-los com segurança e retornar ao navegador apenas metadados não secretos sobre a conexão, conta, produtos/serviços, permissões e capacidades autorizadas.
 
 O formulário público usa `POST /v1/public/leads` quando `VITE_API_BASE_URL` está configurado. Sem backend, o envio fica explicitamente indisponível e não simula sucesso.
 
@@ -109,6 +109,6 @@ Ou execute tudo de uma vez:
 npm run check
 ```
 
-O CI executa contrato arquitetural, lint estrutural, testes, auditoria de dependências, TypeScript, build de produção e smoke runtime. O deploy do GitHub Pages repete os gates relevantes antes de publicar.
+O CI executa contrato arquitetural, lint estrutural, testes, auditoria de dependências, TypeScript, build de produção, smoke runtime e smoke de interação/renderização das rotas críticas do CRM em navegador headless. O deploy do GitHub Pages repete os gates relevantes antes de publicar.
 
 Consulte `docs/ARCHITECTURE.md`, `docs/INTEGRATIONS.md`, `docs/CONTRACTS.md` e `docs/PRODUCTION_READINESS.md` para limites de responsabilidade, contratos e critérios de evolução.
