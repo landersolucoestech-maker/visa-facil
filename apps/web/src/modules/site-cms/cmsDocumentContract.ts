@@ -114,6 +114,7 @@ export function cmsPublicationIssues(document:CmsDocument){
  if(document.publishedAt!==null&&!isDateTimeString(document.publishedAt))issues.push('A data da última publicação do CMS é inválida.');
  if(!document.settings.siteName.trim())issues.push('Informe o nome do site antes de publicar.');
  if(document.settings.siteUrl.trim()&&!isSafeCmsExternalUrl(document.settings.siteUrl))issues.push('A URL principal do site deve usar HTTP ou HTTPS.');
+ if(document.settings.defaultOgImage.trim()&&!isSafeCmsExternalUrl(document.settings.defaultOgImage))issues.push('A OG Image padrão deve usar uma URL absoluta HTTP ou HTTPS.');
  if(!document.pages.some(page=>normalizeCmsSlug(page.slug)==='/'))issues.push('O site precisa manter uma página inicial no slug /.');
  for(const page of document.pages){
   const label=page.name.trim()||page.id;
@@ -126,6 +127,7 @@ export function cmsPublicationIssues(document:CmsDocument){
   if(duplicate)issues.push(`As páginas “${duplicate}” e “${label}” usam o mesmo slug “${normalized}”.`);else seenSlugs.set(slugKey,label);
   if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
   if(page.seo.canonicalUrl.trim()&&!isSafeCmsExternalUrl(page.seo.canonicalUrl))issues.push(`A Canonical URL da página “${label}” deve usar HTTP ou HTTPS.`);
+  if(page.seo.ogImage.trim()&&!isSafeCmsExternalUrl(page.seo.ogImage))issues.push(`A OG Image da página “${label}” deve usar uma URL absoluta HTTP ou HTTPS.`);
   appendOrderIssues(issues,page.sections,`A página “${label}”`);
   const seenSectionTypes=new Set<string>();
   for(const section of page.sections){
