@@ -172,3 +172,21 @@ test('CMS publication validation blocks unsupported and missing structural block
   missingFooter.globals=missingFooter.globals.filter(section=>section.type!=='footer');
   assert.ok(cmsPublicationIssues(missingFooter).some(issue=>issue.includes('bloco global obrigatório “footer” está ausente')));
 });
+
+test('CMS publication validation blocks unsafe public form field identities and controls',()=>{
+  const document=validDocument();
+  document.pages[0].sections.push({
+    id:'contact',type:'contact',label:'Contato',visible:true,order:1,
+    values:{formFields:[
+      {name:'consent',label:'Reservado',type:'hidden',placeholder:'',required:true,options:''},
+      {name:'email',label:'E-mail',type:'email',placeholder:'',required:true,options:''},
+      {name:'EMAIL',label:'Duplicado',type:'email',placeholder:'',required:false,options:''},
+      {name:'destino',label:'Destino',type:'select',placeholder:'Selecione',required:true,options:''},
+    ]},
+  });
+  const issues=cmsPublicationIssues(document);
+  assert.ok(issues.some(issue=>issue.includes('nome técnico inválido ou reservado')));
+  assert.ok(issues.some(issue=>issue.includes('tipo não suportado')));
+  assert.ok(issues.some(issue=>issue.includes('nome técnico duplicado')));
+  assert.ok(issues.some(issue=>issue.includes('precisa ter pelo menos uma opção')));
+});
