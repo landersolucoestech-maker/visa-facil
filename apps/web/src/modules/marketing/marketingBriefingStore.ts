@@ -1,5 +1,6 @@
 import { readSessionRecords } from '../../shared/sessionRecords';
 import { safeWriteSessionRecords as writeSessionRecordsSafely } from '../../shared/sessionPersistence';
+import { getMarketingMockBriefings } from './mocks/marketingMockProvider';
 import type { Platform } from './marketingSessionStore';
 
 export type MarketingBriefingStatus='Rascunho'|'Em elaboração'|'Em revisão'|'Aprovado'|'Arquivado';
@@ -20,7 +21,8 @@ export type MarketingBriefing={
  updatedAt:string;
 };
 
-const KEY='visa-facil.session.marketing.briefings.v1';
+const KEY='visa-facil.session.marketing.briefings.v2';
+const LEGACY_KEY='visa-facil.session.marketing.briefings.v1';
 const STATUSES=new Set<MarketingBriefingStatus>(['Rascunho','Em elaboração','Em revisão','Aprovado','Arquivado']);
 const CHANNELS=new Set<Platform>(['Instagram','Facebook','TikTok','YouTube','X','Threads']);
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
@@ -36,5 +38,18 @@ export function isMarketingBriefing(value:unknown):value is MarketingBriefing{
  if(value.status!=='Rascunho'&&(!value.objective.trim()||!value.ownerUserId))return false;
  return true;
 }
-export function getMarketingSessionBriefings(){return readSessionRecords<MarketingBriefing>(KEY,()=>[],isMarketingBriefing)}
+function initialBriefings():MarketingBriefing[]{return getMarketingMockBriefings().filter(isMarketingBriefing)}
+function migrateLegacyBriefings(){
+ if(typeof sessionStorage==='undefined'||sessionStorage.getItem(KEY)!==null)return;
+ try{
+  const raw=sessionStorage.getItem(LEGACY_KEY);
+  if(raw===null)return;
+  const parsed:unknown=JSON.parse(raw);
+  const legacy=Array.isArray(parsed)?parsed.filter(isMarketingBriefing):[];
+  const seeds=initialBriefings();
+  const known=new Set(legacy.map(record=>record.id));
+  sessionStorage.setItem(KEY,JSON.stringify([...legacy,...seeds.filter(record=>!known.has(record.id))]));
+ }catch{}
+}
+export function getMarketingSessionBriefings(){migrateLegacyBriefings();return readSessionRecords<MarketingBriefing>(KEY,initialBriefings,isMarketingBriefing)}
 export function saveMarketingSessionBriefings(records:MarketingBriefing[]){return writeSessionRecordsSafely(KEY,records,isMarketingBriefing)}
