@@ -25,6 +25,13 @@ const schemas={
  finance:['Descrição','Tipo','Categoria','Valor','Status','Data','Vencimento','Forma de pagamento','Cliente / contato relacionado','Observações'],
 };
 
+const attendanceModalLabelByReportColumn:Record<string,string>={
+ 'Nome do contato / lead':'Contato / Lead do CRM',
+ 'Canal':'Canal',
+ 'Telefone / usuário':'Telefone / usuário',
+ 'Mensagem inicial':'Mensagem inicial',
+};
+
 function arrayLiteral(name){
  const match=adapter.match(new RegExp(`const ${name}=\\[([\\s\\S]*?)\\] as const;`));
  assert.ok(match,`${name} not found`);
@@ -46,7 +53,7 @@ test('reports is XLSX-only in UI, validation, templates and exports',()=>{
  assert.equal(/\.csv[\s'"`]/i.test(app),false);
 });
 
-test('every report dataset exactly matches all visible fields from its create modal',()=>{
+test('every report dataset exactly matches the user-facing data fields from its create modal',()=>{
  assert.deepEqual(arrayLiteral('CONTACT_COLUMNS'),schemas.contacts);
  assert.deepEqual(arrayLiteral('LEAD_COLUMNS'),schemas.leads);
  assert.deepEqual(arrayLiteral('ATTENDANCE_COLUMNS'),schemas.attendance);
@@ -56,10 +63,17 @@ test('every report dataset exactly matches all visible fields from its create mo
 
  for(const label of schemas.contacts)assert.ok(crm.includes(label),`contact modal missing ${label}`);
  for(const label of schemas.leads)assert.ok(crm.includes(label),`lead modal missing ${label}`);
- for(const label of schemas.attendance)assert.ok(attendance.includes(label),`attendance modal missing ${label}`);
+ for(const label of schemas.attendance){const modalLabel=attendanceModalLabelByReportColumn[label]??label;assert.ok(attendance.includes(modalLabel),`attendance modal missing ${modalLabel}`)}
  for(const label of schemas.tasks)assert.ok(tasks.includes(label),`task modal missing ${label}`);
  for(const label of schemas.agenda)assert.ok(agenda.includes(label),`agenda modal missing ${label}`);
  for(const label of schemas.finance)assert.ok(finance.includes(label),`finance modal missing ${label}`);
+});
+
+test('attendance XLSX keeps the human-readable contact-name column while the UI resolves it to a canonical CRM record internally',()=>{
+ assert.ok(schemas.attendance.includes('Nome do contato / lead'));
+ assert.equal(schemas.attendance.includes('crmRecordId'),false);
+ assert.ok(attendance.includes('Contato / Lead do CRM'));
+ assert.ok(attendance.includes('crmRecordId: crmRecord.id'));
 });
 
 test('reports exports from and imports into canonical operational session stores',()=>{
