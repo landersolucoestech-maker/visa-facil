@@ -10,7 +10,8 @@ export class CmsStorageError extends Error{
 }
 
 export class CmsPublicationError extends Error{
- constructor(public readonly issues:string[]){super(`Publicação bloqueada: ${issues[0]||'o documento do CMS é inválido.'}`);this.name='CmsPublicationError'}
+ readonly issues:string[];
+ constructor(issues:string[]){super(`Publicação bloqueada: ${issues[0]||'o documento do CMS é inválido.'}`);this.name='CmsPublicationError';this.issues=issues}
 }
 
 function clone<T>(value:T):T{return structuredClone(value)}
