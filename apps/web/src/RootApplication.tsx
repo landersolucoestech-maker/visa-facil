@@ -62,8 +62,6 @@ const SettingsApp = lazy(() => import('./modules/settings/SettingsApp'));
 const ProfileApp = lazy(() => import('./modules/settings/ProfileApp'));
 const SiteCmsApp = lazy(async () => {
   const module = await import('./modules/site-cms/SiteCmsApp');
-  await import('./styles/ui-system.css');
-  await import('./styles/product-refinement.css');
   await import('./styles/sidebar-v2.css');
   return { default: module.default };
 });
