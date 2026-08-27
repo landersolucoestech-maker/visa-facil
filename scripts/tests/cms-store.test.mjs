@@ -147,6 +147,14 @@ test('CMS publication validation blocks invalid site metadata',()=>{
   const invalidCanonical=validDocument();
   invalidCanonical.pages[0].seo.canonicalUrl='data:text/html;base64,abc';
   assert.ok(cmsPublicationIssues(invalidCanonical).some(issue=>issue.includes('Canonical URL')));
+
+  const invalidPageOg=validDocument();
+  invalidPageOg.pages[0].seo.ogImage='data:image/png;base64,iVBORw0KGgo=';
+  assert.ok(cmsPublicationIssues(invalidPageOg).some(issue=>issue.includes('OG Image da página')));
+
+  const invalidDefaultOg=validDocument();
+  invalidDefaultOg.settings.defaultOgImage='/local-preview.png';
+  assert.ok(cmsPublicationIssues(invalidDefaultOg).some(issue=>issue.includes('OG Image padrão')));
 });
 
 test('CMS publication validation blocks duplicate structural page and global section types',()=>{
