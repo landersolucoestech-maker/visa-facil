@@ -62,6 +62,19 @@ test('marketing content ownership uses active canonical user ids instead of free
   assert.equal(app.includes('<span>Responsável</span><input value={draft.owner}'),false);
 });
 
+test('marketing campaigns persist an active canonical responsible user instead of a hardcoded label',()=>{
+  assert.ok(store.includes('owner:string;'));
+  assert.ok(store.includes('ownerUserId?:string;'));
+  assert.ok(store.includes("owner:typeof value.owner==='string'?value.owner:''"));
+  assert.ok(store.includes("ownerUserId:typeof value.ownerUserId==='string'?value.ownerUserId:undefined"));
+  assert.ok(app.includes('members={members} close={()=>setCampaignModal(undefined)}'));
+  assert.ok(app.includes('owner:defaultOwner?.name??'));
+  assert.ok(app.includes('ownerUserId:defaultOwner?.id'));
+  assert.ok(app.includes('Campanhas finalizadas exigem um usuário ativo responsável.'));
+  assert.ok(app.includes('Boolean(draft.ownerUserId)'));
+  assert.equal(app.includes('<span>Responsável</span><select disabled><option>Marketing</option></select>'),false);
+});
+
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
