@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const store=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/siteStore.ts'),'utf8');
+const contract=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/cmsDocumentContract.ts'),'utf8');
 const app=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/SiteCmsApp.tsx'),'utf8');
 const pages=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsPagesView.tsx'),'utf8');
 const resources=readFileSync(resolve(process.cwd(),'apps/web/src/modules/site-cms/CmsResourceViews.tsx'),'utf8');
@@ -16,10 +17,13 @@ test('CMS user-triggered persistence failures are surfaced instead of silently s
   assert.ok(app.includes('error instanceof CmsStorageError'));
 });
 
-test('CMS publication contract is enforced by storage as well as the UI',()=>{
-  assert.ok(store.includes('export class CmsPublicationError extends Error'));
-  assert.ok(store.includes('const issues=cmsPublicationIssues(normalized)'));
-  assert.ok(store.includes('if(issues.length)throw new CmsPublicationError(issues)'));
+test('CMS publication contract is enforced before storage normalization as well as in the UI',()=>{
+  assert.ok(contract.includes('export class CmsPublicationError extends Error'));
+  assert.ok(contract.includes('export function assertCmsPublishable'));
+  assert.ok(store.includes('const candidate=clone(document)'));
+  assert.ok(store.includes('assertCmsPublishable(candidate)'));
+  assert.ok(store.includes('const normalized=normalize(candidate)'));
+  assert.ok(store.indexOf('assertCmsPublishable(candidate)')<store.indexOf('const normalized=normalize(candidate)'));
   assert.ok(app.includes('error instanceof CmsPublicationError'));
 });
 
