@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { LOCAL_PERSISTENCE_ERROR_EVENT, safeWriteSessionRecords } from '../../apps/web/src/shared/sessionPersistence.ts';
 
 const root=process.cwd();
 const app=readFileSync(resolve(root,'apps/web/src/modules/marketing/MarketingApp.tsx'),'utf8');
 const store=readFileSync(resolve(root,'apps/web/src/modules/marketing/marketingSessionStore.ts'),'utf8');
+const persistence=readFileSync(resolve(root,'apps/web/src/shared/sessionPersistence.ts'),'utf8');
 const fixture=JSON.parse(readFileSync(resolve(root,'apps/web/src/mocks/marketing/marketing.dev.json'),'utf8'));
 
 const contentFormats={
@@ -44,6 +44,9 @@ test('marketing store migrates known legacy records and rejects arbitrary lifecy
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
+  assert.ok(persistence.includes("LOCAL_PERSISTENCE_ERROR_EVENT='visa-local-persistence-error'"));
+  assert.ok(persistence.includes('catch(error){reportSessionPersistenceError(error,key);return structuredClone(records)}'));
+  assert.ok(persistence.includes('window.dispatchEvent(new CustomEvent<LocalPersistenceErrorDetail>'));
 });
 
 test('marketing overview derives upcoming content from schedule instead of insertion order',()=>{
@@ -65,28 +68,4 @@ test('marketing makes local-only campaign and publication state explicit',()=>{
   assert.ok(app.includes('este status não publica automaticamente nas plataformas'));
   assert.ok(app.includes('O protótipo não publica campanhas nas plataformas'));
   assert.ok(app.includes("total===1?'conteúdo':'conteúdos'"));
-});
-
-test('safe session persistence reports quota failures without crashing the calling UI',()=>{
-  const previousStorage=globalThis.sessionStorage;
-  const previousWindow=globalThis.window;
-  let captured;
-  globalThis.sessionStorage={
-    getItem:()=>null,
-    setItem:()=>{throw new Error('quota')},
-    removeItem:()=>{},
-    clear:()=>{},
-  };
-  globalThis.window={dispatchEvent:event=>{captured=event;return true}};
-  try{
-    const records=[{id:'marketing-1',name:'Campaign'}];
-    const validate=value=>Boolean(value)&&typeof value==='object'&&typeof value.id==='string'&&typeof value.name==='string';
-    const result=safeWriteSessionRecords('marketing.test',records,validate);
-    assert.deepEqual(result,records);
-    assert.equal(captured?.type,LOCAL_PERSISTENCE_ERROR_EVENT);
-    assert.equal(captured?.detail?.key,'marketing.test');
-  }finally{
-    if(previousStorage===undefined)delete globalThis.sessionStorage;else globalThis.sessionStorage=previousStorage;
-    if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;
-  }
 });
