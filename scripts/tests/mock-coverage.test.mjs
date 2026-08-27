@@ -21,9 +21,61 @@ const fixtures={
  settings:read('apps/web/src/mocks/settings/settings.dev.json'),
 };
 
-test('every operational CRM domain has non-empty centralized mock data',()=>{
+test('every centralized prototype domain has non-empty mock data',()=>{
  for(const [name,fixture] of Object.entries(fixtures)){
   assert.equal(nonEmpty(fixture),true,`${name} fixture must contain usable mock data`);
+ }
+});
+
+test('every operational CRM route has a representative seeded source',()=>{
+ const coverage={
+  dashboard:fixtures.crm,
+  relacionamento:fixtures.crm,
+  agenda:fixtures.agenda,
+  tarefasGerais:fixtures.tasks.filter(record=>(record.area??'Geral')==='Geral'),
+  atendimentos:fixtures.attendance,
+  contratos:fixtures.contracts,
+  templates:fixtures.contractRegistry.templates,
+  variaveis:fixtures.contractRegistry.variables,
+  transacoes:fixtures.finance,
+  faturamento:fixtures.invoices,
+  dre:fixtures.finance,
+  categoriasFinanceiras:fixtures.financeConfig.categories,
+  regrasFinanceiras:fixtures.financeConfig.rules,
+  campanhas:fixtures.marketing.campaigns,
+  calendarioMarketing:fixtures.marketing.contents,
+  briefings:fixtures.marketing.briefings,
+  tarefasMarketing:fixtures.tasks.filter(record=>record.area==='Marketing'),
+  relatorios:[...fixtures.crm,...fixtures.finance,...fixtures.tasks,...fixtures.agenda],
+  configuracoes:fixtures.settings.users,
+ };
+ for(const [route,source] of Object.entries(coverage)){
+  assert.ok(Array.isArray(source)&&source.length>0,`${route} must open with representative seeded data`);
+ }
+});
+
+test('task mocks cover both general operations and Marketing with canonical links',()=>{
+ const crmIds=new Set(fixtures.crm.map(record=>record.id));
+ const activeUserIds=new Set(fixtures.settings.users.filter(user=>user.status==='Ativo').map(user=>user.id));
+ assert.ok(fixtures.tasks.some(record=>(record.area??'Geral')==='Geral'),'General tasks must be seeded');
+ assert.ok(fixtures.tasks.filter(record=>record.area==='Marketing').length>=3,'Marketing tasks must expose multiple representative rows');
+ for(const task of fixtures.tasks){
+  assert.ok(task.relatedRecordId&&crmIds.has(task.relatedRecordId),`Task ${task.id} must link to a seeded CRM record`);
+  assert.ok(task.ownerUserId&&activeUserIds.has(task.ownerUserId),`Task ${task.id} must link to an active seeded user`);
+ }
+});
+
+test('marketing has campaigns contents and briefings instead of a partially seeded module',()=>{
+ assert.ok(fixtures.marketing.campaigns?.length>=2,'Marketing campaigns must be seeded');
+ assert.ok(fixtures.marketing.contents?.length>=4,'Marketing content calendar must be seeded');
+ assert.ok(fixtures.marketing.briefings?.length>=3,'Marketing briefings must be seeded');
+ const activeUserIds=new Set(fixtures.settings.users.filter(user=>user.status==='Ativo').map(user=>user.id));
+ for(const briefing of fixtures.marketing.briefings){
+  assert.ok(briefing.id&&briefing.title,'Briefing mock must identify itself');
+  if(briefing.status!=='Rascunho'){
+   assert.ok(briefing.objective.trim(),`Briefing ${briefing.id} requires an objective outside draft`);
+   assert.ok(activeUserIds.has(briefing.ownerUserId),`Briefing ${briefing.id} must link to an active seeded user`);
+  }
  }
 });
 
@@ -45,7 +97,7 @@ test('finance and settings reference data are centralized instead of hidden in m
  assert.ok(fixtures.settings.roles?.length>0,'Settings roles fixture must be present');
 });
 
-test('derived modules have seeded canonical sources',()=>{
+test('derived modules use seeded canonical sources rather than duplicate fixtures',()=>{
  assert.equal(nonEmpty(fixtures.crm),true,'Dashboard/Reports require CRM mock source');
  assert.equal(nonEmpty(fixtures.finance),true,'Accounting/Reports require Finance mock source');
  assert.equal(nonEmpty(fixtures.tasks),true,'Dashboard/Reports require Tasks mock source');
