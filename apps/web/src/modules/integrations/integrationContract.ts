@@ -1,7 +1,7 @@
-export type IntegrationId='whatsapp'|'resend'|'autentique'|'nfse'|'instagram'|'facebook'|'youtube'|'tiktok'|'google-ads'|'google-calendar';
+export type IntegrationId='whatsapp'|'autentique'|'nfse'|'instagram'|'facebook'|'youtube'|'tiktok'|'google-ads'|'google-calendar';
 export type IntegrationCategory='Comunicação'|'Documentos'|'Fiscal'|'Social & Conteúdo'|'Publicidade'|'Produtividade';
 export type IntegrationAuthMode='oauth2'|'api-key'|'provider-token'|'certificate'|'hybrid';
-export type IntegrationCapability='messaging'|'transactional-email'|'documents'|'electronic-signature'|'fiscal-documents'|'content-publishing'|'content-management'|'ads'|'analytics'|'calendar-sync';
+export type IntegrationCapability='messaging'|'documents'|'electronic-signature'|'fiscal-documents'|'content-publishing'|'content-management'|'ads'|'analytics'|'calendar-sync';
 export type IntegrationConnectionState='unconfigured'|'disconnected'|'connecting'|'connected'|'degraded'|'error';
 
 export type IntegrationDefinition={
@@ -27,9 +27,14 @@ export type IntegrationRuntimeStatus={
   errorMessage?:string;
 };
 
+/**
+ * Frontend-manageable integrations only.
+ * Server-owned providers such as the transactional-email provider are
+ * intentionally absent from this browser contract and must be configured
+ * exclusively in backend/runtime infrastructure.
+ */
 export const INTEGRATION_REGISTRY:IntegrationDefinition[]=[
   {id:'whatsapp',name:'WhatsApp',category:'Comunicação',description:'Mensagens, contatos e atendimentos do WhatsApp centralizados no VisaChat.',authMode:'provider-token',capabilities:['messaging'],serverOnlySecrets:['META_APP_SECRET','META_WEBHOOK_VERIFY_TOKEN','WHATSAPP_ACCESS_TOKEN'],externalRequirements:['Meta Business verificado quando exigido','WhatsApp Business Account (WABA)','Phone Number ID','Webhook HTTPS público'],oauthScopes:['whatsapp_business_messaging','whatsapp_business_management'],webhookSupported:true},
-  {id:'resend',name:'Resend',category:'Comunicação',description:'E-mails transacionais, notificações operacionais e eventos de entrega.',authMode:'api-key',capabilities:['transactional-email'],serverOnlySecrets:['RESEND_API_KEY','RESEND_WEBHOOK_SECRET'],externalRequirements:['Conta Resend','Domínio de envio verificado','Remetente autorizado','Webhook HTTPS público'],webhookSupported:true},
   {id:'autentique',name:'Autentique',category:'Documentos',description:'Criação, envio, acompanhamento e assinatura eletrônica de documentos e contratos.',authMode:'api-key',capabilities:['documents','electronic-signature'],serverOnlySecrets:['AUTENTIQUE_API_TOKEN','AUTENTIQUE_WEBHOOK_SECRET'],externalRequirements:['Conta Autentique','Token de API','Organization ID quando aplicável','Webhook HTTPS público'],webhookSupported:true},
   {id:'nfse',name:'NFS-e / Nota Fiscal de Serviço',category:'Fiscal',description:'Emissão, consulta, cancelamento e acompanhamento de NFS-e por adapter fiscal.',authMode:'certificate',capabilities:['fiscal-documents'],serverOnlySecrets:['NFSE_CERTIFICATE_SECRET','NFSE_CERTIFICATE_PASSWORD'],externalRequirements:['CNPJ e inscrição municipal','Definição do provedor/município ou Sistema Nacional NFS-e','Certificado digital e ambiente de homologação quando exigidos'],webhookSupported:false},
   {id:'instagram',name:'Instagram',category:'Social & Conteúdo',description:'Mensagens quando suportadas, publicação/gestão de conteúdo e recursos publicitários via ecossistema Meta.',authMode:'oauth2',capabilities:['messaging','content-publishing','content-management','ads','analytics'],serverOnlySecrets:['META_APP_SECRET'],externalRequirements:['Meta App','Conta profissional do Instagram','Assets empresariais exigidos pela Meta','OAuth Redirect URI e webhook HTTPS','App Review para permissões necessárias'],webhookSupported:true},
