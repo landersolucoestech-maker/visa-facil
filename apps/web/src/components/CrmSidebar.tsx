@@ -41,7 +41,7 @@ const AFTER_ITEMS:NavItem[] = [
 function basePath(){const base=import.meta.env.BASE_URL.replace(/\/$/,'');return base||''}
 function href(path:string){return `${basePath()}${path}`||path}
 function go(path:string){window.location.href=href(path)}
-function currentPath(){const base=basePath();const pathname=window.location.pathname;const normalized=base&&pathname.startsWith(base)?pathname.slice(base.length)||'/':pathname;return normalized.replace(/\/+$/,'')||'/'}
+function currentPath(){const base=basePath();const pathname=window.location.pathname;const normalized=!base?pathname:pathname===base?'/':pathname.startsWith(`${base}/`)?pathname.slice(base.length)||'/':pathname;return normalized.replace(/\/+$/,'')||'/'}
 function marketingSection(path:string):MarketingSection{if(path.endsWith('/briefings'))return'briefings';if(path.endsWith('/campanhas'))return'campaigns';if(path.endsWith('/calendario'))return'calendar';if(path.endsWith('/tarefas'))return'tasks';if(path.endsWith('/metricas'))return'metrics';return'overview'}
 function financeSection(path:string):FinanceSection|undefined{if(path==='/crm/categorias-financeiras'||path==='/crm/regras-financeiras')return undefined;if(path.endsWith('/invoices'))return'invoices';if(path.endsWith('/pl'))return'pl';return'transactions'}
 function isActive(path:string,itemHref:string){if(itemHref==='/crm')return path==='/crm';return path===itemHref||path.startsWith(`${itemHref}/`)}
