@@ -6,17 +6,22 @@ O frontend Visa Fácil não deve receber, armazenar nem enviar diretamente crede
 
 A ativação real das integrações exige uma API backend separada com armazenamento seguro de credenciais/tokens, autorização server-side, callbacks OAuth, webhooks, workers de sincronização, observabilidade e persistência.
 
+Instagram, Facebook, YouTube, TikTok e WhatsApp devem iniciar autenticação exclusivamente no fluxo oficial do respectivo provedor. É proibido criar no Visa Fácil telas que imitem login, senha, seleção de conta ou consentimento desses serviços. O frontend pode exibir apenas estado, conta vinculada, permissões/capacidades autorizadas, sincronização, reconexão e desconexão.
+
 ## Contrato frontend ↔ backend
 
 O frontend já está preparado para consumir:
 
 - `GET /v1/integrations` — estados reais de conexão;
 - `POST /v1/integrations/:provider/connect` — iniciar conexão/OAuth ou configuração server-side;
+- `POST /v1/integrations/:provider/reconnect` — reiniciar autorização oficial quando o provedor exigir nova concessão;
 - `POST /v1/integrations/:provider/disconnect` — revogar/desconectar;
 - `POST /v1/integrations/:provider/sync` — solicitar sincronização manual idempotente;
 - `POST /v1/public/leads` — entrada segura do formulário público.
 
 Estados canônicos: `unconfigured`, `disconnected`, `connecting`, `connected`, `degraded`, `error`.
+
+Para integrações OAuth, `connect` e `reconnect` retornam ao navegador somente uma URL HTTPS de autorização validável contra o provedor oficial e metadados não secretos. O backend é o único responsável por receber o callback, trocar authorization code por tokens e armazenar access/refresh tokens.
 
 O backend deve responder erros estruturados com `code`, `message`, `requestId` e `retryable`, sem expor segredos ou respostas brutas sensíveis dos provedores.
 
@@ -48,6 +53,7 @@ O backend deve:
 - renovar tokens antes/ao expirar e persistir rotação quando o provedor devolver novo refresh token;
 - usar cookie de sessão `HttpOnly`, `Secure` e `SameSite` adequado ou outro mecanismo server-side equivalente;
 - guardar scopes concedidos e comparar com os scopes exigidos pela feature;
+- guardar também as capacidades efetivamente autorizadas por conta, sem inferir autorização apenas porque o provedor está conectado;
 - revogar tokens na desconexão quando o provedor oferecer endpoint de revogação;
 - nunca enviar tokens para logs, frontend, analytics ou mensagens de erro.
 
@@ -78,7 +84,7 @@ O backend não deve espalhar SDKs dos provedores pela regra de negócio. Criar a
 - `DocumentSignatureProvider` — Autentique;
 - `FiscalDocumentProvider` — NFS-e;
 - `SocialContentProvider` — Instagram, Facebook, YouTube, TikTok;
-- `AdsProvider` — Meta Ads, Google Ads, TikTok Ads/YouTube Ads conforme APIs habilitadas;
+- `AdsProvider` — Meta Ads, Google Ads e TikTok Ads; inventário de YouTube pertence ao adapter Google Ads, não a um provedor paralelo chamado “YouTube Ads”;
 - `CalendarProvider` — Google Calendar.
 
 A camada de aplicação trabalha com interfaces canônicas; SDK/API específica fica confinada ao adapter.
@@ -89,13 +95,15 @@ A camada de aplicação trabalha com interfaces canônicas; SDK/API específica 
 
 Objetivo: trazer conversas, contatos e mensagens para VisaChat e permitir envio autorizado pelo backend.
 
-Configuração externa prevista: Meta App, WhatsApp Business Account (WABA), Phone Number ID, credencial server-side aprovada, webhook HTTPS e token de verificação. Permissões/scopes precisam ser confirmados conforme o modelo de onboarding da Meta e App Review vigente.
+Configuração externa prevista: Meta App, WhatsApp Business Account (WABA), Phone Number ID, OAuth/Embedded Signup oficial da Meta quando aplicável, webhook HTTPS e token de verificação. Permissões/scopes precisam ser confirmados conforme o modelo de onboarding da Meta e App Review vigente.
 
 Regras: mapear mensagem externa para ID canônico, deduplicar por message ID, manter status de entrega/leitura e impedir duplicação ao receber echo/webhook.
 
 ### Resend
 
 Objetivo: e-mail transacional e notificações.
+
+Resend é infraestrutura interna/server-side. Não pertence ao registry configurável pelo frontend e não deve aparecer como integração que o operador conecta no navegador.
 
 Configuração externa: conta Resend, domínio/remetente verificado, API key server-side e segredo de assinatura de webhook.
 
@@ -131,9 +139,11 @@ Configuração externa: Meta App, Facebook Page, Business assets/Ad Account quan
 
 ### YouTube
 
-Objetivo: leitura do canal, upload/gestão de conteúdo e métricas autorizadas. Publicidade deve usar o adapter de Google Ads quando a operação for de anúncios.
+Objetivo: leitura do canal, upload/gestão de conteúdo, comentários e métricas autorizadas. Publicidade usa o adapter de Google Ads.
 
-Configuração externa: Google Cloud Project, YouTube Data API habilitada, OAuth client ID/secret server-side, redirect URI e canal autorizado. Scopes mínimos devem ser incrementais, por exemplo `youtube.readonly` para leitura e `youtube.upload` para envio quando necessário.
+Configuração externa: Google Cloud Project, YouTube Data API habilitada, YouTube Analytics API quando utilizada, OAuth client ID/secret server-side, redirect URI e canal autorizado. Scopes mínimos devem ser incrementais, por exemplo `youtube.readonly` para leitura e `youtube.upload` para envio quando necessário.
+
+A YouTube Data API não deve ser tratada como API de operação de campanhas pagas. Posicionamentos como YouTube In-stream e YouTube Shorts permanecem disponíveis no planejamento de mídia, mas são executados pela integração Google Ads quando realmente autorizada.
 
 ### TikTok
 
@@ -143,7 +153,7 @@ Configuração externa: TikTok Developer App, client key/secret, redirect URI e 
 
 ### Google Ads
 
-Objetivo: criar, configurar e consultar campanhas/métricas.
+Objetivo: criar, configurar e consultar campanhas/métricas, incluindo inventário do YouTube quando suportado pela campanha e conta autorizada.
 
 Configuração externa: Google Cloud OAuth client, client secret server-side, developer token, customer ID alvo e login customer ID quando a conta for acessada por um Manager Account. O scope é `https://www.googleapis.com/auth/adwords`. Refresh token/credenciais ficam server-side.
 
@@ -167,3 +177,5 @@ Credenciais dos provedores devem existir somente no ambiente backend/secret mana
 ## Critério para exibir “Conectado”
 
 A UI só exibe `connected` quando `GET /v1/integrations` retornar esse estado após validação server-side da credencial/conta. Falta de API, resposta inválida, token expirado não renovável, permissão insuficiente ou health check falho não podem ser mascarados como conexão ativa.
+
+Mesmo com `connected`, cada funcionalidade deve verificar as permissões/scopes e capacidades efetivamente autorizadas. Conectar uma conta não autoriza automaticamente mensagens, publicação, analytics ou anúncios se o provedor não concedeu os requisitos daquela capacidade.
