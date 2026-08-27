@@ -2,9 +2,10 @@ import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'rea
 import { type InvoiceSeed } from './mocks/invoiceMockProvider';
 import { getInvoiceSessionSeeds, saveInvoiceSessionSeeds } from './invoiceSessionStore';
 import { activeFinanceCategories } from './financeConfigStore';
-import { getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
+import { getCrmSessionRecords, getFinanceSessionRecords, saveFinanceSessionRecords } from '../../shared/operationalSessionStore';
 import { localDateIso } from '../../shared/localDate';
 import type { FinanceRecord } from './types';
+import type { CrmRecord } from '../crm/types';
 
 type NoteDirection = 'Entrada' | 'Saída';
 type InvoiceStatus = 'Rascunho' | 'Pronta' | 'Enviada' | 'Em aberto' | 'Parcialmente pago' | 'Pago' | 'Vencida' | 'Cancelada';
@@ -12,7 +13,7 @@ type SettlementStatus = 'Liquidado' | 'Pendente' | 'Cancelado';
 type Mode = 'create' | 'edit' | 'view' | 'payment' | 'document';
 type Payment = { id: string; date: string; method: string; amount: number; processingFee: number; settlementStatus: SettlementStatus; notes: string; financeTransactionId?: string };
 type Invoice = {
-  id: string; invoiceNumber: string; customer: string; billingContact: string; service: string; processRef: string; referenceNumbers: string;
+  id: string; invoiceNumber: string; customer: string; customerRecordId: string; billingContact: string; service: string; processRef: string; referenceNumbers: string;
   destination: string; visaType: string; processStage: string; appointmentDate: string; travelDate: string; noteDirection: NoteDirection;
   natureOfOperation: string; series: string; fiscalNumber: string; accessKey: string; issueDate: string; operationDate: string; dueDate: string;
   fiscalStatus: string; issuerName: string; issuerDocument: string; issuerStateRegistration: string; issuerMunicipalRegistration: string;
@@ -34,7 +35,7 @@ const PAYMENT_METHODS = ['Pix', 'Cartão de crédito', 'Cartão de débito', 'Tr
 const LOCAL_FISCAL_STATUSES = ['Não emitida', 'Preparada localmente', 'Aguardando integração'] as const;
 const today = () => localDateIso();
 const EMPTY: Draft = {
-  invoiceNumber: '', customer: '', billingContact: '', service: '', processRef: '', referenceNumbers: '', destination: '', visaType: '', processStage: '',
+  invoiceNumber: '', customer: '', customerRecordId: '', billingContact: '', service: '', processRef: '', referenceNumbers: '', destination: '', visaType: '', processStage: '',
   appointmentDate: '', travelDate: '', noteDirection: 'Saída', natureOfOperation: 'Prestação de serviços', series: '1', fiscalNumber: '', accessKey: '',
   issueDate: today(), operationDate: today(), dueDate: '', fiscalStatus: 'Não emitida', issuerName: 'VISA FÁCIL', issuerDocument: '', issuerStateRegistration: 'ISENTO',
   issuerMunicipalRegistration: '', issuerAddress: '', issuerCity: '', issuerState: '', issuerZip: '', recipientName: '', recipientDocument: '',
@@ -56,6 +57,7 @@ const normalize = (record: InvoiceSeed): Invoice => ({
   ...EMPTY,
   ...record,
   id: record.id,
+  customerRecordId: record.customerRecordId ?? '',
   payments: (record.payments ?? []).map((payment) => ({ ...payment })),
   recipientName: record.recipientName ?? record.customer ?? '',
   unitValue: record.unitValue ?? record.serviceFee ?? 0,
@@ -76,6 +78,22 @@ const visibleStatus = (invoice: Invoice): InvoiceStatus => isOverdue(invoice) ? 
 const statusClass = (status: InvoiceStatus) => status.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
 const normalizedName = (value:string) => value.trim().toLocaleLowerCase('pt-BR');
 const isLocalFiscalStatus = (value:string) => (LOCAL_FISCAL_STATUSES as readonly string[]).includes(value);
+
+function clientRecords(records:CrmRecord[]){return records.filter((record)=>record.kind==='contact'&&record.relationship==='Cliente')}
+function uniqueClientId(records:CrmRecord[],name:string){
+ const normalized=normalizedName(name);
+ if(!normalized)return'';
+ const matches=clientRecords(records).filter((record)=>normalizedName(record.fullName)===normalized);
+ return matches.length===1?matches[0].id:'';
+}
+function migrateInvoiceCustomerLinks(invoices:Invoice[],crmRecords:CrmRecord[]):Invoice[]{
+ const clients=clientRecords(crmRecords);
+ return invoices.map((invoice)=>{
+  if(invoice.customerRecordId&&clients.some((record)=>record.id===invoice.customerRecordId))return invoice;
+  const customerRecordId=uniqueClientId(clients,invoice.customer);
+  return customerRecordId?{...invoice,customerRecordId}:invoice;
+ });
+}
 
 function BellIcon() {
   return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 21h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>;
@@ -136,19 +154,37 @@ function InvoiceDetail({ record, close, edit, registerPayment, document, settleP
   </div>;
 }
 
-function InvoiceForm({ mode, record, close, save }: { mode: 'create' | 'edit'; record?: Invoice; close: () => void; save: (draft: Draft) => void }) {
+function InvoiceForm({ mode, record, crmRecords, close, save }: { mode: 'create' | 'edit'; record?: Invoice; crmRecords:CrmRecord[]; close: () => void; save: (draft: Draft) => void }) {
   const titleId = useId();
   useDialogEscape(close);
   const [draft, setDraft] = useState<Draft>(() => record ? (({ id: _id, payments: _payments, ...rest }) => rest)(record) : EMPTY);
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
+  const clients=clientRecords(crmRecords);
+  const resolvedCustomerId=draft.customerRecordId&&clients.some((client)=>client.id===draft.customerRecordId)?draft.customerRecordId:uniqueClientId(clients,draft.customer);
+  const customerUnavailable=Boolean(draft.customer)&&!resolvedCustomerId;
+  const changeCustomer=(id:string)=>{
+    if(id==='__legacy__')return;
+    const client=clients.find((item)=>item.id===id);
+    setDraft((current)=>client?{
+      ...current,
+      customerRecordId:client.id,
+      customer:client.fullName,
+      billingContact:client.email||client.whatsapp||client.phone,
+      recipientName:client.fullName,
+      recipientDocument:client.cpf||'',
+      recipientCity:client.city,
+      recipientState:client.state,
+    }:{...current,customerRecordId:'',customer:'',billingContact:'',recipientName:'',recipientDocument:'',recipientCity:'',recipientState:''});
+  };
   const invalidDates = Boolean(draft.issueDate && draft.dueDate && draft.dueDate < draft.issueDate);
   const invalidPaidBalance = draft.paid - total(draft) > 0.0001;
-  const invalid = !draft.customer.trim() || invalidDates || invalidPaidBalance;
+  const invalidCustomer=!draft.customer.trim()||(!resolvedCustomerId&&!record);
+  const invalid = invalidCustomer || invalidDates || invalidPaidBalance;
   return <div className="finance-accounting-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
     <div className="finance-invoice-form invoice-refined-form" role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <header><div><span>{mode === 'create' ? 'NOVA COBRANÇA' : 'EDITAR COBRANÇA'}</span><h2 id={titleId}>{mode === 'create' ? 'Criar cobrança / documento fiscal' : record?.invoiceNumber || 'Cobrança'}</h2><p>A cobrança financeira e o estado fiscal são relacionados, mas permanecem independentes.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
-      <form onSubmit={(event) => { event.preventDefault(); if (!invalid) save(draft); }}>
-        <Section title="Identificação e cobrança"><Field label="Número da cobrança"><input value={draft.invoiceNumber} onChange={(event) => set('invoiceNumber', event.target.value)} /></Field><Field label="Status da cobrança"><select value={draft.status} onChange={(event) => set('status', event.target.value as InvoiceStatus)}>{STATUS.map((item) => <option key={item} disabled={DERIVED_STATUS.has(item)}>{item}</option>)}</select></Field><Field label="Cliente *"><input required value={draft.customer} onChange={(event) => set('customer', event.target.value)} /></Field><Field label="Contato de cobrança"><input value={draft.billingContact} onChange={(event) => set('billingContact', event.target.value)} /></Field><Field label="Serviço"><input value={draft.service} onChange={(event) => set('service', event.target.value)} /></Field><Field label="Processo"><input value={draft.processRef} onChange={(event) => set('processRef', event.target.value)} /></Field><Field label="Emissão"><input type="date" value={draft.issueDate} onChange={(event) => set('issueDate', event.target.value)} /></Field><Field label="Vencimento"><input type="date" min={draft.issueDate || undefined} value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></Field></Section>
+      <form onSubmit={(event) => { event.preventDefault(); if (!invalid) save({...draft,customerRecordId:resolvedCustomerId||draft.customerRecordId}); }}>
+        <Section title="Identificação e cobrança"><Field label="Número da cobrança"><input value={draft.invoiceNumber} onChange={(event) => set('invoiceNumber', event.target.value)} /></Field><Field label="Status da cobrança"><select value={draft.status} onChange={(event) => set('status', event.target.value as InvoiceStatus)}>{STATUS.map((item) => <option key={item} disabled={DERIVED_STATUS.has(item)}>{item}</option>)}</select></Field><Field label="Cliente *"><select required value={customerUnavailable?'__legacy__':resolvedCustomerId} onChange={(event)=>changeCustomer(event.target.value)}><option value="">Selecione um cliente</option>{customerUnavailable&&<option value="__legacy__">{draft.customer} · legado/indisponível</option>}{clients.map((client)=><option key={client.id} value={client.id}>{client.fullName}{client.email?` · ${client.email}`:''}</option>)}</select></Field><Field label="Contato de cobrança"><input value={draft.billingContact} onChange={(event) => set('billingContact', event.target.value)} /></Field><Field label="Serviço"><input value={draft.service} onChange={(event) => set('service', event.target.value)} /></Field><Field label="Processo"><input value={draft.processRef} onChange={(event) => set('processRef', event.target.value)} /></Field><Field label="Emissão"><input type="date" value={draft.issueDate} onChange={(event) => set('issueDate', event.target.value)} /></Field><Field label="Vencimento"><input type="date" min={draft.issueDate || undefined} value={draft.dueDate} onChange={(event) => set('dueDate', event.target.value)} /></Field></Section>
         <Section title="Documento fiscal"><Field label="Tipo da nota"><select value={draft.noteDirection} onChange={(event) => set('noteDirection', event.target.value as NoteDirection)}><option>Entrada</option><option>Saída</option></select></Field><Field label="Natureza da operação"><input value={draft.natureOfOperation} onChange={(event) => set('natureOfOperation', event.target.value)} /></Field><Field label="Série"><input value={draft.series} onChange={(event) => set('series', event.target.value)} /></Field><Field label="Número fiscal / referência"><input value={draft.fiscalNumber} onChange={(event) => set('fiscalNumber', event.target.value)} /></Field><Field label="Estado fiscal"><select value={draft.fiscalStatus} onChange={(event) => set('fiscalStatus', event.target.value)}>{!isLocalFiscalStatus(draft.fiscalStatus) && <option value={draft.fiscalStatus} disabled>{draft.fiscalStatus} · somente integração</option>}{LOCAL_FISCAL_STATUSES.map((item)=><option key={item}>{item}</option>)}</select></Field><Field label="Chave de acesso / referência" wide><input maxLength={44} value={draft.accessKey} onChange={(event) => set('accessKey', event.target.value.replace(/\D/g, ''))} /></Field></Section>
         <p className="finance-inline-error" role="status">Estados oficiais como “Autorizada”, “Cancelada fiscalmente” e contingência só poderão vir da integração fiscal/backend. O frontend não fabrica autorização.</p>
         {draft.noteDirection === 'Entrada' ? <Section title="Nota de entrada"><Field label="Fornecedor / remetente"><input value={draft.supplierName} onChange={(event) => set('supplierName', event.target.value)} /></Field><Field label="CPF/CNPJ fornecedor"><input value={draft.supplierDocument} onChange={(event) => set('supplierDocument', event.target.value)} /></Field><Field label="NF do fornecedor"><input value={draft.supplierInvoiceNumber} onChange={(event) => set('supplierInvoiceNumber', event.target.value)} /></Field><Field label="Série fornecedor"><input value={draft.supplierSeries} onChange={(event) => set('supplierSeries', event.target.value)} /></Field><Field label="Recebimento"><input type="date" value={draft.receiptDate} onChange={(event) => set('receiptDate', event.target.value)} /></Field><Field label="Pedido / compra"><input value={draft.purchaseOrderRef} onChange={(event) => set('purchaseOrderRef', event.target.value)} /></Field><Field label="Chave de acesso de origem" wide><input maxLength={44} value={draft.supplierAccessKey} onChange={(event) => set('supplierAccessKey', event.target.value.replace(/\D/g, ''))} /></Field><Field label="Finalidade da entrada" wide><input value={draft.entryPurpose} onChange={(event) => set('entryPurpose', event.target.value)} /></Field></Section> : <Section title="Nota de saída"><Field label="Emitente"><input value={draft.issuerName} onChange={(event) => set('issuerName', event.target.value)} /></Field><Field label="CPF/CNPJ emitente"><input value={draft.issuerDocument} onChange={(event) => set('issuerDocument', event.target.value)} /></Field><Field label="Data de saída"><input type="date" value={draft.departureDate} onChange={(event) => set('departureDate', event.target.value)} /></Field><Field label="Referência do cliente"><input value={draft.customerOrderRef} onChange={(event) => set('customerOrderRef', event.target.value)} /></Field><Field label="Endereço de entrega"><input value={draft.deliveryAddress} onChange={(event) => set('deliveryAddress', event.target.value)} /></Field><Field label="Forma de entrega"><input value={draft.shippingMethod} onChange={(event) => set('shippingMethod', event.target.value)} /></Field><Field label="Finalidade da saída" wide><input value={draft.salePurpose} onChange={(event) => set('salePurpose', event.target.value)} /></Field></Section>}
@@ -157,6 +193,7 @@ function InvoiceForm({ mode, record, close, save }: { mode: 'create' | 'edit'; r
         <Section title="Valores"><Field label="Serviço"><input type="number" min="0" step="0.01" value={draft.serviceFee || ''} onChange={(event) => set('serviceFee', Number(event.target.value))} /></Field><Field label="Taxa consular"><input type="number" min="0" step="0.01" value={draft.consularFee || ''} onChange={(event) => set('consularFee', Number(event.target.value))} /></Field><Field label="Tradução"><input type="number" min="0" step="0.01" value={draft.translationFee || ''} onChange={(event) => set('translationFee', Number(event.target.value))} /></Field><Field label="Terceiros"><input type="number" min="0" step="0.01" value={draft.thirdPartyFee || ''} onChange={(event) => set('thirdPartyFee', Number(event.target.value))} /></Field><Field label="Outros valores"><input type="number" min="0" step="0.01" value={draft.otherCharges || ''} onChange={(event) => set('otherCharges', Number(event.target.value))} /></Field><Field label="Descontos"><input type="number" min="0" step="0.01" value={draft.discounts || ''} onChange={(event) => set('discounts', Number(event.target.value))} /></Field></Section>
         <Section title="Tributos"><Field label="ICMS"><input type="number" min="0" step="0.01" value={draft.icms || ''} onChange={(event) => set('icms', Number(event.target.value))} /></Field><Field label="IPI"><input type="number" min="0" step="0.01" value={draft.ipi || ''} onChange={(event) => set('ipi', Number(event.target.value))} /></Field><Field label="PIS"><input type="number" min="0" step="0.01" value={draft.pis || ''} onChange={(event) => set('pis', Number(event.target.value))} /></Field><Field label="COFINS"><input type="number" min="0" step="0.01" value={draft.cofins || ''} onChange={(event) => set('cofins', Number(event.target.value))} /></Field><Field label="ISS"><input type="number" min="0" step="0.01" value={draft.iss || ''} onChange={(event) => set('iss', Number(event.target.value))} /></Field><Field label="Tributos retidos"><input type="number" min="0" step="0.01" value={draft.withheldTaxes || ''} onChange={(event) => set('withheldTaxes', Number(event.target.value))} /></Field></Section>
         <Section title="Referências e observações"><Field label="Outras referências" wide><input value={draft.referenceNumbers} onChange={(event) => set('referenceNumbers', event.target.value)} /></Field><Field label="Documentos relacionados" wide><input value={draft.relatedDocuments} onChange={(event) => set('relatedDocuments', event.target.value)} /></Field><Field label="Observações" wide><textarea rows={3} value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></Field><Field label="Informações adicionais" wide><textarea rows={3} value={draft.additionalInfo} onChange={(event) => set('additionalInfo', event.target.value)} /></Field></Section>
+        {customerUnavailable&&<p className="finance-inline-error" role="status">O cliente histórico “{draft.customer}” não corresponde a um cliente atual do CRM. O registro foi preservado; selecione um cliente canônico para relincar a cobrança.</p>}
         {invalidDates && <p className="finance-inline-error" role="alert">O vencimento não pode ser anterior à data de emissão.</p>}
         {invalidPaidBalance && <p className="finance-inline-error" role="alert">O total da cobrança não pode ficar abaixo do valor já liquidado.</p>}
         <div className="finance-form-summary"><span>Total da cobrança <b>{money(total(draft))}</b></span></div>
@@ -181,14 +218,26 @@ function PaymentPicker({ records, close, pick }: { records: Invoice[]; close: ()
 }
 
 function matchLegacyFinanceTransaction(invoice:Invoice,payment:Payment,records:FinanceRecord[]){
- return records.find((record)=>record.type==='Receita'&&record.status==='Recebido'&&Math.abs(record.amount-payment.amount)<0.0001&&normalizedName(record.relatedName)===normalizedName(invoice.customer));
+ return records.find((record)=>{
+  if(record.type!=='Receita'||record.status!=='Recebido'||Math.abs(record.amount-payment.amount)>=0.0001)return false;
+  if(invoice.customerRecordId){
+   if(record.relatedRecordId)return record.relatedRecordId===invoice.customerRecordId;
+   return normalizedName(record.relatedName)===normalizedName(invoice.customer);
+  }
+  return normalizedName(record.relatedName)===normalizedName(invoice.customer);
+ });
 }
 
 function ensureFinanceTransaction(invoice:Invoice,payment:Payment):string|undefined{
  const current=getFinanceSessionRecords();
  if(payment.financeTransactionId&&current.some((record)=>record.id===payment.financeTransactionId))return payment.financeTransactionId;
  const legacy=matchLegacyFinanceTransaction(invoice,payment,current);
- if(legacy)return legacy.id;
+ if(legacy){
+  if(invoice.customerRecordId&&!legacy.relatedRecordId){
+   saveFinanceSessionRecords(current.map((record)=>record.id===legacy.id?{...record,relatedRecordId:invoice.customerRecordId}:record));
+  }
+  return legacy.id;
+ }
  const id=`invoice-payment-${payment.id}`;
  if(current.some((record)=>record.id===id))return id;
  const category=activeFinanceCategories('Receita')[0]?.name||'Receita de serviços';
@@ -203,6 +252,7 @@ function ensureFinanceTransaction(invoice:Invoice,payment:Payment):string|undefi
   status:'Recebido',
   paymentMethod:payment.method,
   relatedName:invoice.customer,
+  relatedRecordId:invoice.customerRecordId||undefined,
   notes:`Origem automática: cobrança ${invoice.invoiceNumber||invoice.id}; pagamento ${payment.id}${payment.notes?` · ${payment.notes}`:''}`,
  };
  saveFinanceSessionRecords([record,...current]);
@@ -225,7 +275,8 @@ function migratePaymentLinks(invoices:Invoice[]):Invoice[]{
 }
 
 export function FinanceInvoicesWorkspace() {
-  const [items, setItems] = useState<Invoice[]>(() => migratePaymentLinks(getInvoiceSessionSeeds().map(normalize)));
+  const crmRecords=useMemo(()=>getCrmSessionRecords(),[]);
+  const [items, setItems] = useState<Invoice[]>(() => migratePaymentLinks(migrateInvoiceCustomerLinks(getInvoiceSessionSeeds().map(normalize),getCrmSessionRecords())));
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('Todos');
   const [modal, setModal] = useState<{ mode: Mode; record?: Invoice }>();
@@ -352,7 +403,7 @@ export function FinanceInvoicesWorkspace() {
 
     {modal?.mode === 'view' && modal.record && <InvoiceDetail record={modal.record} close={() => setModal(undefined)} edit={() => setModal({ mode: 'edit', record: modal.record })} registerPayment={() => setModal({ mode: 'payment', record: modal.record })} document={() => setModal({ mode: 'document', record: modal.record })} settlePayment={(paymentId,nextStatus)=>settlePayment(modal.record!.id,paymentId,nextStatus)} />}
     {modal?.mode === 'document' && modal.record && <InvoiceDocument record={modal.record} close={() => setModal(undefined)} />}
-    {(modal?.mode === 'create' || modal?.mode === 'edit') && <InvoiceForm mode={modal.mode} record={modal.record} close={() => setModal(undefined)} save={save} />}
+    {(modal?.mode === 'create' || modal?.mode === 'edit') && <InvoiceForm mode={modal.mode} record={modal.record} crmRecords={crmRecords} close={() => setModal(undefined)} save={save} />}
     {modal?.mode === 'payment' && modal.record && <PaymentModal record={modal.record} close={() => setModal(undefined)} pay={pay} />}
     {paymentPicker && <PaymentPicker records={openInvoices} close={() => setPaymentPicker(false)} pick={(record) => { setPaymentPicker(false); setModal({ mode: 'payment', record }); }} />}
   </div>;
