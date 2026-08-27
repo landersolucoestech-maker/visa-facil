@@ -29,6 +29,7 @@ type AttendanceConversationBase<Status extends AttendanceConversationStatus> = {
   channel: string;
   status: Status;
   assignee: string;
+  assigneeUserId?: string;
   queue: string;
   protocol: string;
   tags: string[];
@@ -45,6 +46,7 @@ type AttendanceConversationBase<Status extends AttendanceConversationStatus> = {
 
 export type CustomerAttendanceConversation = AttendanceConversationBase<CustomerConversationStatus> & {
   kind?: 'customer';
+  crmRecordId?: string;
   priority?: 'Baixa' | 'Normal' | 'Alta' | 'Urgente';
   slaDueAt?: string;
 };
@@ -126,6 +128,7 @@ function hasCommonConversationShape(value: Record<string, unknown>) {
     && isText(value.email)
     && isNonEmptyText(value.channel)
     && isText(value.assignee)
+    && (value.assigneeUserId === undefined || isNonEmptyText(value.assigneeUserId))
     && isText(value.queue)
     && isNonEmptyText(value.protocol)
     && Array.isArray(value.tags)
@@ -165,6 +168,7 @@ export function isAttendanceConversation(value: unknown): value is AttendanceCon
       && (value.messages as AttendanceMessage[]).every((message) => TEAM_SENDERS.has(message.sender) && message.visibility !== 'external');
   }
   return (value.kind === undefined || value.kind === 'customer')
+    && (value.crmRecordId === undefined || isNonEmptyText(value.crmRecordId))
     && typeof value.status === 'string'
     && CUSTOMER_STATUSES.has(value.status)
     && (value.priority === undefined || (typeof value.priority === 'string' && CUSTOMER_PRIORITIES.has(value.priority)))
