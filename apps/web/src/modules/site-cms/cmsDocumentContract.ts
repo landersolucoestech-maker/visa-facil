@@ -77,6 +77,8 @@ export function cmsPublicationIssues(document:CmsDocument){
   const duplicate=seenSlugs.get(slugKey);
   if(duplicate)issues.push(`As páginas “${duplicate}” e “${label}” usam o mesmo slug “${normalized}”.`);else seenSlugs.set(slugKey,label);
   if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
+  const seenSectionTypes=new Set<string>();
+  for(const section of page.sections){if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type)}
  }
  return issues;
 }
