@@ -60,6 +60,8 @@ jobs:
           path: |
             /tmp/typecheck.log
             /tmp/build.log
+            /tmp/visa-facil-vite.log
+            /tmp/browser-*.html
           if-no-files-found: ignore
           retention-days: 3
 
@@ -79,3 +81,58 @@ jobs:
           curl -fsS http://127.0.0.1:4173/crm >/tmp/crm.html
           grep -q '<div id="root"></div>' /tmp/root.html
           grep -q '<div id="root"></div>' /tmp/crm.html
+
+      - name: Rendered CRM browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome_bin="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$chrome_bin" ]; then
+            echo "Chrome/Chromium não encontrado no runner; o gate de renderização não pode ser executado." >&2
+            exit 1
+          fi
+
+          npm --workspace @visa-facil/web run preview -- --port 4173 > /tmp/visa-facil-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for attempt in {1..20}; do
+            if curl -fsS http://127.0.0.1:4173/crm >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
+          render_route() {
+            route="$1"
+            expected="$2"
+            slug="$(printf '%s' "$route" | tr '/:' '__' | sed 's/^_*//')"
+            [ -n "$slug" ] || slug="root"
+            output="/tmp/browser-${slug}.html"
+            "$chrome_bin" \
+              --headless=new \
+              --no-sandbox \
+              --disable-gpu \
+              --disable-dev-shm-usage \
+              --virtual-time-budget=5000 \
+              --dump-dom "http://127.0.0.1:4173${route}" > "$output"
+            grep -Fq "$expected" "$output" || {
+              echo "A rota ${route} não renderizou o conteúdo esperado: ${expected}" >&2
+              exit 1
+            }
+            grep -Fq 'crm-workspace' "$output" || {
+              echo "A rota ${route} não montou o workspace do CRM." >&2
+              exit 1
+            }
+          }
+
+          render_route '/crm' 'Dashboard'
+          render_route '/crm/relacionamento' 'Contatos & Leads'
+          render_route '/crm/agenda' 'Agenda'
+          render_route '/crm/tarefas' 'Tarefas'
+          render_route '/crm/atendimentos' 'VisaChat'
+          render_route '/crm/contratos' 'Contratos'
+          render_route '/crm/financeiro' 'Transações Financeiras'
+          render_route '/crm/financeiro/invoices' 'Faturamento e Notas Fiscais'
+          render_route '/crm/marketing' 'Visão Geral'
+          render_route '/crm/relatorios' 'Relatórios'
+          render_route '/crm/configuracoes' 'Configurações'
