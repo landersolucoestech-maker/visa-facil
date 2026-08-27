@@ -1,5 +1,6 @@
 import type { CmsDocument, CmsMediaItem, CmsPage, CmsRepeaterItem, CmsSectionInstance, CmsSeo, CmsSettings, CmsStatus, CmsValue } from './types';
 
+const CMS_DOCUMENT_VERSION=1;
 const VALID_PAGE_STATUSES=new Set<CmsStatus>(['draft','published','scheduled','hidden']);
 const VALID_MEDIA_KINDS=new Set<CmsMediaItem['kind']>(['image','document']);
 const KNOWN_PAGE_SECTION_TYPES=new Set(['hero','services-intro','services','experience','pain-points','process','difference','faq','contact']);
@@ -17,15 +18,16 @@ function isNumber(value:unknown):value is number{return typeof value==='number'&
 function isRepeaterItem(value:unknown):value is CmsRepeaterItem{return isRecord(value)&&Object.values(value).every(item=>isString(item)||isBoolean(item))}
 function isCmsValue(value:unknown):value is CmsValue{return isString(value)||isBoolean(value)||(Array.isArray(value)&&value.every(isRepeaterItem))}
 function isSeo(value:unknown):value is CmsSeo{return isRecord(value)&&isString(value.title)&&isString(value.description)&&isString(value.ogImage)&&isString(value.canonicalUrl)&&isBoolean(value.noIndex)}
-function isSection(value:unknown):value is CmsSectionInstance{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.type)&&value.type.trim().length>0&&isString(value.label)&&isBoolean(value.visible)&&isNumber(value.order)&&Number.isInteger(value.order)&&isRecord(value.values)&&Object.values(value.values).every(isCmsValue)}
+function isSection(value:unknown):value is CmsSectionInstance{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.type)&&value.type.trim().length>0&&isString(value.label)&&isBoolean(value.visible)&&isNumber(value.order)&&Number.isInteger(value.order)&&value.order>=0&&isRecord(value.values)&&Object.values(value.values).every(isCmsValue)}
 function isPage(value:unknown):value is CmsPage{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.name)&&isString(value.slug)&&typeof value.status==='string'&&VALID_PAGE_STATUSES.has(value.status as CmsStatus)&&isString(value.scheduledAt)&&isString(value.updatedAt)&&isSeo(value.seo)&&Array.isArray(value.sections)&&value.sections.every(isSection)}
 function isMedia(value:unknown):value is CmsMediaItem{return isRecord(value)&&isString(value.id)&&value.id.trim().length>0&&isString(value.name)&&isString(value.url)&&isString(value.alt)&&typeof value.kind==='string'&&VALID_MEDIA_KINDS.has(value.kind as CmsMediaItem['kind'])&&isString(value.createdAt)}
 function isSettings(value:unknown):value is CmsSettings{return isRecord(value)&&isString(value.siteName)&&isString(value.siteUrl)&&isString(value.locale)&&isString(value.defaultOgImage)&&isString(value.organizationName)}
 function hasUniqueIds<T extends {id:string}>(items:T[]){return new Set(items.map(item=>item.id)).size===items.length}
+function hasUniqueOrders<T extends {order:number}>(items:T[]){return new Set(items.map(item=>item.order)).size===items.length}
 
 export function isCmsDocument(value:unknown):value is CmsDocument{
- if(!isRecord(value)||!isNumber(value.version)||!Number.isInteger(value.version)||value.version<1||!isString(value.updatedAt)||(value.publishedAt!==null&&!isString(value.publishedAt))||!Array.isArray(value.pages)||!value.pages.every(isPage)||!Array.isArray(value.globals)||!value.globals.every(isSection)||!Array.isArray(value.media)||!value.media.every(isMedia)||!isSettings(value.settings))return false;
- return hasUniqueIds(value.pages)&&hasUniqueIds(value.globals)&&hasUniqueIds(value.media)&&value.pages.every(page=>hasUniqueIds(page.sections));
+ if(!isRecord(value)||value.version!==CMS_DOCUMENT_VERSION||!isString(value.updatedAt)||(value.publishedAt!==null&&!isString(value.publishedAt))||!Array.isArray(value.pages)||!value.pages.every(isPage)||!Array.isArray(value.globals)||!value.globals.every(isSection)||!Array.isArray(value.media)||!value.media.every(isMedia)||!isSettings(value.settings))return false;
+ return hasUniqueIds(value.pages)&&hasUniqueIds(value.globals)&&hasUniqueOrders(value.globals)&&hasUniqueIds(value.media)&&value.pages.every(page=>hasUniqueIds(page.sections)&&hasUniqueOrders(page.sections));
 }
 
 export function parseCmsDocument(raw:string|null):CmsDocument|null{
@@ -71,9 +73,19 @@ export function cmsMediaReferenceCount(document:CmsDocument,url:string){
  return count;
 }
 
+function appendOrderIssues(issues:string[],sections:CmsSectionInstance[],scope:string){
+ const seen=new Set<number>();
+ for(const section of sections){
+  if(!Number.isInteger(section.order)||section.order<0)issues.push(`${scope} contém a seção “${section.label}” com ordem inválida.`);
+  else if(seen.has(section.order))issues.push(`${scope} possui mais de uma seção na ordem ${section.order}.`);
+  else seen.add(section.order);
+ }
+}
+
 export function cmsPublicationIssues(document:CmsDocument){
  const issues:string[]=[];
  const seenSlugs=new Map<string,string>();
+ if(document.version!==CMS_DOCUMENT_VERSION)issues.push(`A versão do documento CMS deve ser ${CMS_DOCUMENT_VERSION}.`);
  if(!document.settings.siteName.trim())issues.push('Informe o nome do site antes de publicar.');
  if(document.settings.siteUrl.trim()&&!isSafeCmsExternalUrl(document.settings.siteUrl))issues.push('A URL principal do site deve usar HTTP ou HTTPS.');
  if(!document.pages.some(page=>normalizeCmsSlug(page.slug)==='/'))issues.push('O site precisa manter uma página inicial no slug /.');
@@ -87,12 +99,14 @@ export function cmsPublicationIssues(document:CmsDocument){
   if(duplicate)issues.push(`As páginas “${duplicate}” e “${label}” usam o mesmo slug “${normalized}”.`);else seenSlugs.set(slugKey,label);
   if(page.status==='scheduled'&&!isValidCmsSchedule(page.scheduledAt))issues.push(`A página “${label}” está agendada, mas não possui data e horário válidos.`);
   if(page.seo.canonicalUrl.trim()&&!isSafeCmsExternalUrl(page.seo.canonicalUrl))issues.push(`A Canonical URL da página “${label}” deve usar HTTP ou HTTPS.`);
+  appendOrderIssues(issues,page.sections,`A página “${label}”`);
   const seenSectionTypes=new Set<string>();
   for(const section of page.sections){
    if(!KNOWN_PAGE_SECTION_TYPES.has(section.type))issues.push(`A página “${label}” contém um tipo de seção não suportado: “${section.type}”.`);
    if(seenSectionTypes.has(section.type))issues.push(`A página “${label}” possui mais de uma seção do tipo “${section.label}”.`);else seenSectionTypes.add(section.type);
   }
  }
+ appendOrderIssues(issues,document.globals,'O conteúdo global');
  const seenGlobalTypes=new Set<string>();
  for(const section of document.globals){
   if(!KNOWN_GLOBAL_SECTION_TYPES.has(section.type))issues.push(`Existe um bloco global não suportado: “${section.type}”.`);
