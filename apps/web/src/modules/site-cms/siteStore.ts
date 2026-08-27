@@ -1,5 +1,5 @@
 import { createInitialCmsDocument } from './siteSchema';
-import { normalizeCmsPath, parseCmsDocument } from './cmsDocumentContract';
+import { cmsPublicationIssues, normalizeCmsPath, parseCmsDocument } from './cmsDocumentContract';
 import type { CmsDocument, CmsPage } from './types';
 
 const DRAFT_KEY='visa-facil.cms.draft.v1';
@@ -7,6 +7,10 @@ const PUBLISHED_KEY='visa-facil.cms.published.v1';
 
 export class CmsStorageError extends Error{
  constructor(){super('O navegador não conseguiu salvar o CMS local. Reduza a biblioteca de mídia ou libere espaço antes de tentar novamente.');this.name='CmsStorageError'}
+}
+
+export class CmsPublicationError extends Error{
+ constructor(public readonly issues:string[]){super(`Publicação bloqueada: ${issues[0]||'o documento do CMS é inválido.'}`);this.name='CmsPublicationError'}
 }
 
 function clone<T>(value:T):T{return structuredClone(value)}
@@ -62,9 +66,12 @@ export function loadPublished():CmsDocument{
 }
 
 export function publishDraft(document:CmsDocument){
+ const normalized=normalize(clone(document));
+ const issues=cmsPublicationIssues(normalized);
+ if(issues.length)throw new CmsPublicationError(issues);
  const previousPublished=readRaw(PUBLISHED_KEY);
  const now=new Date().toISOString();
- const published:CmsDocument={...normalize(clone(document)),updatedAt:now,publishedAt:now};
+ const published:CmsDocument={...normalized,updatedAt:now,publishedAt:now};
  persist(PUBLISHED_KEY,published);
  try{
   persist(DRAFT_KEY,published);
