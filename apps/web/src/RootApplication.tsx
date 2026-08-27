@@ -3,6 +3,7 @@ import { AccountMenu, type AccountMenuSurface } from './components/AccountMenu';
 import { GlobalNotificationFallback } from './components/GlobalNotificationFallback';
 import { GlobalPersistenceNotice } from './components/GlobalPersistenceNotice';
 import { GlobalRouteLoader } from './components/GlobalRouteLoader';
+import { TableViewPagination } from './components/TableViewPagination';
 import { AUTHENTICATION_ENABLED, getAuthSession, isInternalPath } from './modules/auth/auth';
 import './styles/crm-content-layout.css';
 import './styles/crm-ui-standard.css';
@@ -97,7 +98,7 @@ function internal(page:ReactNode, accountSurface?:AccountMenuSurface){
   return <><Suspense fallback={<GlobalRouteLoader/>}>{page}</Suspense><GlobalPersistenceNotice/>{accountSurface==='crm'&&<GlobalNotificationFallback/>}{accountSurface&&<AccountMenu surface={accountSurface}/>}</>;
 }
 function withSharedSidebar(page: ReactNode) {
-  return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}</div></div>,'crm');
+  return internal(<div className="crm-global-shell"><CrmSidebar /><div className="crm-global-page">{page}<TableViewPagination /></div></div>,'crm');
 }
 function publicSite(preview=false){
   return <Suspense fallback={<GlobalRouteLoader/>}><PublicSitePage preview={preview}/></Suspense>;
