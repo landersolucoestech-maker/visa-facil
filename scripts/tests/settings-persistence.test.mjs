@@ -5,6 +5,9 @@ import { resolve } from 'node:path';
 
 const root=process.cwd();
 const tabs=readFileSync(resolve(root,'apps/web/src/modules/settings/CompanyAutomationTabs.tsx'),'utf8');
+const shared=readFileSync(resolve(root,'apps/web/src/modules/settings/settingsShared.tsx'),'utf8');
+const mockProvider=readFileSync(resolve(root,'apps/web/src/modules/settings/mocks/settingsMockProvider.ts'),'utf8');
+const fixture=JSON.parse(readFileSync(resolve(root,'apps/web/src/mocks/settings/settings.dev.json'),'utf8'));
 const security=readFileSync(resolve(root,'apps/web/src/modules/settings/SecurityIntegrationTabs.tsx'),'utf8');
 const users=readFileSync(resolve(root,'apps/web/src/modules/settings/UsersTab.tsx'),'utf8');
 const profile=readFileSync(resolve(root,'apps/web/src/modules/settings/ProfileApp.tsx'),'utf8');
@@ -20,9 +23,18 @@ test('company and automation settings confirm local persistence before claiming 
 
 test('automation settings remain explicit preferences rather than executable automation',()=>{
   assert.ok(tabs.includes('nenhum executor de automações está conectado'));
-  assert.ok(tabs.includes('não disparam e-mails, push, backups ou jobs'));
+  assert.ok(tabs.includes('não disparam e-mails, SMS, push, backups ou jobs'));
   assert.ok(tabs.includes('Backup automático'));
   assert.ok(tabs.includes('checked={false} onChange={()=>{}} disabled'));
+});
+
+test('SMS is modeled as a future notification preference without pretending a provider can send it',()=>{
+  assert.ok(shared.includes("AutomationKey='email'|'sms'|'push'"));
+  assert.ok(mockProvider.includes("['email','sms','push'"));
+  assert.equal(fixture.automations.sms,false);
+  assert.ok(tabs.includes("checked={values.sms} onChange={value=>set('sms',value)}"));
+  assert.equal(tabs.includes('<strong>SMS</strong><Toggle checked={false} onChange={()=>{}} disabled/>'),false);
+  assert.ok(tabs.includes('nenhum executor de automações está conectado'));
 });
 
 test('security and integrations do not fake unavailable backend capabilities',()=>{
