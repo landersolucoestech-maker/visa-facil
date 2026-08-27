@@ -56,8 +56,8 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
 
   if (mode === 'view' && record) {
     return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-      <div className="finance-view-modal finance-transaction-view-modal" role="dialog" aria-modal="true">
-        <header><div><span>TRANSAÇÃO</span><h2>{record.description}</h2><p>{record.category} · {record.type}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+      <div className="finance-view-modal finance-transaction-view-modal" role="dialog" aria-modal="true" aria-labelledby="finance-transaction-view-title">
+        <header><div><span>TRANSAÇÃO</span><h2 id="finance-transaction-view-title">{record.description}</h2><p>{record.category} · {record.type}</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
         <section className="finance-view-summary">
           <div><span>Valor</span><strong className={record.type === 'Receita' ? 'is-income' : 'is-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong></div>
           <div><span>Status</span><strong>{record.status}</strong></div>
@@ -73,8 +73,8 @@ function TransactionModal({ mode, record, close, save }: { mode: Mode; record?: 
   const invalidDueDate = Boolean(draft.date && draft.dueDate && draft.dueDate < draft.date);
   const invalid = !draft.description.trim() || draft.amount <= 0 || !draft.date || !draft.category || !isValidStatus(draft.type, draft.status) || invalidDueDate;
   return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="finance-form-modal finance-transaction-form-modal" role="dialog" aria-modal="true">
-      <header><div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2>{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+    <div className="finance-form-modal finance-transaction-form-modal" role="dialog" aria-modal="true" aria-labelledby="finance-transaction-form-title">
+      <header><div><span>{mode === 'create' ? 'NOVA TRANSAÇÃO' : 'EDITAR TRANSAÇÃO'}</span><h2 id="finance-transaction-form-title">{mode === 'create' ? 'Adicionar transação' : 'Editar transação'}</h2><p>Registre os dados financeiros e o vínculo correspondente.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
       <form onSubmit={(event) => { event.preventDefault(); if (!invalid) save(draft); }}>
         <div className="finance-form-grid finance-transaction-form-grid">
           <label className="finance-field-wide"><span>Descrição</span><input required value={draft.description} onChange={(event) => set('description', event.target.value)} /></label>
@@ -146,7 +146,7 @@ export function FinanceTransactionsApp() {
   const clearFilters = () => { setQuery(''); setType('Todos'); setStatus('Todos'); setCategory('Todas'); setStart(''); setEnd(''); };
   const hasFilters = Boolean(query || type !== 'Todos' || status !== 'Todos' || category !== 'Todas' || start || end);
 
-  return <div className="crm-shell finance-shell finance-transactions-shell" onClick={() => { setMenu(undefined); setNotifications(false); }}>
+  return <div className="crm-shell finance-shell finance-transactions-shell" onClick={() => { setMenu(undefined); setNotifications(false); }} onKeyDown={(event)=>{if(event.key==='Escape'){setMenu(undefined);setNotifications(false);if(modal)setModal(undefined);if(ofx)setOfx(false)}}}>
     <div className="crm-workspace finance-transactions-workspace">
       <header className="crm-topbar finance-transactions-topbar">
         <div><small>VISA FÁCIL · CRM · FINANCEIRO</small><h1>Transações</h1><p>Receitas, despesas, contas a pagar e contas a receber.</p></div>
@@ -187,7 +187,7 @@ export function FinanceTransactionsApp() {
               <strong data-label="Valor" className={record.type === 'Receita' ? 'finance-income' : 'finance-expense'}>{record.type === 'Despesa' ? '- ' : ''}{money(record.amount)}</strong>
               <span data-label="Data">{formatDate(record.date)}</span><span data-label="Vencimento" className={record.dueDate && record.dueDate < today && (record.status === 'A receber' || record.status === 'A pagar') ? 'is-overdue' : ''}>{formatDate(record.dueDate)}</span>
               <span data-label="Status"><b className={`finance-status is-${classNamePart(record.status)}`}>{record.status}</b></span>
-              <div className="finance-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}><button className="finance-actions-trigger" type="button" aria-label={`Ações de ${record.description}`} aria-expanded={menu === record.id} onClick={() => setMenu((current) => current === record.id ? undefined : record.id)}>⋯</button>{menu === record.id && <div className="finance-actions-menu"><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'view', record }); }}>Ver</button><button type="button" onClick={() => { setMenu(undefined); setModal({ mode: 'edit', record }); }}>Editar</button><button type="button" className="is-danger" onClick={() => remove(record)}>Excluir</button></div>}</div>
+              <div className="finance-row-actions" data-label="Ações" onClick={(event) => event.stopPropagation()}><button className="finance-actions-trigger" type="button" aria-label={`Ações de ${record.description}`} aria-haspopup="menu" aria-expanded={menu === record.id} onClick={() => setMenu((current) => current === record.id ? undefined : record.id)}>⋯</button>{menu === record.id && <div className="finance-actions-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setMenu(undefined); setModal({ mode: 'view', record }); }}>Ver</button><button type="button" role="menuitem" onClick={() => { setMenu(undefined); setModal({ mode: 'edit', record }); }}>Editar</button><button type="button" role="menuitem" className="is-danger" onClick={() => remove(record)}>Excluir</button></div>}</div>
             </div>) : <div className="finance-empty"><strong>Nenhuma transação encontrada</strong><span>Ajuste os filtros ou adicione uma nova transação.</span></div>}
           </div>
         </section>
