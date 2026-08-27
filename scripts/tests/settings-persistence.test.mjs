@@ -29,7 +29,8 @@ test('security and integrations do not fake unavailable backend capabilities',()
   assert.ok(security.includes('A autenticação está desativada neste ambiente'));
   assert.ok(security.includes('Alteração de senha, 2FA, gestão de sessões e exclusão de conta permanecem indisponíveis'));
   assert.ok(security.includes("disabled={!backendConfigured||working}"));
-  assert.ok(security.includes('Nenhuma integração é considerada conectada'));
+  assert.ok(security.includes("INTEGRATION_REGISTRY.map(item=>({id:item.id,state:'unconfigured'}))"));
+  assert.ok(security.includes("'Backend necessário'"));
 });
 
 test('users and profile remain reference-only while authentication is disabled',()=>{
