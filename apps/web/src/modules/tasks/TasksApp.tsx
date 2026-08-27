@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './tasks.css';
 import { type RelatedType, type TaskPriority, type TaskRecord, type TaskStatus } from './mocks/tasksMockProvider';
 import { getTaskSessionRecords, saveTaskSessionRecords } from '../../shared/operationalSessionStore';
+import { localDateIso } from '../../shared/localDate';
 
 const STATUS_OPTIONS: TaskStatus[] = ['Pendente', 'Em andamento', 'Concluída'];
 const PRIORITY_OPTIONS: TaskPriority[] = ['Baixa', 'Média', 'Alta'];
@@ -66,7 +67,7 @@ export function TasksApp() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   useEffect(() => { saveTaskSessionRecords(tasks); }, [tasks]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateIso();
   const filtered = useMemo(() => tasks.filter((task) => {
     const haystack = `${task.title} ${task.relatedName} ${task.owner} ${task.description}`.toLowerCase();
     return haystack.includes(query.trim().toLowerCase()) && (statusFilter === 'Todos' || task.status === statusFilter) && (priorityFilter === 'Todas' || task.priority === priorityFilter);
