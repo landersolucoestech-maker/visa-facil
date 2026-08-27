@@ -12,8 +12,8 @@
 .crm-directory-tabs small{min-width:22px;height:22px;display:grid;place-items:center;padding:0 4px;border-radius:999px;background:#eef2f7;color:#68778e;font-size:10px}
 .crm-directory-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}
 .crm-directory-search{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;border:1px solid var(--crm-border);border-radius:8px;background:#fff}
-.crm-directory-search>span{width:16px;height:16px;flex:0 0 16px;font-size:0;background:center/16px 16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e8ca1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.65-3.65'/%3E%3C/svg%3E")}
-.crm-directory-search>span:before,.crm-directory-search>span:after{content:none!important;display:none!important}
+.crm-directory-search-icon{width:16px;height:16px;flex:0 0 16px;color:#7e8ca1;display:grid;place-items:center}
+.crm-directory-search-icon svg{display:block;width:16px;height:16px}
 .crm-directory-search input{width:100%;border:0;outline:0;background:transparent;color:var(--crm-text);font:inherit;font-size:13px}
 .crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .crm-directory-search>input[type="search"]{min-width:0!important;min-height:0!important;height:auto!important;flex:1 1 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:0!important}
 .crm-directory-toolbar select{height:38px;padding:0 11px;border:1px solid var(--crm-border);border-radius:8px;background:#fff;color:var(--crm-text);font:inherit;font-size:13px}
