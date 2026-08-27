@@ -1,4 +1,5 @@
 import { buildApiEndpoint, normalizeApiBaseUrl } from './apiBaseUrl';
+import { readBoundedJsonResponse, ResponseBodyLimitError } from './boundedJsonResponse';
 
 export type ApiErrorDetails={
   code:string;
@@ -35,7 +36,7 @@ async function toError(response:Response):Promise<ApiClientError>{
   let requestId=response.headers.get('x-request-id')||undefined;
   let retryable=response.status===408||response.status===429||response.status>=500;
   try{
-    const payload:unknown=await response.json();
+    const payload:unknown=await readBoundedJsonResponse(response);
     if(isRecord(payload)){
       if(typeof payload.code==='string')code=payload.code;
       if(typeof payload.message==='string')message=payload.message;
@@ -46,7 +47,7 @@ async function toError(response:Response):Promise<ApiClientError>{
         if(typeof payload.error.message==='string')message=payload.error.message;
       }
     }
-  }catch{ /* response without JSON error body */ }
+  }catch{ /* oversized, malformed or non-JSON error body: keep the HTTP fallback */ }
   return new ApiClientError({code,message,requestId,retryable,status:response.status});
 }
 
@@ -63,7 +64,11 @@ export async function apiRequest<T>(path:string,init:RequestInit,validate:(value
     throw new ApiClientError({code:'NETWORK_ERROR',message:'Não foi possível alcançar a API backend.',retryable:true,status:0});
   }
   if(!response.ok)throw await toError(response);
-  const payload:unknown=await response.json();
+  let payload:unknown;
+  try{payload=await readBoundedJsonResponse(response)}catch(error){
+    if(error instanceof ResponseBodyLimitError)throw new ApiClientError({code:'API_RESPONSE_TOO_LARGE',message:'A resposta da API excedeu o limite de tamanho permitido.',retryable:false,status:response.status});
+    throw new ApiClientError({code:'INVALID_API_RESPONSE',message:'A API retornou JSON inválido ou ilegível.',retryable:false,status:response.status});
+  }
   if(!validate(payload))throw new ApiClientError({code:'INVALID_API_RESPONSE',message:'A API retornou um contrato de dados inválido.',retryable:false,status:response.status});
   return payload;
 }
