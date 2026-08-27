@@ -1,20 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readSessionRecords, writeSessionRecords } from '../../apps/web/src/shared/sessionRecords.ts';
+import { readSessionRecords, SessionRecordPersistenceError, writeSessionRecords } from '../../apps/web/src/shared/sessionRecords.ts';
 
-function memoryStorage(initial={}){
+function memoryStorage(initial={},throwOnSet=false){
   const values=new Map(Object.entries(initial));
   return {
     getItem:key=>values.has(key)?values.get(key):null,
-    setItem:(key,value)=>values.set(key,String(value)),
+    setItem:(key,value)=>{if(throwOnSet)throw new Error('quota');values.set(key,String(value))},
     removeItem:key=>values.delete(key),
     clear:()=>values.clear(),
   };
 }
 
-function withSessionStorage(initial,callback){
+function withSessionStorage(initial,callback,throwOnSet=false){
   const previous=globalThis.sessionStorage;
-  globalThis.sessionStorage=memoryStorage(initial);
+  globalThis.sessionStorage=memoryStorage(initial,throwOnSet);
   try{return callback(globalThis.sessionStorage)}
   finally{
     if(previous===undefined)delete globalThis.sessionStorage;
@@ -59,3 +59,10 @@ test('invalid writes cannot corrupt the canonical session set',()=>withSessionSt
   assert.throws(()=>writeSessionRecords('test.records',[{id:'bad',name:''}],valid));
   assert.deepEqual(JSON.parse(storage.getItem('test.records')),[{id:'one',name:'One'}]);
 }));
+
+test('validated writes surface browser quota or storage failures instead of reporting false success',()=>withSessionStorage({},()=>{
+  assert.throws(
+    ()=>writeSessionRecords('test.records',[{id:'one',name:'One'}],valid),
+    error=>error instanceof SessionRecordPersistenceError&&error.key==='test.records',
+  );
+},true));
