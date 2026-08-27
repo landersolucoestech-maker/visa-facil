@@ -11,14 +11,14 @@ Rules:
 - External integrations are never mocked as connected. Integration status must continue to come from the real backend contract; fixtures must not fabricate OAuth, tokens, webhooks, Autentique delivery or signatures.
 - To remove demo data later, disable the flag first, remove this directory and then remove the corresponding mock-provider fallback imports.
 
-Current centralized domains:
+Current centralized domains and route coverage:
 - `crm/`: contacts, leads and customer records used directly by CRM and indirectly by Dashboard/Reports.
 - `agenda/`: calendar events used by Agenda and derived summaries.
-- `tasks/`: operational tasks used by Tasks and derived summaries.
+- `tasks/`: both general CRM tasks and Marketing tasks, distinguished by the canonical `area` field.
 - `attendance/`: VisaChat conversations/messages.
 - `contracts/`: operational contract records plus contract templates and variables. Signature mocks stay local-only with `signatureProvider: null` / `signatureState: not_sent`.
-- `finance/`: transactions, invoices, finance categories and automatic categorization rules. Accounting/Reports derive from these canonical sources.
-- `marketing/`: campaigns and marketing operational state.
+- `finance/`: transactions, invoices, finance categories and automatic categorization rules. Accounting/DRE/Reports derive from these canonical sources.
+- `marketing/`: campaigns, content calendar and briefings. These records represent internal planning only and never fabricate successful external publication or ad delivery.
 - `settings/`: prototype company, automation, user and role reference data. These are UI fixtures only and do not represent real authentication/RBAC enforcement.
 
-Derived views such as Dashboard, Accounting and Reports do not maintain a second parallel fixture set: they intentionally calculate their content from the seeded canonical domain stores above, preventing duplicated or contradictory mock data.
+Derived views such as Dashboard, Accounting/DRE and Reports do not maintain a second parallel fixture set: they intentionally calculate their content from the seeded canonical domain stores above, preventing duplicated or contradictory mock data. Integrations and authentication are also intentionally excluded from fake connected-state fixtures because their real state depends on backend/provider authorization.
