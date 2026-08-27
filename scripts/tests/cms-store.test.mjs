@@ -12,7 +12,10 @@ function validDocument(){
       seo:{title:'Home',description:'Descrição',ogImage:'',canonicalUrl:'',noIndex:false},
       sections:[{id:'hero',type:'hero',label:'Hero',visible:true,order:0,values:{title:'Visa Fácil',visible:true,items:[{label:'Item',enabled:true}]}}],
     }],
-    globals:[{id:'global-header',type:'header',label:'Header',visible:true,order:0,values:{title:'Visa Fácil'}}],
+    globals:[
+      {id:'global-header',type:'header',label:'Header',visible:true,order:0,values:{title:'Visa Fácil'}},
+      {id:'global-footer',type:'footer',label:'Footer',visible:true,order:1,values:{copyright:'© 2026 VISA FÁCIL'}},
+    ],
     media:[],
     settings:{siteName:'VISA FÁCIL',siteUrl:'',locale:'pt-BR',defaultOgImage:'',organizationName:'VISA FÁCIL'},
   };
@@ -127,6 +130,20 @@ test('CMS publication validation blocks duplicate structural page and global sec
   assert.ok(cmsPublicationIssues(duplicatePageSection).some(issue=>issue.includes('mais de uma seção')));
 
   const duplicateGlobal=validDocument();
-  duplicateGlobal.globals.push({...structuredClone(duplicateGlobal.globals[0]),id:'global-header-duplicate',order:1});
+  duplicateGlobal.globals.push({...structuredClone(duplicateGlobal.globals[0]),id:'global-header-duplicate',order:2});
   assert.ok(cmsPublicationIssues(duplicateGlobal).some(issue=>issue.includes('mais de um bloco global')));
+});
+
+test('CMS publication validation blocks unsupported and missing structural blocks',()=>{
+  const unknownPageSection=validDocument();
+  unknownPageSection.pages[0].sections[0].type='unknown-section';
+  assert.ok(cmsPublicationIssues(unknownPageSection).some(issue=>issue.includes('tipo de seção não suportado')));
+
+  const unknownGlobal=validDocument();
+  unknownGlobal.globals[0].type='unknown-global';
+  assert.ok(cmsPublicationIssues(unknownGlobal).some(issue=>issue.includes('bloco global não suportado')));
+
+  const missingFooter=validDocument();
+  missingFooter.globals=missingFooter.globals.filter(section=>section.type!=='footer');
+  assert.ok(cmsPublicationIssues(missingFooter).some(issue=>issue.includes('bloco global obrigatório “footer” está ausente')));
 });
