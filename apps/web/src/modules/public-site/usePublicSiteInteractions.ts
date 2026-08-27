@@ -42,8 +42,32 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
         const open = dropdown.classList.toggle('is-open');
         dropdownTrigger.setAttribute('aria-expanded', String(open));
       };
+      const onDropdownEnter = () => {
+        if (window.innerWidth <= 1050) return;
+        dropdownTrigger.setAttribute('aria-expanded', 'true');
+      };
+      const onDropdownLeave = () => {
+        if (window.innerWidth <= 1050 || dropdown.contains(document.activeElement)) return;
+        dropdownTrigger.setAttribute('aria-expanded', 'false');
+      };
+      const onDropdownFocusIn = () => {
+        if (window.innerWidth <= 1050) return;
+        dropdownTrigger.setAttribute('aria-expanded', 'true');
+      };
+      const onDropdownFocusOut = (event: FocusEvent) => {
+        if (window.innerWidth <= 1050 || dropdown.contains(event.relatedTarget as Node | null)) return;
+        dropdownTrigger.setAttribute('aria-expanded', 'false');
+      };
       dropdownTrigger.addEventListener('click', onDropdownClick);
+      dropdown.addEventListener('mouseenter', onDropdownEnter);
+      dropdown.addEventListener('mouseleave', onDropdownLeave);
+      dropdown.addEventListener('focusin', onDropdownFocusIn);
+      dropdown.addEventListener('focusout', onDropdownFocusOut);
       cleanup.push(() => dropdownTrigger.removeEventListener('click', onDropdownClick));
+      cleanup.push(() => dropdown.removeEventListener('mouseenter', onDropdownEnter));
+      cleanup.push(() => dropdown.removeEventListener('mouseleave', onDropdownLeave));
+      cleanup.push(() => dropdown.removeEventListener('focusin', onDropdownFocusIn));
+      cleanup.push(() => dropdown.removeEventListener('focusout', onDropdownFocusOut));
     }
 
     root.querySelectorAll<HTMLAnchorElement>('[data-nav] a').forEach((link) => {
@@ -70,7 +94,7 @@ export function usePublicSiteInteractions(rootRef: RefObject<HTMLDivElement | nu
     const onEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       const menuWasOpen = Boolean(nav?.classList.contains('is-open'));
-      const dropdownWasOpen = Boolean(dropdown?.classList.contains('is-open'));
+      const dropdownWasOpen = Boolean(dropdown?.classList.contains('is-open')) || dropdownTrigger?.getAttribute('aria-expanded') === 'true';
       closeMenu();
       if (menuWasOpen) menuButton?.focus();
       else if (dropdownWasOpen) dropdownTrigger?.focus();
