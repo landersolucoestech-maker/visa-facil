@@ -150,7 +150,10 @@ function importAttendance(rows:ReportRow[]):ImportResult{
  rows.forEach((row,index)=>{
   const rowNumber=index+2;const customer=required(row,'Nome do contato / lead',rowNumber);const handle=required(row,'Telefone / usuário',rowNumber);const channel=canonicalOption(text(row,'Canal'),ATTENDANCE_CHANNELS,'WhatsApp','Canal',rowNumber);const initialBody=text(row,'Mensagem inicial');
   const existingIndex=next.findIndex(record=>getAttendanceConversationKind(record)==='customer'&&normalize(record.handle)===normalize(handle)&&normalize(record.channel)===normalize(channel));const previous=existingIndex>=0?next[existingIndex]:undefined;const now=timeNow();const timestamp=nowIso();
-  if(previous){next[existingIndex]={...previous,customer,handle,channel,updatedAt:timestamp};updated+=1;return}
+  if(previous&&previous.kind!=='team'){
+   const updatedConversation:AttendanceConversation={...previous,kind:'customer',customer,handle,channel,updatedAt:timestamp};
+   next[existingIndex]=updatedConversation;updated+=1;return;
+  }
   const initialMessage:AttendanceMessage[]=initialBody?[{id:crypto.randomUUID(),sender:'agent',author:currentAuthor,body:initialBody,time:now,visibility:'external',deliveryStatus:'local'}]:[];
   const record:AttendanceConversation={id:newId('attendance'),kind:'customer',customer,handle,email:'',channel,status:'Em atendimento',assignee:currentAuthor,queue:'Atendimento',protocol:`VF-${Date.now().toString(36).toUpperCase()}-${index+1}`,tags:[],priority:'Normal',lastMessage:initialBody||'Conversa iniciada',lastMessageAt:now,updatedAt:timestamp,unread:0,crmType:'Contato',service:'',destination:'',visaType:'',messages:initialMessage};next.push(record);imported+=1;
  });
