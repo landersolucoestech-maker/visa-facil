@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { makePlaceholder } from './contractTemplateEngine';
 import type { ContractVariableDefinition, ContractVariableType } from './contractTypes';
 import './contract-variable-modal.css';
@@ -23,6 +23,7 @@ export function ContractVariableModal({variables,variable,mode=variable?'edit':'
  const [description,setDescription]=useState(variable?.description??'');
  const readOnly=mode==='view';
  const identityLocked=Boolean(variable)&&mode!=='create';
+ useEffect(()=>{const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose()};document.addEventListener('keydown',closeOnEscape);return()=>document.removeEventListener('keydown',closeOnEscape)},[onClose]);
  const placeholder=useMemo(()=>identityLocked&&variable?variable.placeholder:group.trim()&&field.trim()?makePlaceholder(group,field):'',[field,group,identityLocked,variable]);
  const duplicate=placeholder?variables.some(item=>item.id!==variable?.id&&item.placeholder===placeholder):false;
  const valid=Boolean(label.trim()&&placeholder&&!duplicate);
