@@ -33,7 +33,7 @@ test('every operational CRM route has a representative seeded source',()=>{
   relacionamento:fixtures.crm,
   agenda:fixtures.agenda,
   tarefasGerais:fixtures.tasks.filter(record=>(record.area??'Geral')==='Geral'),
-  atendimentos:fixtures.attendance,
+  atendimentos:fixtures.attendance.conversations,
   contratos:fixtures.contracts,
   templates:fixtures.contractRegistry.templates,
   variaveis:fixtures.contractRegistry.variables,
