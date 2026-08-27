@@ -13,6 +13,7 @@ const browser=spawn(chrome,[
  '--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
  `--remote-debugging-port=${port}`,`--user-data-dir=${profile}`,'about:blank',
 ],{stdio:'ignore'});
+const browserExit=new Promise(resolve=>browser.once('exit',resolve));
 
 const sleep=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 async function devtoolsPage(){
@@ -107,5 +108,6 @@ try{
 }finally{
  socket.close();
  browser.kill('SIGTERM');
- await rm(profile,{recursive:true,force:true});
+ await Promise.race([browserExit,sleep(2500)]);
+ await rm(profile,{recursive:true,force:true,maxRetries:8,retryDelay:100});
 }
