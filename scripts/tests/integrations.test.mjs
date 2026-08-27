@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { INTEGRATION_REGISTRY, isIntegrationRuntimeStatus } from '../../apps/web/src/modules/integrations/integrationContract.ts';
 
-const EXPECTED=['whatsapp','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'];
+const EXPECTED=['whatsapp','telephony-sms','autentique','nfse','instagram','facebook','youtube','tiktok','google-ads','google-calendar'];
 const OFFICIAL_ACCOUNT_PROVIDERS=['whatsapp','instagram','facebook','youtube','tiktok'];
 const root=process.cwd();
 const contractSource=readFileSync(resolve(root,'apps/web/src/modules/integrations/integrationContract.ts'),'utf8');
@@ -45,12 +45,17 @@ test('social and WhatsApp account connections require official provider authoriz
 
 test('provider capabilities are explicit and do not overstate YouTube paid-media ownership',()=>{
   const whatsapp=INTEGRATION_REGISTRY.find(item=>item.id==='whatsapp');
+  const telephony=INTEGRATION_REGISTRY.find(item=>item.id==='telephony-sms');
   const instagram=INTEGRATION_REGISTRY.find(item=>item.id==='instagram');
   const facebook=INTEGRATION_REGISTRY.find(item=>item.id==='facebook');
   const youtube=INTEGRATION_REGISTRY.find(item=>item.id==='youtube');
   const tiktok=INTEGRATION_REGISTRY.find(item=>item.id==='tiktok');
   assert.ok(whatsapp?.capabilities.includes('messaging'));
   assert.ok(whatsapp?.capabilities.includes('customer-service'));
+  assert.ok(telephony?.capabilities.includes('sms'));
+  assert.ok(telephony?.capabilities.includes('voice'));
+  assert.ok(telephony?.capabilities.includes('phone-numbers'));
+  assert.ok(telephony?.capabilities.includes('delivery-status'));
   assert.ok(instagram?.capabilities.includes('messaging'));
   assert.ok(instagram?.capabilities.includes('content-publishing'));
   assert.ok(instagram?.capabilities.includes('ads'));
