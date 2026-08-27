@@ -126,12 +126,12 @@ jobs:
           }
 
           render_route '/crm' 'Dashboard'
-          render_route '/crm/relacionamento' 'Contatos & Leads'
+          render_route '/crm/relacionamento' 'Central de relacionamento operacional.'
           render_route '/crm/agenda' 'Agenda'
           render_route '/crm/tarefas' 'Tarefas'
           render_route '/crm/atendimentos' 'VisaChat'
           render_route '/crm/contratos' 'Contratos'
-          render_route '/crm/financeiro' 'Transações Financeiras'
+          render_route '/crm/financeiro' 'Receitas, despesas, contas a pagar e contas a receber.'
           render_route '/crm/financeiro/invoices' 'Faturamento e Notas Fiscais'
           render_route '/crm/marketing' 'Visão Geral'
           render_route '/crm/relatorios' 'Relatórios'
