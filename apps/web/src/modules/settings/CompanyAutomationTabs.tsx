@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { reportSessionPersistenceError } from '../../shared/sessionPersistence';
 import { INITIAL_COMPANY, INITIAL_AUTOMATIONS, type AutomationKey, type Company, Card, Field, Toggle, SettingRow, SettingsGroup, base } from './settingsShared';
 
 const MAX_LOGO_BYTES=5*1024*1024;
@@ -9,8 +10,18 @@ const FREQUENCIES=['Imediato','Diário (resumo)','Semanal','Por evento/gatilho']
 const TIMES=['08:00','09:00','10:00','12:00','14:00','18:00'] as const;
 type AutomationSession={values:Record<AutomationKey,boolean>;frequency:string;time:string};
 
-function storage(){return typeof sessionStorage==='undefined'?null:sessionStorage}
+function storage(){try{return typeof sessionStorage==='undefined'?null:sessionStorage}catch{return null}}
 function isObject(value:unknown):value is Record<string,unknown>{return typeof value==='object'&&value!==null&&!Array.isArray(value)}
+function writeSetting(key:string,value:unknown){
+ const store=storage();
+ if(!store){reportSessionPersistenceError(new Error(`sessionStorage indisponível para ${key}.`),key);return false}
+ try{
+  const raw=JSON.stringify(value);
+  store.setItem(key,raw);
+  if(store.getItem(key)!==raw)throw new Error(`A gravação local de ${key} não pôde ser confirmada.`);
+  return true;
+ }catch(error){reportSessionPersistenceError(error,key);return false}
+}
 function readCompany():Company{
  const store=storage();if(!store)return structuredClone(INITIAL_COMPANY);
  try{
@@ -20,7 +31,7 @@ function readCompany():Company{
   return keys.every(key=>typeof value[key]==='string')?Object.fromEntries(keys.map(key=>[key,value[key]])) as Company:structuredClone(INITIAL_COMPANY);
  }catch{return structuredClone(INITIAL_COMPANY)}
 }
-function writeCompany(value:Company){storage()?.setItem(COMPANY_KEY,JSON.stringify(value))}
+function writeCompany(value:Company){return writeSetting(COMPANY_KEY,value)}
 function validAutomationValues(value:unknown):value is Record<AutomationKey,boolean>{
  if(!isObject(value))return false;
  return (Object.keys(INITIAL_AUTOMATIONS) as AutomationKey[]).every(key=>typeof value[key]==='boolean')&&value.backup===false;
@@ -34,7 +45,7 @@ function readAutomationSession():AutomationSession{
   return {values:{...value.values,backup:false},frequency:value.frequency,time:value.time};
  }catch{return fallback}
 }
-function writeAutomationSession(value:AutomationSession){storage()?.setItem(AUTOMATIONS_KEY,JSON.stringify({...value,values:{...value.values,backup:false}}))}
+function writeAutomationSession(value:AutomationSession){return writeSetting(AUTOMATIONS_KEY,{...value,values:{...value.values,backup:false}})}
 
 export function CompanyTab(){
  const [company,setCompany]=useState<Company>(()=>readCompany());
@@ -43,6 +54,7 @@ export function CompanyTab(){
  const [logo,setLogo]=useState<string>();
  const [logoError,setLogoError]=useState('');
  const [saved,setSaved]=useState(false);
+ const [saveError,setSaveError]=useState('');
  useEffect(()=>()=>{if(logo)URL.revokeObjectURL(logo)},[logo]);
  const chooseLogo=(file?:File)=>{
   setLogoError('');
@@ -52,9 +64,12 @@ export function CompanyTab(){
   const next=URL.createObjectURL(file);
   setLogo(current=>{if(current)URL.revokeObjectURL(current);return next});
  };
- const begin=()=>{setSnapshot(company);setEditing(true);setSaved(false)};
- const cancel=()=>{setCompany(snapshot);setEditing(false)};
- const save=()=>{writeCompany(company);setSnapshot(company);setEditing(false);setSaved(true)};
+ const begin=()=>{setSnapshot(company);setEditing(true);setSaved(false);setSaveError('')};
+ const cancel=()=>{setCompany(snapshot);setEditing(false);setSaveError('')};
+ const save=()=>{
+  if(!writeCompany(company)){setSaved(false);setSaveError('Não foi possível preservar os dados nesta sessão. As alterações continuam abertas para nova tentativa.');return}
+  setSnapshot(company);setEditing(false);setSaved(true);setSaveError('');
+ };
  return <div className="settings-company-grid">
   <Card title="Identidade Visual" description="Dados da empresa nesta sessão; a prévia de logo permanece apenas nesta aba" icon="◐" className="settings-identity-card">
    <div className="settings-identity">
@@ -76,7 +91,8 @@ export function CompanyTab(){
     <Field label="Slug da organização" help={`Link de cadastro: ${window.location.origin}${base()}/cadastro/${company.slug||'seu-slug'}`}><input disabled={!editing} value={company.slug} onChange={event=>setCompany(current=>({...current,slug:event.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-')}))}/></Field>
    </div>
    {editing&&<div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={save}>Aplicar nesta sessão</button><button className="settings-btn settings-btn-outline" onClick={cancel}>Cancelar</button></div>}
-   {saved&&<div className="settings-inline-success">✓ Dados preservados no sessionStorage deste navegador. Não há persistência remota de empresa.</div>}
+   {saved&&<div className="settings-inline-success" role="status">✓ Dados preservados no sessionStorage deste navegador. Não há persistência remota de empresa.</div>}
+   {saveError&&<p className="settings-security-notice" role="alert">{saveError}</p>}
   </Card>
  </div>;
 }
@@ -87,8 +103,13 @@ export function AutomationsTab(){
  const [frequency,setFrequency]=useState(initial.frequency);
  const [time,setTime]=useState(initial.time);
  const [saved,setSaved]=useState(false);
- const set=(key:AutomationKey,value:boolean)=>{if(key==='backup')return;setValues(current=>({...current,[key]:value,backup:false}));setSaved(false)};
- const apply=()=>{writeAutomationSession({values:{...values,backup:false},frequency,time});setSaved(true)};
+ const [saveError,setSaveError]=useState('');
+ const set=(key:AutomationKey,value:boolean)=>{if(key==='backup')return;setValues(current=>({...current,[key]:value,backup:false}));setSaved(false);setSaveError('')};
+ const apply=()=>{
+  const ok=writeAutomationSession({values:{...values,backup:false},frequency,time});
+  setSaved(ok);
+  setSaveError(ok?'':'Não foi possível preservar as preferências nesta sessão. Nenhuma automação foi executada.');
+ };
  return <Card title="Automações & Notificações" description="Preferências de interface; nenhum executor de automações está conectado" icon="⚡">
   <div className="settings-info-box">As opções abaixo não disparam e-mails, push, backups ou jobs. Elas servem apenas para modelar preferências enquanto não existe backend/worker responsável pela execução.</div>
   <div className="settings-section-block"><div className="settings-section-title"><span>◌</span><div><h3>Canais de Notificação</h3><p>Preferências previstas para futura integração</p></div></div><div className="settings-channel-grid"><div><span>✉</span><strong>E-mail</strong><Toggle checked={values.email} onChange={value=>set('email',value)}/></div><div className="is-disabled"><span>▯</span><strong>SMS</strong><Toggle checked={false} onChange={()=>{}} disabled/></div><div><span>◌</span><strong>Push/In-App</strong><Toggle checked={values.push} onChange={value=>set('push',value)}/></div></div></div>
@@ -101,7 +122,8 @@ export function AutomationsTab(){
   <div className="settings-divider"/>
   <SettingsGroup title="Sistema" icon="↻"><SettingRow title="Alertas críticos do sistema" description="Preferência para futuros eventos de erro" checked={values.criticalAlerts} onChange={value=>set('criticalAlerts',value)}/><SettingRow title="Notificações operacionais" description="Preferência para futuras notificações in-app" checked={values.operational} onChange={value=>set('operational',value)}/><SettingRow title="Backup automático" description="Indisponível: não existe banco de dados ou rotina de backup neste repositório" checked={false} onChange={()=>{}} disabled/></SettingsGroup>
   <div className="settings-divider"/>
-  <div className="settings-section-block"><div className="settings-section-title"><span>◷</span><div><h3>Frequência & Preferências</h3></div></div><div className="settings-form-grid"><Field label="Frequência de envio"><select value={frequency} onChange={event=>{setFrequency(event.target.value);setSaved(false)}}>{FREQUENCIES.map(value=><option key={value}>{value}</option>)}</select></Field><Field label="Horário preferido"><select value={time} onChange={event=>{setTime(event.target.value);setSaved(false)}}>{TIMES.map(value=><option key={value}>{value}</option>)}</select></Field></div></div>
-  <div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={apply}>Aplicar nesta sessão</button>{saved&&<span className="settings-saved-text">✓ Preferências preservadas nesta sessão do navegador</span>}</div>
+  <div className="settings-section-block"><div className="settings-section-title"><span>◷</span><div><h3>Frequência & Preferências</h3></div></div><div className="settings-form-grid"><Field label="Frequência de envio"><select value={frequency} onChange={event=>{setFrequency(event.target.value);setSaved(false);setSaveError('')}}>{FREQUENCIES.map(value=><option key={value}>{value}</option>)}</select></Field><Field label="Horário preferido"><select value={time} onChange={event=>{setTime(event.target.value);setSaved(false);setSaveError('')}}>{TIMES.map(value=><option key={value}>{value}</option>)}</select></Field></div></div>
+  <div className="settings-form-actions"><button className="settings-btn settings-btn-primary" onClick={apply}>Aplicar nesta sessão</button>{saved&&<span className="settings-saved-text" role="status">✓ Preferências preservadas nesta sessão do navegador</span>}</div>
+  {saveError&&<p className="settings-security-notice" role="alert">{saveError}</p>}
  </Card>;
 }
