@@ -100,6 +100,8 @@ export function RootApplication() {
   let path = normalizePath(window.location.pathname);
   const session = AUTHENTICATION_ENABLED ? getAuthSession() : null;
 
+  if(path==='/login-preview')return internal(<LoginApp previewOnly/>);
+
   if(path==='/login'){
     if(!AUTHENTICATION_ENABLED){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}
     if(session){replacePath('/workspaces');return internal(<WorkspaceSelectorApp/>,'workspace')}
