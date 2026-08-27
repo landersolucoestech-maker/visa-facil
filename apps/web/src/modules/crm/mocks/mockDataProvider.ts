@@ -31,11 +31,17 @@ export function isCrmRecord(value: unknown): value is CrmRecord {
     && typeof value.createdAt === 'string' && Number.isFinite(Date.parse(value.createdAt))
     && typeof value.updatedAt === 'string' && Number.isFinite(Date.parse(value.updatedAt));
   if (!validBase) return false;
-  for (const field of ['relationship', 'contactStatus', 'source', 'owner', 'interest', 'destination', 'visaType', 'leadStatus', 'temperature', 'nextAction', 'nextActionDate'] as const) {
+  for (const field of ['relationship', 'contactStatus', 'source', 'owner', 'ownerUserId', 'interest', 'destination', 'visaType', 'leadStatus', 'temperature', 'nextAction', 'nextActionDate', 'convertedContactId', 'convertedFromLeadId', 'convertedAt'] as const) {
     if (!isOptionalText(value[field])) return false;
   }
+  if (typeof value.convertedAt==='string'&&value.convertedAt&&!Number.isFinite(Date.parse(value.convertedAt))) return false;
   if (typeof value.source==='string'&&!SOURCES.has(value.source)) return false;
-  if (value.kind === 'contact') return typeof value.relationship === 'string' && RELATIONSHIPS.has(value.relationship) && typeof value.contactStatus === 'string' && CONTACT_STATUSES.has(value.contactStatus);
+  if (value.kind === 'contact') {
+    if(value.convertedContactId!==undefined)return false;
+    return typeof value.relationship === 'string' && RELATIONSHIPS.has(value.relationship) && typeof value.contactStatus === 'string' && CONTACT_STATUSES.has(value.contactStatus);
+  }
+  if(value.convertedFromLeadId!==undefined)return false;
+  if(value.convertedContactId&&value.leadStatus!=='Convertido')return false;
   return typeof value.leadStatus === 'string' && LEAD_STATUSES.has(value.leadStatus) && typeof value.temperature === 'string' && TEMPERATURES.has(value.temperature);
 }
 
