@@ -75,6 +75,18 @@ test('marketing campaigns persist an active canonical responsible user instead o
   assert.equal(app.includes('<span>Responsável</span><select disabled><option>Marketing</option></select>'),false);
 });
 
+test('marketing contents link to campaigns by canonical id and unlink safely when a campaign is deleted',()=>{
+  assert.ok(store.includes('campaignId?:string'));
+  assert.ok(store.includes("value.campaignId===undefined||typeof value.campaignId==='string'"));
+  assert.ok(store.includes("campaignId:typeof value.campaignId==='string'?value.campaignId:undefined"));
+  assert.ok(app.includes('campaigns={campaigns}'));
+  assert.ok(app.includes("<span>Campanha vinculada</span><select value={draft.campaignId??''}"));
+  assert.ok(app.includes('value={campaign.id}>{campaign.name} · {campaign.status}'));
+  assert.ok(app.includes('item.campaignId===record.id?{...item,campaignId:undefined}:item'));
+  assert.ok(app.includes('Vínculo interno por ID com as campanhas desta sessão.'));
+  assert.equal(app.includes('<span>Campanha vinculada</span><select disabled>'),false);
+});
+
 test('marketing writes use the same crash-safe persistence contract as operational modules',()=>{
   assert.ok(store.includes('writeSessionRecordsSafely<ContentItem>'));
   assert.ok(store.includes('writeSessionRecordsSafely<Campaign>'));
