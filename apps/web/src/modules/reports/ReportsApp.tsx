@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import './reports.css';
 import { getReportRows, importReportRows, REPORT_DATASET_COLUMNS, type ReportDatasetId, type ReportRow } from './reportDatasetAdapter';
+import { CONFIGURATION_REPORT_DATASET_COLUMNS, getConfigurationReportRows, importConfigurationReportRows, isConfigurationReportDatasetId, type ConfigurationReportDatasetId } from './reportConfigurationDatasetAdapter';
 import { createXlsxBlob, readXlsxFile } from './xlsxWorkbook';
 
+type ReportEntityId=ReportDatasetId|ConfigurationReportDatasetId;
 type ReportEntity = {
-  id: ReportDatasetId;
+  id: ReportEntityId;
   label: string;
   description: string;
   columns: readonly string[];
@@ -18,13 +20,19 @@ const ENTITIES:ReportEntity[]=[
   {id:'tasks',label:'Tarefas',description:'Todos os campos do modal Criar tarefa.',columns:REPORT_DATASET_COLUMNS.tasks},
   {id:'agenda',label:'Agenda',description:'Todos os campos do modal Novo evento na agenda.',columns:REPORT_DATASET_COLUMNS.agenda},
   {id:'finance',label:'Transações financeiras',description:'Todos os campos do modal Adicionar transação.',columns:REPORT_DATASET_COLUMNS.finance},
+  {id:'financeCategories',label:'Categorias financeiras',description:'Todos os campos do modal Nova categoria financeira.',columns:CONFIGURATION_REPORT_DATASET_COLUMNS.financeCategories},
+  {id:'financeRules',label:'Regras financeiras',description:'Todos os campos do modal Nova regra financeira.',columns:CONFIGURATION_REPORT_DATASET_COLUMNS.financeRules},
+  {id:'contractTemplates',label:'Templates de contratos',description:'Todos os campos editáveis do modal Novo template.',columns:CONFIGURATION_REPORT_DATASET_COLUMNS.contractTemplates},
+  {id:'contractVariables',label:'Variáveis de templates de contratos',description:'Todos os campos editáveis do modal Criar variável.',columns:CONFIGURATION_REPORT_DATASET_COLUMNS.contractVariables},
 ];
 
 function BellIcon(){return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
 function normalizeHeader(value:string){return value.trim().toLocaleLowerCase('pt-BR')}
 function downloadBlob(blob:Blob,fileName:string){const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=fileName;document.body.appendChild(anchor);anchor.click();anchor.remove();URL.revokeObjectURL(url)}
+function reportRows(id:ReportEntityId){return isConfigurationReportDatasetId(id)?getConfigurationReportRows(id):getReportRows(id)}
+function importRows(id:ReportEntityId,rows:ReportRow[]){return isConfigurationReportDatasetId(id)?importConfigurationReportRows(id,rows):importReportRows(id,rows)}
 function downloadTemplate(entity:ReportEntity){downloadBlob(createXlsxBlob(entity.label,[...entity.columns],[]),`${entity.id}-template.xlsx`)}
-function downloadDataset(entity:ReportEntity){const records=getReportRows(entity.id);const rows=records.map(row=>entity.columns.map(column=>row[column]??''));const stamp=new Date().toISOString().slice(0,10);downloadBlob(createXlsxBlob(entity.label,[...entity.columns],rows),`${entity.id}-${stamp}.xlsx`)}
+function downloadDataset(entity:ReportEntity){const records=reportRows(entity.id);const rows=records.map(row=>entity.columns.map(column=>row[column]??''));const stamp=new Date().toISOString().slice(0,10);downloadBlob(createXlsxBlob(entity.label,[...entity.columns],rows),`${entity.id}-${stamp}.xlsx`)}
 function validateHeaders(headers:string[],entity:ReportEntity){
  const normalized=headers.map(normalizeHeader);
  if(headers.length===0)throw new Error('O XLSX não possui cabeçalho.');
@@ -63,7 +71,7 @@ export function ReportsApp(){
  const runImport=async()=>{
   if(!file||!importEntity||busy)return;
   setBusy(true);setResult(undefined);
-  try{const rows=await parseXlsx(file,importEntity);const outcome=importReportRows(importEntity.id,rows);setResult({ok:true,message:`Importação XLSX concluída no protótipo local: ${outcome.imported} novo${outcome.imported===1?' registro':'s registros'} e ${outcome.updated} atualizado${outcome.updated===1?'':'s'}. Total processado: ${outcome.total}.`})}
+  try{const rows=await parseXlsx(file,importEntity);const outcome=importRows(importEntity.id,rows);setResult({ok:true,message:`Importação XLSX concluída no protótipo local: ${outcome.imported} novo${outcome.imported===1?' registro':'s registros'} e ${outcome.updated} atualizado${outcome.updated===1?'':'s'}. Total processado: ${outcome.total}.`})}
   catch(error){setResult({ok:false,message:error instanceof Error?error.message:'Não foi possível importar o XLSX.'})}
   finally{setBusy(false)}
  };
@@ -71,7 +79,7 @@ export function ReportsApp(){
  return <div className="crm-shell reports-shell" onClick={()=>setNotificationsOpen(false)} onKeyDown={event=>{if(event.key==='Escape'){setNotificationsOpen(false);if(importEntity)closeImport()}}}>
   <div className="crm-workspace">
    <header className="crm-topbar">
-    <div><small>VISA FÁCIL · CRM</small><h1>Relatórios</h1><p>Importação e exportação dos datasets operacionais exclusivamente em XLSX.</p></div>
+    <div><small>VISA FÁCIL · CRM</small><h1>Relatórios</h1><p>Importação e exportação dos datasets operacionais e de configuração exclusivamente em XLSX.</p></div>
     <div className="crm-topbar-actions" onClick={event=>event.stopPropagation()}><div className="reports-topbar-menu"><button className="reports-notification-button" type="button" aria-label="Alertas" aria-haspopup="true" aria-expanded={notificationsOpen} onClick={()=>setNotificationsOpen(value=>!value)}><BellIcon/></button>{notificationsOpen&&<div className="reports-dropdown" role="region" aria-label="Notificações de relatórios"><strong>Notificações</strong><p>Nenhuma notificação no momento.</p></div>}</div></div>
    </header>
 
