@@ -16,6 +16,13 @@ test('CMS user-triggered persistence failures are surfaced instead of silently s
   assert.ok(app.includes('error instanceof CmsStorageError'));
 });
 
+test('CMS publication contract is enforced by storage as well as the UI',()=>{
+  assert.ok(store.includes('export class CmsPublicationError extends Error'));
+  assert.ok(store.includes('const issues=cmsPublicationIssues(normalized)'));
+  assert.ok(store.includes('if(issues.length)throw new CmsPublicationError(issues)'));
+  assert.ok(app.includes('error instanceof CmsPublicationError'));
+});
+
 test('CMS never describes browser-local publication as a central production publish',()=>{
   assert.ok(app.includes('Conteúdo publicado localmente neste navegador.'));
   assert.ok(app.includes('Publicar localmente'));
