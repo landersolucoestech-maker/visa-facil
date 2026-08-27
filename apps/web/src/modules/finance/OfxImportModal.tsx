@@ -52,8 +52,8 @@ export function OfxImportModal({ existingIds, close, imported }: Props) {
   };
 
   return <div className="finance-modal-backdrop" onMouseDown={(event) => event.currentTarget === event.target && close()}>
-    <div className="finance-ofx-modal finance-transaction-ofx-modal">
-      <header><div><span>IMPORTAR OFX</span><h2>Importar extrato bancário</h2><p>As movimentações válidas serão adicionadas à lista atual de Transações.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
+    <div className="finance-ofx-modal finance-transaction-ofx-modal" role="dialog" aria-modal="true" aria-labelledby="finance-ofx-title">
+      <header><div><span>IMPORTAR OFX</span><h2 id="finance-ofx-title">Importar extrato bancário</h2><p>As movimentações válidas serão adicionadas à lista atual de Transações.</p></div><button type="button" onClick={close} aria-label="Fechar">×</button></header>
       <div className="finance-ofx-body">
         <label className="finance-ofx-drop"><input type="file" accept=".ofx,application/x-ofx" onChange={(event) => choose(event.target.files?.[0])}/><UploadIcon /><strong>{file ? file.name : 'Selecionar arquivo OFX'}</strong><span>{file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : 'Arquivos .OFX · máximo de 5 MB'}</span></label>
         <p className="finance-config-note">Entradas são importadas como receitas recebidas e saídas como despesas pagas. As regras financeiras ativas desta sessão são aplicadas pela descrição; sem correspondência, é usada a primeira categoria ativa compatível.</p>
