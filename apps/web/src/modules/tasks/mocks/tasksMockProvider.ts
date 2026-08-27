@@ -11,7 +11,9 @@ export type TaskRecord = {
   description: string;
   relatedType: RelatedType;
   relatedName: string;
+  relatedRecordId?: string;
   owner: string;
+  ownerUserId?: string;
   priority: TaskPriority;
   status: TaskStatus;
   dueDate: string;
@@ -31,6 +33,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 function isText(value: unknown): value is string { return typeof value === 'string'; }
+function isOptionalText(value: unknown): value is string | undefined { return value === undefined || typeof value === 'string'; }
 export function isTaskRecord(value: unknown): value is TaskRecord {
   if (!isObject(value)) return false;
   if (typeof value.dueDate !== 'string' || (value.dueDate !== '' && !DATE_RE.test(value.dueDate))) return false;
@@ -41,7 +44,9 @@ export function isTaskRecord(value: unknown): value is TaskRecord {
     && isText(value.description)
     && typeof value.relatedType === 'string' && RELATED_TYPES.has(value.relatedType as RelatedType)
     && isText(value.relatedName)
+    && isOptionalText(value.relatedRecordId)
     && isText(value.owner)
+    && isOptionalText(value.ownerUserId)
     && typeof value.priority === 'string' && PRIORITIES.has(value.priority as TaskPriority)
     && typeof value.status === 'string' && STATUSES.has(value.status as TaskStatus)
     && isText(value.reminder)
