@@ -30,6 +30,7 @@ function endpoint(path:string){
   const base=getApiBaseUrl();
   if(!base)throw new ApiClientError({code:'BACKEND_NOT_CONFIGURED',message:'A API backend não está configurada neste ambiente.',retryable:false,status:0});
   const clean=path.startsWith('/')?path:`/${path}`;
+  if(base==='/')return clean;
   return `${base}${clean}`;
 }
 
