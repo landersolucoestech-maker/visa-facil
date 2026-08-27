@@ -13,6 +13,7 @@ export function ContractTemplateModal({template,variables,mode=template?'edit':'
  const [query,setQuery]=useState('');
  const readOnly=mode==='view';
  useEffect(()=>setDraft(initial(template)),[template]);
+ useEffect(()=>{const closeOnEscape=(event:KeyboardEvent)=>{if(event.key==='Escape')onClose()};document.addEventListener('keydown',closeOnEscape);return()=>document.removeEventListener('keydown',closeOnEscape)},[onClose]);
  const visibleVariables=useMemo(()=>variables.filter(item=>`${item.label} ${item.placeholder}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0,80),[variables,query]);
  const placeholders=useMemo(()=>extractTemplatePlaceholders(draft.content),[draft.content]);
  const append=(placeholder:string)=>{if(!readOnly)setDraft(current=>({...current,content:`${current.content}${current.content&&!current.content.endsWith('\n')?' ':''}${placeholder}`}))};
