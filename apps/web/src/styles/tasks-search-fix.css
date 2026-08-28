@@ -1,0 +1,15 @@
+/* Scoped fix: the search wrapper owns the visible field chrome. */
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .tasks-search > input{
+  min-height:0!important;
+  height:auto!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  outline:0!important;
+}
+.crm-global-shell.crm-global-shell .crm-global-page.crm-global-page .tasks-search:focus-within{
+  border-color:#8fa1ba;
+  box-shadow:var(--vf-focus,0 0 0 2px rgba(49,95,157,.10));
+}
