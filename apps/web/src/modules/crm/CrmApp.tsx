@@ -114,16 +114,51 @@ function RecordModal({ mode, kind, record, members, onClose, onSave, onEdit, onC
   return <div className="crm-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><div className="crm-form-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}><header><div><span>{mode === 'create' ? 'NOVO REGISTRO' : 'EDITAR REGISTRO'}</span><h2 id={titleId}>{mode === 'create' ? 'Novo' : 'Editar'} {kind === 'contact' ? 'contato' : 'lead'}</h2><p>Cadastre os dados da pessoa atendida.</p></div><button type="button" onClick={onClose} aria-label="Fechar">×</button></header><RecordForm kind={kind} initial={draft} members={members} onCancel={onClose} onSubmit={onSave} /></div></div>;
 }
 
+type KpiCardData={label:string;value:number;helper:string};
+function safePercent(value:number,total:number){return total>0?(value/total)*100:0}
+function formatPercent(value:number){return `${new Intl.NumberFormat('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:1}).format(Number.isFinite(value)?value:0)}%`}
+function createdWithinLast30Days(record:CrmRecord){
+  const createdAt=new Date(record.createdAt).getTime();
+  if(!Number.isFinite(createdAt))return false;
+  const now=Date.now();
+  const thirtyDays=30*24*60*60*1000;
+  return createdAt<=now&&createdAt>=now-thirtyDays;
+}
+function KpiCard({label,value,helper}:{label:string;value:number;helper:string}){return <article className="crm-kpi-card"><span>{label}</span><strong>{value}</strong><small>{helper}</small></article>}
+
 function RelationshipCrm({ tab, setTab, records, openModal, onDelete, onConvert }: { tab: CrmTab; setTab: (tab: CrmTab) => void; records: CrmRecord[]; openModal: (mode: ModalMode, kind: RecordKind, record?: CrmRecord) => void; onDelete: (record: CrmRecord) => void; onConvert:(record:CrmRecord)=>void }) {
   const [openActionId, setOpenActionId] = useState<string>();
   const [query,setQuery]=useState('');
   const [filter,setFilter]=useState('Todos');
-  const contacts = records.filter((record) => record.kind === 'contact').length;
-  const leads = records.filter((record) => record.kind === 'lead').length;
-  const clients = records.filter((record) => record.kind === 'contact' && record.relationship === 'Cliente').length;
-  const qualified = records.filter((record) => record.kind === 'lead' && record.leadStatus === 'Qualificado').length;
-  const converted = records.filter((record) => record.kind === 'lead' && record.convertedContactId).length;
-  const summary = [['Total de contatos', String(contacts)], ['Clientes', String(clients)], ['Leads', String(leads)], ['Qualificados', String(qualified)], ['Convertidos', String(converted)]];
+  const contactRecords=records.filter((record)=>record.kind==='contact');
+  const leadRecords=records.filter((record)=>record.kind==='lead');
+  const contacts=contactRecords.length;
+  const leads=leadRecords.length;
+  const contactsWithCompany=0;
+  const activeClients=contactRecords.filter((record)=>record.relationship==='Cliente'&&record.contactStatus==='Ativo').length;
+  const newContacts=contactRecords.filter(createdWithinLast30Days).length;
+  const newLeads=leadRecords.filter(createdWithinLast30Days).length;
+  const leadsInProgress=leadRecords.filter((record)=>!record.convertedContactId&&record.leadStatus!=='Convertido'&&record.leadStatus!=='Perdido').length;
+  const qualifiedLeads=leadRecords.filter((record)=>record.leadStatus==='Qualificado').length;
+  const convertedLeads=leadRecords.filter((record)=>Boolean(record.convertedContactId)||record.leadStatus==='Convertido').length;
+  const conversionRate=safePercent(convertedLeads,leads);
+  const summary:KpiCardData[]=tab==='contacts'?[{
+    label:'Total de contatos',value:contacts,helper:contacts===0?'Nenhum contato cadastrado':`+${newContacts} nos últimos 30 dias`,
+  },{
+    label:'Com empresa',value:contactsWithCompany,helper:`${formatPercent(safePercent(contactsWithCompany,contacts))} dos contatos`,
+  },{
+    label:'Clientes ativos',value:activeClients,helper:`${formatPercent(safePercent(activeClients,contacts))} dos contatos`,
+  },{
+    label:'Novos contatos',value:newContacts,helper:'Nos últimos 30 dias',
+  }]:[{
+    label:'Total de leads',value:leads,helper:leads===0?'Nenhum lead cadastrado':`+${newLeads} nos últimos 30 dias`,
+  },{
+    label:'Em andamento',value:leadsInProgress,helper:`${formatPercent(safePercent(leadsInProgress,leads))} do total`,
+  },{
+    label:'Qualificados',value:qualifiedLeads,helper:`${formatPercent(safePercent(qualifiedLeads,leads))} do total`,
+  },{
+    label:'Convertidos',value:convertedLeads,helper:`${formatPercent(conversionRate)} de conversão`,
+  }];
   const normalizedQuery=query.trim().toLowerCase();
   const visible=records.filter(record=>{
     if(tab==='contacts'&&record.kind!=='contact')return false;
@@ -140,7 +175,7 @@ function RelationshipCrm({ tab, setTab, records, openModal, onDelete, onConvert 
   useEffect(()=>{if(!openActionId)return;const closeOnEscape=(event:globalThis.KeyboardEvent)=>{if(event.key==='Escape')setOpenActionId(undefined)};document.addEventListener('keydown',closeOnEscape);return()=>document.removeEventListener('keydown',closeOnEscape)},[openActionId]);
 
   return <section className="crm-directory" onClick={() => setOpenActionId(undefined)}>
-    <section className="crm-directory-summary" aria-label="Resumo do relacionamento">{summary.map(([label, value]) => <article key={label}><span>{label}</span><strong>{value}</strong></article>)}</section>
+    <section className="crm-directory-summary" aria-label={`Resumo de ${tab==='contacts'?'contatos':'leads'}`}>{summary.map((item)=><KpiCard key={item.label} {...item}/>)}</section>
     <div className="crm-directory-tabs" role="tablist" aria-label="CRM" onKeyDown={handleTabKeyDown}><button id="crm-directory-tab-contacts" type="button" role="tab" aria-selected={tab === 'contacts'} aria-controls="crm-directory-table" tabIndex={tab==='contacts'?0:-1} className={tab === 'contacts' ? 'is-active' : ''} onClick={() => changeTab('contacts')}>Contatos <small>{contacts}</small></button><button id="crm-directory-tab-leads" type="button" role="tab" aria-selected={tab === 'leads'} aria-controls="crm-directory-table" tabIndex={tab==='leads'?0:-1} className={tab === 'leads' ? 'is-active' : ''} onClick={() => changeTab('leads')}>Leads <small>{leads}</small></button></div>
     <div className="crm-directory-toolbar"><label className="crm-directory-search"><span className="crm-directory-search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><input type="search" aria-label="Buscar" value={query} onChange={event=>setQuery(event.target.value)} placeholder={tab === 'contacts' ? 'Buscar por nome, e-mail, telefone ou cidade' : 'Buscar lead por nome, origem, e-mail ou telefone'} /></label><select aria-label="Filtrar registros" value={filter} onChange={event=>setFilter(event.target.value)}><option>Todos</option><Options values={filters}/></select></div>
     <div className="crm-directory-table" id="crm-directory-table" role="tabpanel" aria-labelledby={`crm-directory-tab-${tab}`}><div className="crm-directory-table__head"><span>Nome</span><span>{tab === 'contacts' ? 'Relacionamento' : 'Origem'}</span><span>Status</span><span>E-mail / telefone</span><span>{tab === 'contacts' ? 'Cidade' : 'Próxima ação'}</span><span>Ações</span></div>{visible.length === 0 ? <div className="crm-directory-list"><p>Nenhum {tab === 'contacts' ? 'contato' : 'lead'} encontrado.</p></div> : visible.map((record) => <div className="crm-directory-row" key={record.id}><div><strong>{displayName(record)}</strong><small>{record.kind === 'contact' ? record.relationship : record.interest}</small></div><span>{record.kind === 'contact' ? record.relationship : record.source}</span><span><b className="crm-status-pill">{record.kind === 'contact' ? record.contactStatus : record.leadStatus}</b></span><div><strong>{record.email}</strong><small>{record.whatsapp || record.phone}</small></div><span>{record.kind === 'contact' ? [record.city, record.state].filter(Boolean).join(' / ') : record.nextAction || '—'}</span><div className="crm-row-actions" onClick={(event) => event.stopPropagation()}><button className="crm-actions-trigger" type="button" aria-label={`Ações de ${displayName(record)}`} aria-haspopup="menu" aria-expanded={openActionId === record.id} onClick={() => setOpenActionId((current) => current === record.id ? undefined : record.id)}>⋯</button>{openActionId === record.id && <div className="crm-actions-menu" role="menu"><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); openModal('view', record.kind, record); }}>Ver</button><button type="button" role="menuitem" onClick={() => { setOpenActionId(undefined); openModal('edit', record.kind, record); }}>Editar</button>{record.kind==='lead'&&!record.convertedContactId&&<button type="button" role="menuitem" onClick={()=>{setOpenActionId(undefined);onConvert(record)}}>Converter em cliente</button>}<button type="button" role="menuitem" className="is-danger" onClick={() => { setOpenActionId(undefined); onDelete(record); }}>Excluir</button></div>}</div></div>)}</div>
